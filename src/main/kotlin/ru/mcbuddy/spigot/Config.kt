@@ -72,7 +72,7 @@ class Config(private val plugin: JavaPlugin) {
     }
 
     private fun getSound(key: String, default: String, defaultSound: Sound) = runCatching {
-      Registry.SOUNDS.get(NamespacedKey.fromString(config.getString(key, default)!!)!!)!!
+      Sound.valueOf(config.getString(key, default)!!)
     }.getOrElse {
       plugin.logger.warning("❌ Error while loading sound `$key`")
       defaultSound
