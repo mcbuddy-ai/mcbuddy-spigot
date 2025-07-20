@@ -23,7 +23,7 @@ class Zygote : JavaPlugin() {
   override fun onEnable() {
     saveDefaultConfig()
     initializeComponents()
-    listOf("ask", "askx", "reload").map(::getCommand).forEach { it?.setExecutor(this) }
+    listOf("ask", "askx").map(::getCommand).forEach { it?.setExecutor(this) }
     logger.info("✅ MCBuddy Spigot Plugin initialized")
   }
 
@@ -43,11 +43,24 @@ class Zygote : JavaPlugin() {
     logger.info("✅ MCBuddy Spigot Plugin disabled")
   }
 
-  override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>) = when (command.name.lowercase()) {
-    "ask" -> handler.handleAskCommand(sender, args)
-    "askx" -> handler.handleAskxCommand(sender, args)
-    "reload" -> handleReloadCommand(sender)
-    else -> false
+  override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+    return when (command.name.lowercase()) {
+      "ask" -> {
+        if (args.isNotEmpty() && args[0].lowercase() == "reload") {
+          handleReloadCommand(sender)
+        } else {
+          handler.handleAskCommand(sender, args)
+        }
+      }
+      "askx" -> {
+        if (args.isNotEmpty() && args[0].lowercase() == "reload") {
+          handleReloadCommand(sender)
+        } else {
+          handler.handleAskxCommand(sender, args)
+        }
+      }
+      else -> false
+    }
   }
 
   private fun handleReloadCommand(sender: CommandSender): Boolean {
