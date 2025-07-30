@@ -10,6 +10,8 @@ import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Minecraft.formatMessage
 
 class Handler(private val plugin: JavaPlugin, private val configuration: Config, private val service: Service, private val animator: Animator, private val executor: Executor, private val scope: CoroutineScope) {
+  private val errorHandler = ErrorHandler()
+
   fun handleAskCommand(sender: CommandSender, args: Array<out String>): Boolean {
     plugin.logger.info("🔄 Handling ask command")
 
@@ -51,7 +53,12 @@ class Handler(private val plugin: JavaPlugin, private val configuration: Config,
             animator.playErrorSound(sender)
           }
 
-          sender.sendMessage(formatMessage(configuration.messages.errorMessage))
+          val errorMessage = when (e) {
+            is ApiErrorException -> errorHandler.getUserErrorMessage(e.apiError)
+            else -> errorHandler.getUserErrorMessage(e)
+          }
+          
+          sender.sendMessage(formatMessage(errorMessage))
         }
       }
     }
@@ -132,7 +139,12 @@ class Handler(private val plugin: JavaPlugin, private val configuration: Config,
             animator.playErrorSound(sender)
           }
 
-          sender.sendMessage(formatMessage(configuration.messages.askxErrorMessage))
+          val errorMessage = when (e) {
+            is ApiErrorException -> errorHandler.getUserErrorMessage(e.apiError)
+            else -> errorHandler.getUserErrorMessage(e)
+          }
+          
+          sender.sendMessage(formatMessage(errorMessage))
         }
       }
     }

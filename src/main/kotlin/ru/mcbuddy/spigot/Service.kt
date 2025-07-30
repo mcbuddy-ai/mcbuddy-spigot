@@ -16,6 +16,7 @@ class Service(private val config: Config, private val client: OkHttpClient) {
   @Serializable data class AskXResponse(val isSequence: Boolean, val commands: List<String>, val status: String? = null, val timestamp: String? = null, val error: String? = null)
 
   private val json = Json { ignoreUnknownKeys = true }
+  private val errorParser = ErrorParser()
 
   suspend fun ask(question: String, userId: String) = withContext(IO) {
     val request = AskRequest(question = question, platform = "minecraft", user_id = userId)
@@ -45,8 +46,13 @@ class Service(private val config: Config, private val client: OkHttpClient) {
 
   private fun <T> execute(request: Request, responseProcessor: (String) -> T): T {
     val response = client.newCall(request).execute()
-    if (!response.isSuccessful) throw Exception("HTTP ${response.code}: ${response.message}")
-    val responseBody = response.body?.string() ?: throw Exception("Empty response from server")
+    
+    if (!response.isSuccessful) {
+      val apiError = errorParser.parseErrorFromResponse(response)
+      throw ApiErrorException(apiError)
+    }
+    
+    val responseBody = response.body?.string() ?: throw Exception("Сервер вернул пустой ответ")
     return responseProcessor(responseBody)
   }
 }
