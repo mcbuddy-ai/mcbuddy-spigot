@@ -10,7 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Minecraft.formatMessage
 
 class Handler(private val plugin: JavaPlugin, private val configuration: Config, private val service: Service, private val animator: Animator, private val executor: Executor, private val scope: CoroutineScope) {
-  private val errorHandler = ErrorHandler()
+  private val errorHandler = ErrorHandler(configuration)
 
   fun handleAskCommand(sender: CommandSender, args: Array<out String>): Boolean {
     plugin.logger.info("🔄 Handling ask command")

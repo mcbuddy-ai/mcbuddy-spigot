@@ -118,6 +118,40 @@ class Config(private val plugin: JavaPlugin) {
     }
   }
 
+  val errorMessages = ErrorMessages() ; inner class ErrorMessages(config: FileConfiguration = plugin.config) {
+    // API ошибки
+    val apiErrors = config.getConfigurationSection("error_messages.api_errors")?.let { section ->
+      section.getKeys(false).associateWith { key -> section.getString(key, "&cОшибка: $key")!! }
+    } ?: emptyMap()
+    
+    // HTTP ошибки
+    val httpErrors = config.getConfigurationSection("error_messages.http_errors")?.let { section ->
+      section.getKeys(false).mapNotNull { key -> 
+        val statusCode = key.toIntOrNull()
+        if (statusCode != null) {
+          statusCode to section.getString(key, "&cHTTP $statusCode ошибка")!!
+        } else null
+      }.toMap()
+    } ?: emptyMap()
+    
+    // Системные ошибки
+    val systemErrors = config.getConfigurationSection("error_messages.system_errors")?.let { section ->
+      mapOf(
+        "timeout" to section.getString("timeout", "&cТаймаут")!!,
+        "network" to section.getString("network", "&cСетевая ошибка")!!,
+        "default" to section.getString("default", "&cОшибка")!!
+      )
+    } ?: mapOf(
+      "timeout" to "&cТаймаут",
+      "network" to "&cСетевая ошибка", 
+      "default" to "&cОшибка"
+    )
+
+    init {
+      plugin.logger.info("✅ Error Messages loaded (API: ${apiErrors.size}, HTTP: ${httpErrors.size}, System: ${systemErrors.size})")
+    }
+  }
+
   init {
     plugin.logger.info("✅ Configuration successfully loaded")
   }
