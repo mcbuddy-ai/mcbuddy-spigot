@@ -41,7 +41,7 @@
 
 3. **Полученный файл:**
    ```
-   build/libs/mcbuddy-spigot-1.2.0-all.jar
+   build/libs/mcbuddy-spigot-1.3.0-all.jar
    ```
 
 ### Установка:
