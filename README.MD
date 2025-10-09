@@ -1,4 +1,11 @@
-# McBuddy Spigot
+# 💬 McBuddy Spigot
+
+[![AI Capable](https://img.shields.io/badge/AI-Capable-brightgreen?style=flat&logo=openai&logoColor=white)](https://github.com/mcbuddy-ai/mcbuddy-spigot)
+[![Spigot](https://img.shields.io/badge/Spigot-1.21+-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Java](https://img.shields.io/badge/Java-21+-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+
+**Язык**: 🇷🇺 Русский | [🇺🇸 English](README.EN.md) | [🇨🇳 中文](README.CN.md)
 
 💬 Spigot-плагин для интеграции MCBuddy — добавляет команду `/ask` для вопросов к AI-ассистенту прямо в чате Minecraft сервера! 🎮
 
