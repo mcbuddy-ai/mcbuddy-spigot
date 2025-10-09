@@ -1,0 +1,66 @@
+---
+alwaysApply: true
+---
+
+# MCBuddy Spigot - Project Overview 💬
+
+## Project Information
+- **Full Name**: MCBuddy Spigot
+- **Short Name**: mcbuddy-spigot
+- **Description**: Spigot-плагин для интеграции MCBuddy — добавляет команды `/ask` и `/askx` для вопросов к AI-ассистенту прямо в чате Minecraft сервера! 🎮
+
+## Technical Specifications
+- **Kotlin Version**: 2.2.0+
+- **Java Version**: 21+
+- **Spigot API**: 1.21.4+
+- **Main Class**: ru.mcbuddy.spigot.Zygote
+- **Architecture**: Modular Kotlin application with coroutines support
+
+## Technology Stack
+- **Language**: Kotlin
+- **Platform**: Spigot API 1.21+
+- **HTTP Client**: OkHttp 4.12.0
+- **Serialization**: kotlinx-serialization-json
+- **Async**: kotlinx-coroutines-core
+- **Build System**: Gradle with Kotlin DSL
+- **Packaging**: Shadow JAR plugin
+
+## Core Features
+- **Command /ask** — задать вопрос AI-ассистенту MCBuddy о Minecraft
+- **Command /askx** — выполнить команды Minecraft через AI-ассистента (генерация и выполнение команд)
+- **Command /ask reload** — перезагрузить конфигурацию плагина
+- **Action Bar Animations** — индикаторы статуса "думает" с анимированными точками над хотбаром
+- **Particle Effects** — магические эффекты вокруг головы игрока во время обработки запроса
+- **Sound Effects** — уведомления о начале обработки, успехе и ошибках
+- **Security** — защита от выполнения критичных серверных команд через `/askx`
+
+## Integrations
+- **MCBuddy Server API** — HTTP интеграция с бэкендом для получения AI-ответов
+- **Spigot API** — полная интеграция с Minecraft сервером
+- **OpenRouter** — поддержка использования собственного токена через X-OpenRouter-Token
+
+## Core Components
+- **Zygote**: Plugin entry point and lifecycle management
+- **Handler**: Centralized command processing with validation
+- **Service**: HTTP integration with MCBuddy Server API
+- **Config**: Type-safe YAML configuration loading
+- **Animator**: Action Bar animations and particle effects
+- **Executor**: Command execution for /askx feature
+- **HttpClient**: HTTP client with configuration
+- **Minecraft**: Message formatting utilities
+
+## Key Entry Points
+- **Main Class**: [src/main/kotlin/ru/mcbuddy/spigot/Zygote.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Zygote.kt)
+- **Command Handler**: [src/main/kotlin/ru/mcbuddy/spigot/Handler.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Handler.kt)
+- **API Service**: [src/main/kotlin/ru/mcbuddy/spigot/Service.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Service.kt)
+- **Configuration**: [src/main/kotlin/ru/mcbuddy/spigot/Config.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Config.kt)
+- **Plugin YAML**: [src/main/resources/plugin.yml](mdc:src/main/resources/plugin.yml)
+
+## Architectural Principles
+- **Pattern**: Component-based architecture with clear responsibilities
+- **Structure**: Organized by component functionality
+- **Type Safety**: Strong Kotlin typing throughout
+- **Async**: Coroutines for non-blocking operations
+- **Configuration**: YAML-based configuration with validation
+- **Error Handling**: Centralized error handling with user-friendly messages
+- **Security**: Command blacklist for /askx to prevent server damage
