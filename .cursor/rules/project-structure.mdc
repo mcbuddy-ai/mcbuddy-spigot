@@ -1,0 +1,93 @@
+---
+alwaysApply: true
+---
+
+# MCBuddy Spigot - Project Structure 📁
+
+## Root Structure
+
+### Main Files
+- **Build Configuration**: [build.gradle.kts](mdc:build.gradle.kts) – Gradle build script with Kotlin DSL
+- **Gradle Properties**: [gradle.properties](mdc:gradle.properties) – Gradle project properties
+- **Settings**: [settings.gradle.kts](mdc:settings.gradle.kts) – Gradle settings
+
+### Source Structure
+
+#### Main Kotlin Sources (`src/main/kotlin/ru/mcbuddy/spigot/`)
+- **Purpose**: Plugin implementation with all core components
+- **Key Files**:
+  - [Zygote.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Zygote.kt) – Plugin entry point, lifecycle management, component initialization
+  - [Handler.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Handler.kt) – Command handler for /ask, /askx, /reload with validation
+  - [Service.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Service.kt) – HTTP service for MCBuddy Server API integration
+  - [Config.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Config.kt) – Type-safe YAML configuration loading and management
+  - [Animator.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Animator.kt) – Action Bar animations and particle effects
+  - [Executor.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Executor.kt) – Command execution for /askx with security checks
+  - [HttpClient.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/HttpClient.kt) – HTTP client with OkHttp configuration
+  - [Minecraft.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Minecraft.kt) – Minecraft message formatting utilities
+  - [ErrorHandler.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/ErrorHandler.kt) – Error handling utilities
+  - [ErrorParser.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/ErrorParser.kt) – Error parsing from API responses
+  - [Errors.kt](mdc:src/main/kotlin/ru/mcbuddy/spigot/Errors.kt) – Error type definitions
+
+#### Resources (`src/main/resources/`)
+- **Purpose**: Plugin metadata and configuration
+- **Key Files**:
+  - [plugin.yml](mdc:src/main/resources/plugin.yml) – Plugin metadata, commands, permissions
+  - [config.yml](mdc:src/main/resources/config.yml) – Default configuration with server URL, UI settings, messages
+
+### Build Artifacts (`build/`)
+- **Purpose**: Compiled classes and JAR artifacts
+- **Structure**:
+  - `classes/` – Compiled Kotlin and Java classes
+  - `libs/` – Generated JAR files (plugin and shadow JAR)
+  - `resources/` – Processed resource files
+
+### Gradle Wrapper (`gradle/`)
+- **Purpose**: Gradle wrapper for consistent builds
+- **Contents**: Gradle wrapper JAR and properties
+
+## Component Responsibilities
+
+### Zygote
+- Plugin initialization and lifecycle management
+- Component registration and dependency setup
+- Configuration loading on startup
+- Command registration with Spigot
+
+### Handler
+- Validates and routes commands (/ask, /askx, /reload)
+- Permission checking
+- Input validation and sanitization
+- Error handling and user feedback
+
+### Service
+- HTTP communication with MCBuddy Server
+- Request/response serialization
+- Custom token header support (X-OpenRouter-Token)
+- API error handling
+
+### Config
+- Loads and validates YAML configuration
+- Provides type-safe access to settings
+- Reloadable configuration support
+- Default value handling
+
+### Animator
+- Action Bar animations ("Думает...", "Думает..", "Думает.")
+- Particle effects around player head
+- Sound effects for feedback
+- Async animation control
+
+### Executor
+- Executes generated Minecraft commands
+- Command blacklist validation
+- Permission checking for sensitive commands
+- Error reporting for failed executions
+
+## Architectural Principles of the Structure
+- **Modularity**: Each component has a single, clear responsibility
+- **Type Safety**: Kotlin's type system ensures compile-time safety
+- **Async Operations**: Coroutines for non-blocking HTTP and animations
+- **Configuration**: Centralized configuration management with validation
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Security**: Command blacklist and permission checks for safety
+- **User Experience**: Visual and audio feedback for all operations
