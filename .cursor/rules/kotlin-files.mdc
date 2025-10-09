@@ -1,0 +1,39 @@
+---
+globs: *.kt
+---
+
+# Kotlin Files (.kt) Rules
+
+## Language Version & Features
+- Use Kotlin 2.0+ features
+- Leverage modern Kotlin capabilities:
+  - Context parameters where situationally appropriate
+  - Value classes for type safety
+  - Sealed interfaces/classes
+  - Inline functions for performance where suitable
+  - Extension functions for utility methods where suitable
+  - Data classes for immutable data structures
+
+## Code Style
+- Use **2 spaces** for indentation
+- Annotations on the same line as method/class declaration
+- Method references (`::method`) where possible
+- Scope functions: `let`, `also`, `apply`, `with`, `run`
+
+## Documentation
+- Public library classes must have KDoc documentation (for library classes, foundation module)
+- Use simplified American English
+- Document parameters, return values, and exceptions
+
+## Constants & Companion Objects
+- Constants in `UPPER_CASE` format
+- Place constants at bottom of file in `companion object`
+- Make companion object private when possible, or individual constants private
+
+## Best Practices
+- Prefer immutable data structures
+- Use `by lazy` for expensive initialization
+- Leverage destructuring declarations
+- Use trailing lambdas syntax
+- Use trailing comma syntax
+- Prefer expression functions for simple operations
