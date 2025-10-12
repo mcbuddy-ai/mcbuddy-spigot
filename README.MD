@@ -1,9 +1,11 @@
 # 💬 McBuddy Spigot
 
 [![AI Capable](https://img.shields.io/badge/AI-Capable-brightgreen?style=flat&logo=openai&logoColor=white)](https://github.com/mcbuddy-ai/mcbuddy-spigot)
-[![Spigot](https://img.shields.io/badge/Spigot-1.21+-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
+[![GitHub Release](https://img.shields.io/github/v/release/mcbuddy-ai/mcbuddy-spigot?style=flat&logo=github&color=blue)](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases)
+[![Spigot](https://img.shields.io/badge/Spigot-1.21.10-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Java](https://img.shields.io/badge/Java-21+-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-8.13-02303A?style=flat&logo=gradle&logoColor=white)](https://gradle.org/)
 
 **Язык**: 🇷🇺 Русский | [🇺🇸 English](README.EN.md) | [🇨🇳 中文](README.CN.md)
 
@@ -26,37 +28,61 @@
 - **Настраиваемые разрешения** — Гибкая система прав доступа для команд
 - **HTTP таймауты** — Защита от зависания при недоступности сервера
 
-## Сборка
+## Установка
 
-### Требования:
+### Установка из релиза (рекомендуется)
+
+1. **Скачайте плагин:**
+  - Перейдите на страницу [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases)
+  - Скачайте последнюю версию файла `mcbuddy-spigot-X.X.X-all.jar`
+
+  > **Важно**: Используйте версию с суффиксом `-all.jar`, она содержит все необходимые зависимости!
+
+1. **Установите на сервер:**
+  - Скопируйте `mcbuddy-spigot-X.X.X-all.jar` в папку `plugins/` вашего сервера
+
+2. **Перезапустите сервер:**
+
+3. **Настройте конфигурацию:** (необязательно)
+  - При необходимости, отредактируйте конфигурационный файл `plugins/mcbuddy-spigot/config.yml`
+
+4. **Примените настройки:**
+  - Выполните `/ask reload` для применения настроек
+
+5. **Проверьте работу:**
+  - Выполните `/ask Как скрафтить алмазную кирку?`
+
+### Системные требования
+
+- **Minecraft сервер**: Spigot/Paper 1.21+ или выше
+- **Java**: 21 или выше
+- **MCBuddy Server**: Доступный сервер API (по умолчанию `https://mcbuddy.ru`)
+
+## Сборка из исходников
+
+### Требования для сборки:
 - **Java 21** или выше
-- **Gradle 8.0** или выше
-- **Spigot/Paper 1.21** или выше
+- **Gradle 8.13** или выше
 
-### Сборка плагина:
+### Процесс сборки:
 
 1. **Клонирование репозитория:**
-   ```bash
-   git clone https://github.com/mcbuddy-ai/mcbuddy-spigot
-   cd mcbuddy-spigot
-   ```
+  ```bash
+  git clone https://github.com/mcbuddy-ai/mcbuddy-spigot
+  cd mcbuddy-spigot
+  ```
 
 2. **Сборка JAR файла:**
-   ```bash
-   ./gradlew build
-   ```
+  - Выполните `./gradlew shadowJar`
 
-3. **Полученный файл:**
-   ```
-   build/libs/mcbuddy-spigot-1.3.0-all.jar
-   ```
+3. **Результат:**
+  - `build/libs/mcbuddy-spigot-X.X.X.jar` — Базовая версия (без зависимостей)
+  - `build/libs/mcbuddy-spigot-X.X.X-all.jar` — Полная версия со всеми зависимостями
 
-### Установка:
-
-1. Скопируйте JAR файл в папку `plugins` вашего Spigot/Paper сервера
-2. Перезапустите сервер или выполните `/reload confirm`
-3. Настройте конфигурацию в `plugins/mcbuddy-spigot/config.yml`
-4. Выполните `/mcbuddy:reload` для применения настроек
+4. **Установка:**
+  - Скопируйте `mcbuddy-spigot-X.X.X-all.jar` в папку `plugins/` вашего сервера
+  - Перезапустите сервер
+  - Настройте `plugins/mcbuddy-spigot/config.yml`
 
 ## Стек
 
@@ -119,7 +145,7 @@ AI-инструменты использовались для генерации
 
 ---
 
-![image](./media.jpg)
+![image](./media.png)
 
 🇷🇺 **Сделано в России с любовью.** ❤️
 

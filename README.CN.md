@@ -1,9 +1,11 @@
 # 💬 McBuddy Spigot
 
 [![AI Capable](https://img.shields.io/badge/AI-Capable-brightgreen?style=flat&logo=openai&logoColor=white)](https://github.com/mcbuddy-ai/mcbuddy-spigot)
-[![Spigot](https://img.shields.io/badge/Spigot-1.21+-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
+[![GitHub Release](https://img.shields.io/github/v/release/mcbuddy-ai/mcbuddy-spigot?style=flat&logo=github&color=blue)](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases)
+[![Spigot](https://img.shields.io/badge/Spigot-1.21.10-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Java](https://img.shields.io/badge/Java-21+-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-8.13-02303A?style=flat&logo=gradle&logoColor=white)](https://gradle.org/)
 
 **语言**: [🇷🇺 Русский](README.md) | [🇺🇸 English](README.EN.md) | 🇨🇳 中文
 
@@ -80,37 +82,59 @@
 
 ## 安装
 
-### 下载预构建的 JAR
+### 从发布版本安装（推荐）
 
-1. 从 [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases) 下载最新版本
-2. 将 `mcbuddy-spigot-X.X.X-all.jar` 文件放入 `plugins/` 文件夹
-3. 重启服务器或执行 `/reload confirm`
-4. 配置 `plugins/mcbuddy-spigot/config.yml`
-5. 执行 `/ask reload` 以应用设置
+1. **下载插件：**
+   - 访问 [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases) 页面
+   - 下载最新版本的文件 `mcbuddy-spigot-X.X.X-all.jar`
+   
+   > **重要**：使用带有 `-all.jar` 后缀的版本，它包含所有必需的依赖项！
 
-### 从源代码构建
+2. **在服务器上安装：**
+   - 将 `mcbuddy-spigot-X.X.X-all.jar` 复制到您服务器的 `plugins/` 文件夹
 
-要求：
-- Java 21+
-- Gradle 8.0+
+3. **重启服务器：**
 
-1. 克隆仓库：
-```bash
-git clone https://github.com/mcbuddy-ai/mcbuddy-spigot
-cd mcbuddy-spigot
-```
+4. **配置：**（可选）
+   - 如需要，编辑配置文件 `plugins/mcbuddy-spigot/config.yml`
 
-2. 构建 JAR 文件：
-```bash
-./gradlew build
-```
+5. **应用设置：**
+   - 执行 `/ask reload` 以应用设置
 
-3. 构建的文件：
-```
-build/libs/mcbuddy-spigot-X.X.X-all.jar
-```
+6. **测试：**
+   - 执行 `/ask 如何合成钻石镐？`
 
-4. 复制到服务器的 `plugins/` 文件夹
+### 系统要求
+
+- **Minecraft 服务器**: Spigot/Paper 1.21+ 或更高
+- **Java**: 21 或更高
+- **MCBuddy Server**: 可用的 API 服务器（默认 `https://mcbuddy.ru`）
+
+## 从源代码构建
+
+### 构建要求：
+- Java 21 或更高
+- Gradle 8.13 或更高
+
+### 构建过程：
+
+1. **克隆仓库：**
+   ```bash
+   git clone https://github.com/mcbuddy-ai/mcbuddy-spigot
+   cd mcbuddy-spigot
+   ```
+
+2. **构建 JAR 文件：**
+   - 执行 `./gradlew shadowJar`
+
+3. **结果：**
+   - `build/libs/mcbuddy-spigot-X.X.X.jar` — 基础版本（不含依赖项）
+   - `build/libs/mcbuddy-spigot-X.X.X-all.jar` — 完整版本，包含所有依赖项
+
+4. **安装：**
+   - 将 `mcbuddy-spigot-X.X.X-all.jar` 复制到您服务器的 `plugins/` 文件夹
+   - 重启服务器
+   - 配置 `plugins/mcbuddy-spigot/config.yml`
 
 ### 配置
 
@@ -175,11 +199,10 @@ AI 工具被用于生成部分文档和创建角色效果。主要架构、Spigo
 
 ---
 
-![image](./media.jpg)
+![image](./media.png)
 
 🇷🇺 **在俄罗斯用爱制作。** ❤️
 
 **McBuddy** — 是对 Minecraft 游戏和现代技术的热爱的结晶。该项目是为俄语游戏社区创建的，注重代码质量和用户体验。
 
 > 🫡 Made by Pavel Erokhin (Павел Ерохин), aka mairwunnx.
-

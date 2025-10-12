@@ -1,9 +1,11 @@
 # 💬 McBuddy Spigot
 
 [![AI Capable](https://img.shields.io/badge/AI-Capable-brightgreen?style=flat&logo=openai&logoColor=white)](https://github.com/mcbuddy-ai/mcbuddy-spigot)
-[![Spigot](https://img.shields.io/badge/Spigot-1.21+-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
+[![GitHub Release](https://img.shields.io/github/v/release/mcbuddy-ai/mcbuddy-spigot?style=flat&logo=github&color=blue)](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases)
+[![Spigot](https://img.shields.io/badge/Spigot-1.21.10-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Java](https://img.shields.io/badge/Java-21+-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-8.13-02303A?style=flat&logo=gradle&logoColor=white)](https://gradle.org/)
 
 **Language**: [🇷🇺 Русский](README.md) | 🇺🇸 English | [🇨🇳 中文](README.CN.md)
 
@@ -80,37 +82,59 @@
 
 ## Installation
 
-### Download Pre-built JAR
+### Install from Release (recommended)
 
-1. Download the latest version from [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases)
-2. Place the `mcbuddy-spigot-X.X.X-all.jar` file in the `plugins/` folder
-3. Restart the server or execute `/reload confirm`
-4. Configure `plugins/mcbuddy-spigot/config.yml`
-5. Execute `/ask reload` to apply settings
+1. **Download the plugin:**
+   - Go to the [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases) page
+   - Download the latest version of the file `mcbuddy-spigot-X.X.X-all.jar`
+   
+   > **Important**: Use the version with the `-all.jar` suffix, it contains all necessary dependencies!
 
-### Build from Source
+2. **Install on server:**
+   - Copy `mcbuddy-spigot-X.X.X-all.jar` to the `plugins/` folder of your server
 
-Requirements:
-- Java 21+
-- Gradle 8.0+
+3. **Restart the server:**
 
-1. Clone the repository:
-```bash
-git clone https://github.com/mcbuddy-ai/mcbuddy-spigot
-cd mcbuddy-spigot
-```
+4. **Configure:** (optional)
+   - If needed, edit the configuration file `plugins/mcbuddy-spigot/config.yml`
 
-2. Build the JAR file:
-```bash
-./gradlew build
-```
+5. **Apply settings:**
+   - Execute `/ask reload` to apply settings
 
-3. Built file:
-```
-build/libs/mcbuddy-spigot-X.X.X-all.jar
-```
+6. **Test:**
+   - Execute `/ask How to craft a diamond pickaxe?`
 
-4. Copy to your server's `plugins/` folder
+### System Requirements
+
+- **Minecraft server**: Spigot/Paper 1.21+ or higher
+- **Java**: 21 or higher
+- **MCBuddy Server**: Available API server (default `https://mcbuddy.ru`)
+
+## Build from Source
+
+### Build Requirements:
+- Java 21 or higher
+- Gradle 8.13 or higher
+
+### Build Process:
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/mcbuddy-ai/mcbuddy-spigot
+   cd mcbuddy-spigot
+   ```
+
+2. **Build JAR file:**
+   - Execute `./gradlew shadowJar`
+
+3. **Result:**
+   - `build/libs/mcbuddy-spigot-X.X.X.jar` — Base version (without dependencies)
+   - `build/libs/mcbuddy-spigot-X.X.X-all.jar` — Full version with all dependencies
+
+4. **Installation:**
+   - Copy `mcbuddy-spigot-X.X.X-all.jar` to the `plugins/` folder of your server
+   - Restart the server
+   - Configure `plugins/mcbuddy-spigot/config.yml`
 
 ### Configuration
 
@@ -175,7 +199,7 @@ AI tools were used for generating part of the documentation and creating charact
 
 ---
 
-![image](./media.jpg)
+![image](./media.png)
 
 🇷🇺 **Made in Russia with love.** ❤️
 
