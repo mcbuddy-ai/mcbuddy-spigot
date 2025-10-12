@@ -142,7 +142,7 @@ jobs:
       - name: Build with Gradle
         id: build
         run: |
-          ./gradlew shadowJar --no-daemon
+          ./gradlew build --no-daemon
           VERSION=${{ needs.version-check.outputs.version }}
           echo "jar-name=mcbuddy-spigot-${VERSION}.jar" >> $GITHUB_OUTPUT
           echo "jar-all-name=mcbuddy-spigot-${VERSION}-all.jar" >> $GITHUB_OUTPUT
