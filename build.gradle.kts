@@ -2,7 +2,7 @@ plugins {
   kotlin("jvm") version "2.2.20"
   kotlin("plugin.serialization") version "2.2.0"
   id("com.gradleup.shadow") version "8.3.0"
-  id("xyz.jpenilla.run-paper") version "2.3.1"
+  id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
 group = "ru.mcbuddy"
