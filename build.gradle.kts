@@ -1,7 +1,7 @@
 plugins {
   kotlin("jvm") version "2.2.20"
   kotlin("plugin.serialization") version "2.2.20"
-  id("com.gradleup.shadow") version "8.3.0"
+  id("com.gradleup.shadow") version "9.2.2"
   id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
