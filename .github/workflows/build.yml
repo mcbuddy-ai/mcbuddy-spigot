@@ -148,7 +148,7 @@ jobs:
           echo "jar-all-name=mcbuddy-spigot-${VERSION}-all.jar" >> $GITHUB_OUTPUT
 
       - name: Upload JAR artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: plugin-jars
           path: |
