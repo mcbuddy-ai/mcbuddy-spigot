@@ -1,0 +1,88 @@
+package ru.mcbuddy.spigot
+
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+
+/** Models of the MCBuddy streaming protocol v2 (`POST /api/v2/chat`). Field names follow the wire format. */
+object Protocol {
+  val json = Json {
+    ignoreUnknownKeys = true
+    explicitNulls = false
+    encodeDefaults = true
+  }
+
+  @Serializable data class ChatRequest(
+    val mode: String,
+    val message: String,
+    val platform: String = "minecraft",
+    val user_id: String,
+    val locale: String? = null,
+    val player: PlayerInfo? = null,
+    val server: ServerInfo,
+    val tools: List<String>,
+  )
+
+  @Serializable data class PlayerInfo(val name: String, val uuid: String, val op: Boolean)
+
+  @Serializable data class ServerInfo(val software: String, val version: String, val plugin_version: String)
+
+  @Serializable data class Start(val run_id: String, val model: String? = null)
+
+  @Serializable data class Delta(val delta: String = "")
+
+  @Serializable data class ToolCall(val call_id: String, val name: String, val args: JsonObject = JsonObject(emptyMap()))
+
+  @Serializable data class ToolStatus(
+    val call_id: String,
+    val name: String,
+    val kind: String = "server",
+    val state: String,
+    val args: JsonObject? = null,
+    val summary: String? = null,
+  )
+
+  @Serializable data class Commands(val is_sequence: Boolean = false, val commands: List<String> = emptyList())
+
+  @Serializable data class Usage(
+    val input_tokens: Long = 0,
+    val output_tokens: Long = 0,
+    val reasoning_tokens: Long = 0,
+    val cost: Double = 0.0,
+  )
+
+  @Serializable data class Done(val answer: String = "", val duration_ms: Long = 0)
+
+  @Serializable data class ErrorEvent(val code: String = "PROCESSING_ERROR", val message: String = "")
+
+  @Serializable data class ToolResult(val ok: Boolean, val result: JsonElement? = null, val error: String? = null)
+
+  /** One server-sent event after decoding; unknown event names are ignored. */
+  sealed interface Event {
+    data class Started(val data: Start) : Event
+    data class Reasoning(val delta: String) : Event
+    data class Text(val delta: String) : Event
+    data class Call(val data: ToolCall) : Event
+    data class Status(val data: ToolStatus) : Event
+    data class Command(val data: Commands) : Event
+    data class Spent(val data: Usage) : Event
+    data class Finished(val data: Done) : Event
+    data class Failed(val data: ErrorEvent) : Event
+  }
+
+  fun decode(name: String, data: String): Event? = runCatching {
+    when (name) {
+      "start" -> Event.Started(json.decodeFromString(data))
+      "reasoning" -> Event.Reasoning(json.decodeFromString<Delta>(data).delta)
+      "text" -> Event.Text(json.decodeFromString<Delta>(data).delta)
+      "tool_call" -> Event.Call(json.decodeFromString(data))
+      "tool_status" -> Event.Status(json.decodeFromString(data))
+      "commands" -> Event.Command(json.decodeFromString(data))
+      "usage" -> Event.Spent(json.decodeFromString(data))
+      "done" -> Event.Finished(json.decodeFromString(data))
+      "error" -> Event.Failed(json.decodeFromString(data))
+      else -> null
+    }
+  }.getOrNull()
+}
