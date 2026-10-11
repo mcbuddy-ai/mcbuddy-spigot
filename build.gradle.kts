@@ -1,54 +1,60 @@
 plugins {
-  kotlin("jvm") version "2.2.21"
-  kotlin("plugin.serialization") version "2.2.21"
-  id("com.gradleup.shadow") version "9.2.2"
-  id("xyz.jpenilla.run-paper") version "3.0.2"
+  kotlin("jvm") version "2.4.21"
+  kotlin("plugin.serialization") version "2.4.21"
+  id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = "ru.mcbuddy"
-version = "1.4.2"
+// .version is the single source: CI names the release jars after it.
+version = file(".version").readText().trim()
 
 repositories {
   mavenCentral()
   maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
     name = "spigotmc-repo"
   }
-  maven("https://oss.sonatype.org/content/groups/public/") {
-    name = "sonatype"
-  }
 }
 
 dependencies {
-  compileOnly("org.spigotmc:spigot-api:1.21.10-R0.1-SNAPSHOT")
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-  implementation("com.squareup.okhttp3:okhttp:5.3.2")
+  compileOnly("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+  implementation("com.squareup.okhttp3:okhttp:5.5.0")
+
+  testImplementation("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
+  testImplementation(kotlin("test"))
+  testImplementation(platform("org.junit:junit-bom:6.1.3"))
+  testImplementation("org.junit.jupiter:junit-jupiter")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+kotlin {
+  jvmToolchain(25)
 }
 
 tasks {
-  runServer {
-    // Configure the Minecraft version for our task.
-    // This is the only required configuration besides applying the plugin.
-    // Your plugin's jar (or shadowJar if present) will be used automatically.
-    minecraftVersion("1.21")
+  test {
+    useJUnitPlatform()
   }
-}
 
-val targetJavaVersion = 21
-kotlin {
-  jvmToolchain(targetJavaVersion)
-}
+  shadowJar {
+    // Relocated so other plugins that ship their own Kotlin or OkHttp can't clash with ours.
+    listOf("kotlin", "kotlinx", "okhttp3", "okio").forEach { relocate(it, "ru.mcbuddy.spigot.libs.$it") }
+    mergeServiceFiles()
+    exclude("META-INF/*.kotlin_module", "META-INF/versions/*/module-info.class", "module-info.class")
+    dependencies { exclude(dependency("org.jetbrains:annotations")) }
+  }
 
-tasks.build {
-  dependsOn("shadowJar")
-}
+  build {
+    dependsOn(shadowJar)
+  }
 
-tasks.processResources {
-  val props = mapOf("version" to version)
-  inputs.properties(props)
-  filteringCharset = "UTF-8"
-  filesMatching("plugin.yml") {
-    expand(props)
+  processResources {
+    val props = mapOf("version" to version)
+    inputs.properties(props)
+    filteringCharset = "UTF-8"
+    filesMatching("plugin.yml") {
+      expand(props)
+    }
   }
 }
