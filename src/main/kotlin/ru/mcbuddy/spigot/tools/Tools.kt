@@ -48,7 +48,8 @@ class ToolRegistry(tools: List<ClientTool>, private val enabled: (String) -> Boo
   fun find(name: String): ClientTool? = byName[name]?.takeIf { enabled(it.name) }
 
   companion object {
-    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + NotebookTools.all + ActionTools.all + OperatorTools.all
+    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + InspectTools.all +
+      NotebookTools.all + ActionTools.all + OperatorTools.all
   }
 }
 
@@ -83,6 +84,15 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "add_note" to "Записываю в блокнот",
       "find_notes" to "Листаю блокнот",
       "delete_note" to "Вычёркиваю из блокнота",
+      "get_container" to "Заглядываю в контейнер",
+      "scan_nearby_containers" to "Обыскиваю сундуки рядом",
+      "get_block_info" to "Изучаю блок",
+      "get_map_info" to "Разглядываю карту",
+      "get_enchant_options" to "Осматриваю стол зачарований",
+      "get_mob_info" to "Присматриваюсь к мобу",
+      "get_light_spawn_check" to "Ищу тёмные места",
+      "get_brewing_items" to "Проверяю запасы для зелий",
+      "scan_farm" to "Осматриваю ферму",
       "give_item" to "Выдаю {item}",
       "teleport" to "Телепортирую",
       "set_gamemode" to "Меняю режим игры: {mode}",
