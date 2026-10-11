@@ -103,7 +103,7 @@ class Config(private val plugin: JavaPlugin) {
   val messages = Messages() ; inner class Messages(config: FileConfiguration = plugin.config) {
     val thinkingMessage = config.getString("messages.thinking", "&eОбращаюсь к AI-ассистенту, подождите немного...")!!
     val errorMessage = config.getString("messages.error", "&cНе удалось получить ответ от сервера")!!
-    val usageMessage = config.getString("messages.usage", "&7Использование: &f/ask <вопрос>\n&7Пример: &f/ask как скрафтить алмазную кирку?")!!
+    val usageMessage = config.getString("messages.usage", "&7Использование: &f/ask <вопрос>\n&7Пример: &f/ask как скрафтить алмазную кирку?\n&7Остановить: &f/ask cancel&7, начать заново: &f/ask new&7, память: &f/ask memory")!!
 
     val askxThinkingMessage = config.getString("messages.askx_thinking", "&eАнализирую ваш запрос и генерирую команды...")!!
     val askxErrorMessage = config.getString("messages.askx_error", "&cНе удалось выполнить команды. Попробуйте переформулировать запрос или обратитесь к администратору.")!!
@@ -113,6 +113,17 @@ class Config(private val plugin: JavaPlugin) {
     val cancelledMessage = config.getString("messages.cancelled", "&7Остановил.")!!
     val nothingToCancelMessage = config.getString("messages.nothing_to_cancel", "&7Сейчас я ничего не делаю.")!!
     val reminderMessage = config.getString("messages.reminder", "&e⏰ Напоминание: &f{text}")!!
+
+    val sessionClearedMessage = config.getString("messages.session_cleared", "&aНачинаем разговор заново. Что я о тебе помню, осталось: &f/ask memory")!!
+    val memoryHeaderMessage = config.getString("messages.memory_header", "&6Что я о тебе помню:")!!
+    val memoryLineMessage = config.getString("messages.memory_line", "&e{n}. &f{text}")!!
+    val memoryFooterMessage = config.getString("messages.memory_footer", "&7Забыть: &f/ask forget <номер|all>")!!
+    val memoryEmptyMessage = config.getString("messages.memory_empty", "&7Я пока ничего о тебе не запомнил. Скажи «запомни, что…», и запомню.")!!
+    val forgotMessage = config.getString("messages.forgot", "&aЗабыл: &f{text}")!!
+    val forgotAllMessage = config.getString("messages.forgot_all", "&aЗабыл всё, что помнил о тебе ({count}).")!!
+    val forgetUsageMessage = config.getString("messages.forget_usage", "&7Использование: &f/ask forget <номер|all>&7. Номера — в &f/ask memory")!!
+    val forgetNotFoundMessage = config.getString("messages.forget_not_found", "&cНет записи с номером {n}. Список: &f/ask memory")!!
+    val memoryUnsupportedMessage = config.getString("messages.memory_unsupported", "&cСервер MCBuddy пока не умеет хранить память.")!!
 
     val reloadSuccessMessage = config.getString("messages.reload_success", "&aКонфигурация MCBuddy успешно перезагружена!")!!
     val reloadErrorMessage = config.getString("messages.reload_error", "&cОшибка при перезагрузке конфигурации: {error}")!!

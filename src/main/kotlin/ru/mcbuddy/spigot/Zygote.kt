@@ -22,6 +22,7 @@ class Zygote : JavaPlugin(), TabCompleter {
   private lateinit var animator: Animator
   private lateinit var executor: Executor
   private lateinit var handler: Handler
+  private lateinit var memory: MemoryCommands
   private lateinit var reminders: Reminders
 
   override fun onEnable() {
@@ -47,6 +48,7 @@ class Zygote : JavaPlugin(), TabCompleter {
     service = Service(this, configuration, client, tools, reminders, scope)
     executor = Executor(this, configuration, animator)
     handler = Handler(this, configuration, service, animator, executor, scope)
+    memory = MemoryCommands(this, configuration, service, scope)
   }
 
   override fun onDisable() {
@@ -59,11 +61,17 @@ class Zygote : JavaPlugin(), TabCompleter {
   }
 
   override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+    val ask = command.name.equals("ask", ignoreCase = true)
+    val word = args.firstOrNull()?.lowercase()
     return when (command.name.lowercase()) {
       "ask", "askx" -> when {
-        args.size == 1 && args[0].equals("reload", ignoreCase = true) && sender.hasPermission(RELOAD_PERMISSION) -> handleReloadCommand(sender)
-        args.size == 1 && args[0].equals("cancel", ignoreCase = true) -> handler.cancel(sender)
-        command.name.equals("ask", ignoreCase = true) -> handler.handleAskCommand(sender, args)
+        args.size == 1 && word == "reload" && sender.hasPermission(RELOAD_PERMISSION) -> handleReloadCommand(sender)
+        args.size == 1 && word == "cancel" -> handler.cancel(sender)
+        ask && args.size == 1 && word == "new" -> memory.newSession(sender)
+        ask && args.size == 1 && word == "memory" -> memory.list(sender)
+        ask && word == "forget" && args.size <= 2 -> args.getOrNull(1)?.let { memory.forget(sender, it) }
+          ?: true.also { sender.sendMessage(formatMessage(configuration.messages.forgetUsageMessage)) }
+        ask -> handler.handleAskCommand(sender, args)
         else -> handler.handleAskxCommand(sender, args)
       }
       else -> false
@@ -71,12 +79,17 @@ class Zygote : JavaPlugin(), TabCompleter {
   }
 
   override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
-    if (args.size != 1) return emptyList()
-    val options = buildList {
-      add("cancel")
-      if (sender.hasPermission(RELOAD_PERMISSION)) add("reload")
+    val ask = command.name.equals("ask", ignoreCase = true)
+    val options = when {
+      args.size == 1 -> buildList {
+        add("cancel")
+        if (ask) addAll(listOf("new", "memory", "forget"))
+        if (sender.hasPermission(RELOAD_PERMISSION)) add("reload")
+      }
+      ask && args.size == 2 && args[0].equals("forget", ignoreCase = true) -> listOf("all")
+      else -> return emptyList()
     }
-    return options.filter { it.startsWith(args[0], ignoreCase = true) }
+    return options.filter { it.startsWith(args.last(), ignoreCase = true) }
   }
 
   private fun handleReloadCommand(sender: CommandSender): Boolean {

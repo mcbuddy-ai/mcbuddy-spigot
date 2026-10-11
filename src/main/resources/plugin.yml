@@ -12,7 +12,7 @@ plugin-name: McBuddy
 commands:
   ask:
     description: Задать вопрос AI-ассистенту MCBuddy
-    usage: /<command> <вопрос>
+    usage: /<command> <вопрос> | cancel | new | memory | forget <номер|all>
     permission: mcbuddy.ask
   askx:
     description: Выполнить команды Minecraft через AI-ассистента

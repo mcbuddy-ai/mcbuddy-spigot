@@ -171,6 +171,33 @@ class Service(
     }.onFailure { plugin.logger.warning("❌ Couldn't send the result of ${call.name}: $it") }
   }
 
+  @Serializable data class Memory(val id: String, val text: String, val created_at: String? = null)
+  @Serializable private data class Memories(val memories: List<Memory> = emptyList())
+  @Serializable private data class Deleted(val deleted: Int = 0)
+
+  /** `/ask new`: the backend forgets the conversation but keeps the memories. */
+  suspend fun resetSession(userId: String) = withContext(IO) { send("/api/v2/users/${path(userId)}/session", "DELETE") }
+
+  suspend fun memories(userId: String): List<Memory> = withContext(IO) {
+    json.decodeFromString<Memories>(send("/api/v2/users/${path(userId)}/memories", "GET")).memories
+  }
+
+  /** Forgets one memory, or all of them when [id] is null; returns how many went. */
+  suspend fun forget(userId: String, id: String?): Int = withContext(IO) {
+    val suffix = id?.let { "/${path(it)}" } ?: ""
+    json.decodeFromString<Deleted>(send("/api/v2/users/${path(userId)}/memories$suffix", "DELETE")).deleted
+  }
+
+  private fun path(segment: String) = java.net.URLEncoder.encode(segment, Charsets.UTF_8).replace("+", "%20")
+
+  private fun send(path: String, method: String): String {
+    val request = Request.Builder().url("${config.server.url}$path").method(method, null).build()
+    client.newCall(request).execute().use { response ->
+      if (!response.isSuccessful) throw ApiErrorException(errorParser.parseErrorFromResponse(response))
+      return response.body.string()
+    }
+  }
+
   /** The v1 API: one request, one answer, no tools. Kept for backends that predate v2. */
   private fun legacy(run: Run, message: String): Outcome {
     val userId = (run.sender as? Player)?.uniqueId?.toString() ?: "console"
