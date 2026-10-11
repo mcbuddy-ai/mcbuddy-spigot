@@ -20,6 +20,9 @@
 - **`/ask <question>`** — ask a question to MCBuddy AI assistant about Minecraft
 - **`/askx <action description>`** — execute Minecraft commands via AI assistant
 - **`/ask cancel`** — stop a question the assistant is still working on
+- **`/ask new`** — start the conversation over; what the assistant remembers about you stays
+- **`/ask memory`** — show what the assistant remembers about you
+- **`/ask forget <number|all>`** — forget one entry or all of them
 - **`/ask reload`** — reload plugin configuration (`mcbuddy.reload`)
 
 ### The Assistant Knows the Game
@@ -34,7 +37,20 @@ The assistant decides what it needs to know and asks the plugin while it answers
 - **Statistics and advancements** — playtime, deaths, what you have and what comes next
 - **Recipes** — the exact recipes of your server
 - **Structures** — the nearest village, stronghold, and so on
+- **Key places** — your respawn point, the world spawn, and where you last died
+- **Trades** — the deals of the villager or wandering trader you’re looking at
 - **Web search** — the assistant looks up fresh facts by itself when it needs them
+- **Exact math** — stacks, Nether coordinates, XP, and time get calculated, not estimated
+
+### The Assistant Lends a Hand
+
+For any player, the assistant can show the way (it points your compass and draws a particle trail only you see), tidy your inventory (the hotbar stays put), and remind you of something in 1–120 minutes. None of this hands out items or changes the world.
+
+For operators, it also gives items, teleports, switches the game mode, heals, applies effects, and changes the time and weather. The plugin offers these tools to the assistant only when an operator asks, and checks again before running one: a regular player can’t talk the assistant into a sword. Switch them off under `tools.operator`.
+
+### Memory
+
+The assistant remembers the last 8 questions and answers and folds older ones into a short summary. A conversation lasts a day after the last question. What matters about you, like where your base is or what you’re working toward, it writes down for good when you mention it or ask it to remember. See and erase the entries with `/ask memory` and `/ask forget`.
 
 ### Privacy
 
@@ -42,7 +58,7 @@ Tools only know about the player who asked and the world around them. Other play
 
 ### Live Status, Like Claude Code
 
-- **Action bar** — a spinner (`·✢✳✶✻✽`), a changing verb, elapsed time, and tokens: `✻ Сверяюсь с вики… (12с · ↓ 340 токенов)`. While the model thinks, the tail of its reasoning shows; while it writes, “Пишу ответ…”
+- **Action bar** — a spinner (`·✢✳✶✻✽`), a changing verb, elapsed time, and tokens both ways: `✻ Сверяюсь с вики… (12с · ↑ 2.4k · ↓ 340 токенов)`. `↑` is what the model has read, `↓` what it has written. While it writes the answer, the verb turns into “Пишу ответ…”
 - **Tool lines in chat** — what the assistant does and what it found:
   ```
   ⏺ Заглядываю в инвентарь
@@ -167,12 +183,13 @@ Edit `plugins/mcbuddy-spigot/config.yml`. The new keys:
 
 | Key | What it sets |
 |---|---|
-| `ui.action_bar.format` | The status line: `{spinner}`, `{verb}`, `{elapsed}`, `{tokens}` |
+| `ui.action_bar.format` | The status line: `{spinner}`, `{verb}`, `{elapsed}`, `{input}`, `{output}` |
 | `ui.action_bar.spinner`, `frame_millis` | Spinner frames and speed |
 | `ui.action_bar.verbs`, `askx_verbs`, `verb_seconds` | Verbs and how often they change |
-| `ui.action_bar.show_reasoning` | Show the tail of the model’s reasoning |
 | `ui.tool_lines.*` | The `⏺`/`⎿` chat lines and tool labels |
 | `tools.enabled.<tool>` | Switch a tool on or off |
+| `tools.operator.enabled`, `tools.operator.<tool>` | Operator tools: all at once or one by one |
+| `messages.reminder`, `messages.memory_*`, `messages.forget*` | Texts for reminders and memory |
 | `tools.locate_structure_radius` | Structure search radius in chunks |
 | `http.tool_timeout` | Seconds a tool may run |
 
