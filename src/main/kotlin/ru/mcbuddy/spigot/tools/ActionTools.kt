@@ -6,6 +6,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.bukkit.Location
 import org.bukkit.Particle
+import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import ru.mcbuddy.spigot.Plurals
@@ -29,7 +30,8 @@ object ActionTools {
     val target = Location(world, x, y, z)
     // Compasses point at this only in the overworld; elsewhere the trail still shows the way.
     player.compassTarget = target
-    trail(context, player, target)
+    val seconds = args.int("seconds")?.also { if (it !in 1..30) throw ToolError("seconds must be 1–30") } ?: 2
+    trail(context, player, target, seconds)
     val dx = x - player.location.x
     val dz = z - player.location.z
     val distance = Math.round(Math.hypot(dx, dz))
@@ -43,8 +45,9 @@ object ActionTools {
   }
 
   /** A short line of particles from the player toward the target; only this player sees it. */
-  private fun trail(context: ToolContext, player: Player, target: Location) {
-    repeat(4) { pulse ->
+  private fun trail(context: ToolContext, player: Player, target: Location, seconds: Int) {
+    // Two pulses a second, so the line follows the player as they turn and walk.
+    repeat(seconds * 2) { pulse ->
       context.plugin.server.scheduler.runTaskLater(context.plugin, Runnable {
         if (!player.isOnline || player.world != target.world) return@Runnable
         val from = player.eyeLocation.subtract(0.0, 0.4, 0.0)
@@ -113,5 +116,20 @@ object ActionTools {
     ToolOutput(buildJsonObject { put("cancelled", cancelled) }, "отменил $count ${Plurals.ru(count, "напоминание", "напоминания", "напоминаний")}")
   }
 
-  val all = listOf(pointTo, sortInventory, reminder, reminders, cancelReminder)
+  private val ping = tool("ping_me") { context, player, _ ->
+    // Heard and seen by everyone nearby: the point is to find the player in a crowd or a dark cave.
+    val above = player.location.add(0.0, 2.3, 0.0)
+    repeat(3) { pulse ->
+      context.plugin.server.scheduler.runTaskLater(context.plugin, Runnable {
+        if (!player.isOnline) return@Runnable
+        val spot = player.location.add(0.0, 2.3, 0.0)
+        player.world.spawnParticle(Particle.NOTE, spot, 6, 0.4, 0.3, 0.4, 1.0)
+        player.world.spawnParticle(Particle.END_ROD, spot, 12, 0.2, 0.6, 0.2, 0.02)
+        player.world.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.2f + pulse * 0.3f)
+      }, pulse * 8L)
+    }
+    ToolOutput(buildJsonObject { put("pinged", true); put("y", above.blockY) }, "дзынь!")
+  }
+
+  val all = listOf(pointTo, sortInventory, reminder, reminders, cancelReminder, ping)
 }

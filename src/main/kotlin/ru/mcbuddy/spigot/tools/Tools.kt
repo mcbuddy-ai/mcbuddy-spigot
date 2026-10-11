@@ -90,6 +90,7 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "get_item_durability" to "Проверяю износ снаряжения",
       "get_xp_info" to "Считаю опыт",
       "get_food_options" to "Смотрю, что можно съесть",
+      "ping_me" to "Подаю сигнал",
       "get_map_info" to "Разглядываю карту",
       "get_enchant_options" to "Осматриваю стол зачарований",
       "get_mob_info" to "Присматриваюсь к мобу",
