@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Minecraft.formatMessage
+import ru.mcbuddy.spigot.tools.Reminders
 import ru.mcbuddy.spigot.tools.ToolRegistry
 
 class Zygote : JavaPlugin(), TabCompleter {
@@ -21,9 +22,13 @@ class Zygote : JavaPlugin(), TabCompleter {
   private lateinit var animator: Animator
   private lateinit var executor: Executor
   private lateinit var handler: Handler
+  private lateinit var reminders: Reminders
 
   override fun onEnable() {
     saveDefaultConfig()
+    // Outlives /ask reload, so reminders already set keep their schedule.
+    reminders = Reminders(this) { configuration.messages.reminderMessage }
+    server.pluginManager.registerEvents(reminders, this)
     initializeComponents()
     listOf("ask", "askx").map(::getCommand).forEach {
       it?.setExecutor(this)
@@ -39,13 +44,14 @@ class Zygote : JavaPlugin(), TabCompleter {
     if (::animator.isInitialized) animator.stopAllAnimations()
     animator = Animator(this, configuration)
     val tools = ToolRegistry(ToolRegistry.all(), configuration.tools::enabled)
-    service = Service(this, configuration, client, tools, scope)
+    service = Service(this, configuration, client, tools, reminders, scope)
     executor = Executor(this, configuration, animator)
     handler = Handler(this, configuration, service, animator, executor, scope)
   }
 
   override fun onDisable() {
     if (::handler.isInitialized) handler.cancelAll()
+    if (::reminders.isInitialized) reminders.cancelAll()
     animator.stopAllAnimations()
     scope.cancel()
     client.dispatcher.executorService.shutdown()

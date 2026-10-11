@@ -13,6 +13,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Protocol.Event
+import ru.mcbuddy.spigot.tools.Reminders
 import ru.mcbuddy.spigot.tools.ToolContext
 import ru.mcbuddy.spigot.tools.ToolError
 import ru.mcbuddy.spigot.tools.ToolRegistry
@@ -25,6 +26,7 @@ class Service(
   private val config: Config,
   private val client: OkHttpClient,
   private val tools: ToolRegistry,
+  private val reminders: Reminders,
   private val scope: CoroutineScope,
 ) {
   @Serializable data class AskRequest(val question: String, val platform: String = "minecraft", val user_id: String? = null)
@@ -132,7 +134,7 @@ class Service(
   /** Runs a client tool on the server thread and posts what came out; failures go back as errors, never as exceptions. */
   private fun answerTool(run: Run, call: Protocol.ToolCall, listener: Listener) {
     val tool = tools.find(call.name)
-    val context = ToolContext(run.sender, config.tools.structureRadius)
+    val context = ToolContext(run.sender, config.tools.structureRadius, plugin, reminders)
     val result = if (tool == null) {
       Protocol.ToolResult(ok = false, error = "the tool ${call.name} is switched off on this server")
     } else {

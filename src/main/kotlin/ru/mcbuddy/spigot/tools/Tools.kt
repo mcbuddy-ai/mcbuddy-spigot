@@ -9,9 +9,10 @@ import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.plugin.Plugin
 
 /** Who asked. Tools see only this sender: the owner decided the agent may learn about the asker alone. */
-class ToolContext(val sender: CommandSender, val structureRadius: Int) {
+class ToolContext(val sender: CommandSender, val structureRadius: Int, val plugin: Plugin, val reminders: Reminders) {
   val player: Player? get() = sender as? Player
 
   fun requirePlayer(): Player = player ?: throw ToolError("there is no player: the question came from the console")
@@ -43,7 +44,7 @@ class ToolRegistry(tools: List<ClientTool>, private val enabled: (String) -> Boo
   fun find(name: String): ClientTool? = byName[name]?.takeIf { enabled(it.name) }
 
   companion object {
-    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all
+    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + ActionTools.all
   }
 }
 
@@ -70,6 +71,9 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "get_server" to "Узнаю о сервере",
       "get_locations" to "Вспоминаю важные места",
       "get_villager_trades" to "Смотрю, чем торгует житель",
+      "point_to" to "Показываю дорогу",
+      "sort_inventory" to "Навожу порядок в инвентаре",
+      "set_reminder" to "Ставлю напоминание",
       "search_web" to "Ищу в интернете: «{query}»",
     )
   }

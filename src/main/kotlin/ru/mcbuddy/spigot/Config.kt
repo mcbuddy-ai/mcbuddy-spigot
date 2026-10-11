@@ -111,6 +111,7 @@ class Config(private val plugin: JavaPlugin) {
 
     val cancelledMessage = config.getString("messages.cancelled", "&7Остановил.")!!
     val nothingToCancelMessage = config.getString("messages.nothing_to_cancel", "&7Сейчас я ничего не делаю.")!!
+    val reminderMessage = config.getString("messages.reminder", "&e⏰ Напоминание: &f{text}")!!
 
     val reloadSuccessMessage = config.getString("messages.reload_success", "&aКонфигурация MCBuddy успешно перезагружена!")!!
     val reloadErrorMessage = config.getString("messages.reload_error", "&cОшибка при перезагрузке конфигурации: {error}")!!
