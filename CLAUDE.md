@@ -33,6 +33,10 @@ The contract with the backend is `docs/protocol-v2.md` in mcbuddy-ai/mcbuddy-ser
 - `./gradlew build` runs the tests and builds the shaded jar; Java 25.
 - The version lives in `.version` only. A push to `master` builds the plugin; a changed `.version` also creates a GitHub release with the jars. Bump it only when the owner asks.
 
+## Installing on Moonlands
+
+The owner's server, Moonlands, runs this plugin. When the owner asks to put a change “on the server”, release it here (bump `.version`, push, wait for the release), then follow “Shipping a plugin or backend update” in `~/c/personal/minecraft/CLAUDE.md` (MairwunNx/minecraft). That repo's rules about restarts and the live world apply.
+
 ## Commits
 
 Short one-line imperative English messages, one logical change per commit: “Show tool results as ⎿ lines”.
