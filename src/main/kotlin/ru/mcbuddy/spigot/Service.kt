@@ -89,7 +89,7 @@ class Service(
             scope.launch { answerTool(run, event.data, listener) }
           }
           is Event.Command -> commands = event.data
-          is Event.Spent -> run.tokens.set(event.data.output_tokens + event.data.reasoning_tokens)
+          is Event.Spent -> run.usage(event.data.input_tokens, event.data.output_tokens + event.data.reasoning_tokens)
           is Event.Finished -> outcome = Outcome(event.data.answer.ifBlank { run.answer() }, commands)
           is Event.Failed -> failure = event.data
           null -> {}

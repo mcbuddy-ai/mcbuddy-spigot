@@ -17,9 +17,12 @@ class Run(val sender: CommandSender, val mode: Mode, verbs: List<String>, verbSe
   @Volatile var call: Call? = null
   @Volatile var cancelled = false
 
-  /** Tokens streamed so far; replaced by the exact count when the `usage` event arrives. */
-  val tokens = AtomicLong()
-  private val reasoning = StringBuilder()
+  /** Tokens streamed so far, estimated from the deltas. */
+  private val estimated = AtomicLong()
+
+  /** Totals from the latest `usage` event; the backend sends one after every model step. */
+  val input = AtomicLong()
+  private val reported = AtomicLong()
   private val answer = StringBuilder()
 
   /** Calls whose `⏺` line is already in chat, so a `tool_status` and its `tool_call` don't print twice. */
@@ -27,19 +30,23 @@ class Run(val sender: CommandSender, val mode: Mode, verbs: List<String>, verbSe
 
   val elapsedMillis get() = System.currentTimeMillis() - startedAt
 
-  fun addReasoning(delta: String) = synchronized(reasoning) {
-    reasoning.append(delta)
-    if (reasoning.length > 600) reasoning.delete(0, reasoning.length - 600)
-    tokens.addAndGet(estimate(delta))
+  fun addReasoning(delta: String) {
+    estimated.addAndGet(estimate(delta))
   }
-
-  fun reasoningTail(): String = synchronized(reasoning) { reasoning.toString() }
 
   fun addText(delta: String) = synchronized(answer) {
     answer.append(delta)
     phase = Phase.ANSWERING
-    tokens.addAndGet(estimate(delta))
+    estimated.addAndGet(estimate(delta))
   }
+
+  fun usage(inputTokens: Long, outputTokens: Long) {
+    input.set(inputTokens)
+    reported.set(outputTokens)
+  }
+
+  /** Tokens written so far: the live estimate until the backend's count catches up or passes it. */
+  val output get() = maxOf(estimated.get(), reported.get())
 
   fun answer(): String = synchronized(answer) { answer.toString() }
 

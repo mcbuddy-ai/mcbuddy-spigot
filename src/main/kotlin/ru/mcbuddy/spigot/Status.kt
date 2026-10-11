@@ -17,29 +17,19 @@ class Spinner(frames: String) {
 }
 
 /** Builds the status line from a template; every piece of text stays configurable. */
-class StatusFormat(
-  private val template: String,
-  private val answeringVerb: String,
-  private val reasoningTemplate: String,
-  private val reasoningLength: Int,
-) {
-  fun line(spinner: String, verb: String, phase: Phase, elapsedSeconds: Long, tokens: Long, reasoning: String?): String {
-    val base = template
+class StatusFormat(private val template: String, private val answeringVerb: String) {
+  /** [input] is what the model has read so far, [output] what it has written, both in tokens. */
+  fun line(spinner: String, verb: String, phase: Phase, elapsedSeconds: Long, input: Long, output: Long): String {
+    // "1.2k" reads as many, whatever the exact number ends with.
+    val written = "${compact(output)} ${if (output >= 1_000) "токенов" else Plurals.tokens(output)}"
+    return template
       .replace("{spinner}", spinner)
       .replace("{verb}", if (phase == Phase.ANSWERING) answeringVerb else verb)
       .replace("{elapsed}", "${elapsedSeconds}с")
-      // "1.2k" reads as many, whatever the exact number ends with.
-      .replace("{tokens}", "${compact(tokens)} ${if (tokens >= 1_000) "токенов" else Plurals.tokens(tokens)}")
-    val tail = reasoning?.let(::lastWords)?.takeIf { it.isNotBlank() && phase == Phase.THINKING } ?: return base
-    return base + reasoningTemplate.replace("{reasoning}", tail)
-  }
-
-  /** The end of the reasoning text, cut at a word boundary, so it reads like a live thought. */
-  fun lastWords(text: String): String {
-    val flat = text.replace(Regex("\\s+"), " ").trim()
-    if (flat.length <= reasoningLength) return flat
-    val cut = flat.takeLast(reasoningLength)
-    return "…" + cut.substringAfter(' ', cut)
+      .replace("{input}", compact(input))
+      .replace("{output}", written)
+      // Configs from 2.0 still say {tokens}.
+      .replace("{tokens}", written)
   }
 
   companion object {

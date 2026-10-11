@@ -18,7 +18,7 @@ class Animator(private val plugin: JavaPlugin, private val config: Config) {
   private val activeAnimations = mutableMapOf<Player, BukkitRunnable>()
   private val ui = config.ui
   private val spinner = Spinner(ui.spinnerFrames)
-  private val format = StatusFormat(ui.statusFormat, ui.answeringVerb, ui.reasoningFormat, ui.reasoningLength)
+  private val format = StatusFormat(ui.statusFormat, ui.answeringVerb)
   private val labels = ToolLabels(ui.toolLabels)
 
   /** The current action bar text for a run. */
@@ -29,8 +29,8 @@ class Animator(private val plugin: JavaPlugin, private val config: Config) {
       verb = run.verbs.at(elapsed),
       phase = run.phase,
       elapsedSeconds = elapsed / 1000,
-      tokens = run.tokens.get(),
-      reasoning = if (ui.showReasoning) run.reasoningTail() else null,
+      input = run.input.get(),
+      output = run.output,
     )
   }
 

@@ -45,16 +45,13 @@ class Config(private val plugin: JavaPlugin) {
 
   val ui = UI() ; inner class UI(val config: FileConfiguration = plugin.config) {
     val actionBarEnabled = config.getBoolean("ui.action_bar.enabled", true)
-    val statusFormat = config.getString("ui.action_bar.format", "&6{spinner} &6{verb}… &7({elapsed} · ↓ {tokens})")!!
+    val statusFormat = config.getString("ui.action_bar.format", "&6{spinner} &6{verb}… &7({elapsed} · ↑ {input} · ↓ {output})")!!
     val answeringVerb = config.getString("ui.action_bar.answering", "Пишу ответ")!!
     val spinnerFrames = config.getString("ui.action_bar.spinner", "·✢✳✶✻✽")!!
     val frameMillis = config.getInt("ui.action_bar.frame_millis", 120).toLong().coerceAtLeast(50)
     val verbSeconds = config.getInt("ui.action_bar.verb_seconds", 3).toLong()
     val verbs = config.getStringList("ui.action_bar.verbs").ifEmpty { DEFAULT_VERBS }
     val askxVerbs = config.getStringList("ui.action_bar.askx_verbs").ifEmpty { DEFAULT_ASKX_VERBS }
-    val showReasoning = config.getBoolean("ui.action_bar.show_reasoning", true)
-    val reasoningFormat = config.getString("ui.action_bar.reasoning_format", " &8&o{reasoning}")!!
-    val reasoningLength = config.getInt("ui.action_bar.reasoning_length", 40)
 
     val toolLines = config.getBoolean("ui.tool_lines.enabled", true)
     val toolStartFormat = config.getString("ui.tool_lines.started", "&7⏺ {label}")!!
