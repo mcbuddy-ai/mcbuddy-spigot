@@ -84,9 +84,11 @@ object OperatorTools {
       other.location
     } else {
       val world = worldFor(player, args.string("dimension"))
-      val x = args.double("x") ?: throw ToolError("x is required, or player")
-      val y = args.double("y") ?: throw ToolError("y is required")
-      val z = args.double("z") ?: throw ToolError("z is required")
+      // The schema is flat (no unions), so either a player or all three coordinates must be there.
+      val x = args.double("x")
+      val y = args.double("y")
+      val z = args.double("z")
+      if (x == null || y == null || z == null) throw ToolError("give either player, or all of x, y, and z")
       if (y < world.minHeight || y > world.maxHeight + 64) throw ToolError("y must be ${world.minHeight}–${world.maxHeight + 64}")
       if (Math.abs(x) > 29_999_984 || Math.abs(z) > 29_999_984) throw ToolError("the point is outside the world")
       Location(world, x, y, z, player.location.yaw, player.location.pitch)

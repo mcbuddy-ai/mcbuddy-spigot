@@ -98,6 +98,9 @@ class ToolsTest {
     assertEquals("Ищу в интернете: «рецепт маяка»", labels.label("search_web", buildJsonObject { put("query", "рецепт маяка") }))
     assertEquals("Ищу рецепт: ", labels.label("get_recipes", null))
     assertEquals("Вызываю new_tool", labels.label("new_tool", null))
+    // Server tools may come with arrays; a placeholder that isn't a plain value just stays empty.
+    assertEquals("Считаю точно", labels.label("exact_calculations", buildJsonObject { put("expressions", kotlinx.serialization.json.JsonArray(listOf(JsonPrimitive("2+2")))) }))
+    assertEquals("Ищу рецепт: ", ToolLabels(mapOf("get_recipes" to "Ищу рецепт: {item}")).label("get_recipes", buildJsonObject { put("item", kotlinx.serialization.json.JsonArray(emptyList())) }))
   }
 
   @Test fun `server versions read the same on Spigot and Paper`() {
