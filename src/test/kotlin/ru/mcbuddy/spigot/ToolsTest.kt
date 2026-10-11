@@ -1,0 +1,93 @@
+package ru.mcbuddy.spigot
+
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import ru.mcbuddy.spigot.tools.ClientTool
+import ru.mcbuddy.spigot.tools.Facts
+import ru.mcbuddy.spigot.tools.ToolContext
+import ru.mcbuddy.spigot.tools.ToolLabels
+import ru.mcbuddy.spigot.tools.ToolOutput
+import ru.mcbuddy.spigot.tools.ToolRegistry
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+class ToolsTest {
+  private fun fake(name: String) = object : ClientTool {
+    override val name = name
+    override fun run(context: ToolContext, args: JsonObject) = ToolOutput(JsonPrimitive(name), name)
+  }
+
+  @Test fun `the plugin offers exactly the tools of the protocol`() {
+    val names = ToolRegistry.all().map { it.name }.toSet()
+    assertEquals(
+      setOf("get_player_status", "get_inventory", "get_surroundings", "get_target", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server"),
+      names,
+    )
+  }
+
+  @Test fun `switched off tools are neither offered nor runnable`() {
+    val registry = ToolRegistry(listOf(fake("get_world"), fake("locate_structure"))) { it != "locate_structure" }
+    assertEquals(listOf("get_world"), registry.offered())
+    assertNull(registry.find("locate_structure"))
+    assertNull(registry.find("unknown"))
+    assertEquals("get_world", registry.find("get_world")?.name)
+  }
+
+  @Test fun `other players collapse into a count`() {
+    val result = Facts.entities(
+      listOf(
+        Facts.Seen("zombie", 12.34, hostile = true, player = false),
+        Facts.Seen("zombie", 5.0, hostile = true, player = false),
+        Facts.Seen("cow", 3.0, hostile = false, player = false),
+        Facts.Seen("player", 2.0, hostile = false, player = true),
+        Facts.Seen("player", 9.0, hostile = false, player = true),
+      ),
+    )
+    assertEquals(2, result["other_players"]!!.jsonPrimitive.int)
+    val entities = result["entities"] as JsonArray
+    assertEquals(listOf("cow", "zombie"), entities.map { it.jsonObject["type"]!!.jsonPrimitive.content })
+    assertEquals(2, entities[1].jsonObject["count"]!!.jsonPrimitive.int)
+    assertEquals("5.0", entities[1].jsonObject["nearest"]!!.jsonPrimitive.content)
+    assertEquals(setOf("entities", "other_players"), result.keys, "nothing about other players may appear besides the count")
+    assertFalse(entities.any { "player" in it.toString() }, "players must not show up as an entity group: $result")
+    assertTrue(entities[1].jsonObject.containsKey("hostile"))
+  }
+
+  @Test fun `compass directions follow Minecraft axes`() {
+    assertEquals("north", Facts.direction(0.0, -10.0))
+    assertEquals("east", Facts.direction(10.0, 0.0))
+    assertEquals("south-west", Facts.direction(-5.0, 5.0))
+  }
+
+  @Test fun `day and moon phases`() {
+    assertEquals("day", Facts.dayPhase(1_000))
+    assertEquals("sunset", Facts.dayPhase(12_500))
+    assertEquals("night", Facts.dayPhase(18_000))
+    assertEquals("sunrise", Facts.dayPhase(23_000))
+    assertEquals("full", Facts.moonPhase(0))
+    assertEquals("new", Facts.moonPhase(4 * 24_000L + 100))
+  }
+
+  @Test fun `labels fill in arguments and fall back to defaults`() {
+    val labels = ToolLabels(mapOf("get_inventory" to "Роюсь в карманах"))
+    assertEquals("Роюсь в карманах", labels.label("get_inventory", null))
+    assertEquals("Ищу в интернете: «рецепт маяка»", labels.label("search_web", buildJsonObject { put("query", "рецепт маяка") }))
+    assertEquals("Ищу рецепт: ", labels.label("get_recipes", null))
+    assertEquals("Вызываю new_tool", labels.label("new_tool", null))
+  }
+
+  @Test fun `server versions read the same on Spigot and Paper`() {
+    assertEquals("26.3", ru.mcbuddy.spigot.tools.WorldTools.version("26.3-R0.1-SNAPSHOT"))
+    assertEquals("26.3", ru.mcbuddy.spigot.tools.WorldTools.version("26.3.build.169-beta"))
+    assertEquals("26.1.2", ru.mcbuddy.spigot.tools.WorldTools.version("26.1.2-R0.1-SNAPSHOT"))
+  }
+}
