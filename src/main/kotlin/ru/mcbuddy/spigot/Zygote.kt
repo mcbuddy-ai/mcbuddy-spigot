@@ -7,10 +7,12 @@ import kotlinx.coroutines.cancel
 import okhttp3.OkHttpClient
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
+import org.bukkit.command.TabCompleter
 import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Minecraft.formatMessage
+import ru.mcbuddy.spigot.tools.ToolRegistry
 
-class Zygote : JavaPlugin() {
+class Zygote : JavaPlugin(), TabCompleter {
   private val scope = CoroutineScope(Dispatchers.Unconfined + SupervisorJob())
 
   private lateinit var client: OkHttpClient
@@ -23,20 +25,27 @@ class Zygote : JavaPlugin() {
   override fun onEnable() {
     saveDefaultConfig()
     initializeComponents()
-    listOf("ask", "askx").map(::getCommand).forEach { it?.setExecutor(this) }
+    listOf("ask", "askx").map(::getCommand).forEach {
+      it?.setExecutor(this)
+      it?.tabCompleter = this
+    }
     logger.info("✅ MCBuddy Spigot Plugin initialized")
   }
 
   private fun initializeComponents() {
     configuration = Config(this)
     client = HttpClient(this, configuration).client
-    service = Service(configuration, client)
+    if (::handler.isInitialized) handler.cancelAll()
+    if (::animator.isInitialized) animator.stopAllAnimations()
     animator = Animator(this, configuration)
+    val tools = ToolRegistry(ToolRegistry.all(), configuration.tools::enabled)
+    service = Service(this, configuration, client, tools, scope)
     executor = Executor(this, configuration, animator)
     handler = Handler(this, configuration, service, animator, executor, scope)
   }
 
   override fun onDisable() {
+    if (::handler.isInitialized) handler.cancelAll()
     animator.stopAllAnimations()
     scope.cancel()
     client.dispatcher.executorService.shutdown()
@@ -45,22 +54,23 @@ class Zygote : JavaPlugin() {
 
   override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
     return when (command.name.lowercase()) {
-      "ask" -> {
-        if (args.isNotEmpty() && args[0].lowercase() == "reload") {
-          handleReloadCommand(sender)
-        } else {
-          handler.handleAskCommand(sender, args)
-        }
-      }
-      "askx" -> {
-        if (args.isNotEmpty() && args[0].lowercase() == "reload") {
-          handleReloadCommand(sender)
-        } else {
-          handler.handleAskxCommand(sender, args)
-        }
+      "ask", "askx" -> when {
+        args.size == 1 && args[0].equals("reload", ignoreCase = true) && sender.hasPermission(RELOAD_PERMISSION) -> handleReloadCommand(sender)
+        args.size == 1 && args[0].equals("cancel", ignoreCase = true) -> handler.cancel(sender)
+        command.name.equals("ask", ignoreCase = true) -> handler.handleAskCommand(sender, args)
+        else -> handler.handleAskxCommand(sender, args)
       }
       else -> false
     }
+  }
+
+  override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
+    if (args.size != 1) return emptyList()
+    val options = buildList {
+      add("cancel")
+      if (sender.hasPermission(RELOAD_PERMISSION)) add("reload")
+    }
+    return options.filter { it.startsWith(args[0], ignoreCase = true) }
   }
 
   private fun handleReloadCommand(sender: CommandSender): Boolean {
@@ -78,5 +88,9 @@ class Zygote : JavaPlugin() {
     }
 
     return true
+  }
+
+  private companion object {
+    const val RELOAD_PERMISSION = "mcbuddy.reload"
   }
 }
