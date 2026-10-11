@@ -14,7 +14,7 @@ The Minecraft plugin of MCBuddy. `/ask` asks the AI buddy a question, `/askx` tu
 | `Zygote.kt` | Plugin entry: commands, tab completion, `/ask reload`, `/ask cancel` |
 | `MemoryCommands.kt` | `/ask new`, `/ask memory`, `/ask forget`: the backend's session and memory endpoints |
 | `Handler.kt`, `Service.kt`, `Sse.kt`, `Protocol.kt` | Sends a question to `POST /api/v2/chat`, reads the SSE stream, posts tool results back; falls back to v1 when the backend has no v2 |
-| `tools/` | Client tools. They run on the server thread and see only the asking player and the world around them; other players appear only as a count. Each can be switched off in `config.yml`. `ActionTools` change nothing that matters (compass, sorting, reminders); `OperatorTools` change the game and are operator-only |
+| `tools/` | Client tools. They run on the server thread and see only the asking player and the world around them; other players appear only as a count. Each can be switched off in `config.yml`. `ActionTools` change nothing that matters (compass, sorting, reminders with short ids that live in memory, capped by `tools.reminders.max_pending`); `OperatorTools` change the game and are operator-only |
 | `Run.kt`, `Status.kt`, `Animator.kt` | One active run per player and the live status: spinner, rotating verbs, elapsed time, tokens read (↑) and written (↓) in the action bar, `⏺`/`⎿` tool lines in chat |
 | `Executor.kt` | Runs `/askx` commands as the player, minus `blocked_commands` |
 

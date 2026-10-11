@@ -44,7 +44,7 @@ The assistant decides what it needs to know and asks the plugin while it answers
 
 ### The Assistant Lends a Hand
 
-For any player, the assistant can show the way (it points your compass and draws a particle trail only you see), tidy your inventory (the hotbar stays put), and remind you of something in 1–120 minutes. None of this hands out items or changes the world.
+For any player, the assistant can show the way (it points your compass and draws a particle trail only you see), tidy your inventory (the hotbar stays put), and remind you of something in 1–120 minutes. It lists and cancels reminders on request, and up to 10 can wait per player. None of this hands out items or changes the world.
 
 For operators, it also gives items, teleports, switches the game mode, heals, applies effects, and changes the time and weather. The plugin offers these tools to the assistant only when an operator asks, and checks again before running one: a regular player can’t talk the assistant into a sword. Switch them off under `tools.operator`.
 
@@ -190,6 +190,7 @@ Edit `plugins/mcbuddy-spigot/config.yml`. The new keys:
 | `tools.enabled.<tool>` | Switch a tool on or off |
 | `tools.operator.enabled`, `tools.operator.<tool>` | Operator tools: all at once or one by one |
 | `messages.reminder`, `messages.memory_*`, `messages.forget*` | Texts for reminders and memory |
+| `tools.reminders.max_pending` | How many reminders can wait per player (10) |
 | `tools.locate_structure_radius` | Structure search radius in chunks |
 | `http.tool_timeout` | Seconds a tool may run |
 
