@@ -2,10 +2,10 @@
 
 [![AI Capable](https://img.shields.io/badge/AI-Capable-brightgreen?style=flat&logo=openai&logoColor=white)](https://github.com/mcbuddy-ai/mcbuddy-spigot)
 [![GitHub Release](https://img.shields.io/github/v/release/mcbuddy-ai/mcbuddy-spigot?style=flat&logo=github&color=blue)](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases)
-[![Spigot](https://img.shields.io/badge/Spigot-1.21.10-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Gradle](https://img.shields.io/badge/Gradle-8.13-02303A?style=flat&logo=gradle&logoColor=white)](https://gradle.org/)
+[![Spigot](https://img.shields.io/badge/Spigot-26.3-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Java](https://img.shields.io/badge/Java-25-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-9.5-02303A?style=flat&logo=gradle&logoColor=white)](https://gradle.org/)
 
 **Language**: [🇷🇺 Русский](README.md) | 🇺🇸 English | [🇨🇳 中文](README.CN.md)
 
@@ -19,13 +19,38 @@
 
 - **`/ask <question>`** — ask a question to MCBuddy AI assistant about Minecraft
 - **`/askx <action description>`** — execute Minecraft commands via AI assistant
-- **`/ask reload`** — reload plugin configuration
+- **`/ask cancel`** — stop a question the assistant is still working on
+- **`/ask reload`** — reload plugin configuration (`mcbuddy.reload`)
 
-### Visual Effects
+### The Assistant Knows the Game
 
-- **Action Bar animations** — "thinking" status indicators with animated dots above the hotbar
-- **Particles** — magical effects around the player's head during request processing
-- **Sound effects** — notifications for processing start, success, and errors
+The assistant decides what it needs to know and asks the plugin while it answers. Ask “what should I do next?” and it looks at your inventory, advancements, and statistics instead of guessing.
+
+- **Player state** — health, food, XP, coordinates, biome, effects, the item in hand
+- **Inventory** — armor, offhand, and the ender chest on request
+- **Surroundings** — blocks and creatures around you: ores, chests, spawners, mobs
+- **Crosshair** — the block or creature you’re looking at
+- **World** — time, day, moon phase, weather, difficulty, and the rules that change advice
+- **Statistics and advancements** — playtime, deaths, what you have and what comes next
+- **Recipes** — the exact recipes of your server
+- **Structures** — the nearest village, stronghold, and so on
+- **Web search** — the assistant looks up fresh facts by itself when it needs them
+
+### Privacy
+
+Tools only know about the player who asked and the world around them. Other players show up only as a count nearby: no names, coordinates, or inventories. Every tool can be switched off in `config.yml`.
+
+### Live Status, Like Claude Code
+
+- **Action bar** — a spinner (`·✢✳✶✻✽`), a changing verb, elapsed time, and tokens: `✻ Сверяюсь с вики… (12с · ↓ 340 токенов)`. While the model thinks, the tail of its reasoning shows; while it writes, “Пишу ответ…”
+- **Tool lines in chat** — what the assistant does and what it found:
+  ```
+  ⏺ Заглядываю в инвентарь
+    ⎿ 12 стаков
+  ⏺ Ищу в интернете: «фантомы minecraft»
+    ⎿ 5 источников
+  ```
+- **Particles and sounds** — as before, all configurable
 
 ### Security
 
@@ -63,21 +88,21 @@
 
 - `mcbuddy.ask` — permission to use `/ask` command
 - `mcbuddy.askx` — permission to use `/askx` command
-- `mcbuddy.reload` — permission to reload configuration
+- `mcbuddy.reload` — permission to reload configuration (operators by default)
 
 ### How It Works
 
-1. Player enters `/ask` or `/askx` command in chat
-2. Plugin displays visual effects (particles, Action Bar)
-3. Request is sent to MCBuddy Server via HTTP API
-4. AI processes the question and returns answer
-5. Player receives formatted answer in Minecraft chat
+1. The player enters `/ask` or `/askx`
+2. The plugin opens a stream to MCBuddy Server (`POST /api/v2/chat`) and shows the live status
+3. When the assistant needs something from the game, the server sends a tool call; the plugin runs it on the server thread and posts the result back
+4. The answer arrives in chat; for `/askx`, the commands run as before, minus the blocked ones
+5. With an older backend that has no v2, the plugin falls back to `/api/ask` and just answers
 
 ## Compatibility
 
-- **Spigot/Paper**: 1.21+
-- **Java**: 21+
-- **Kotlin**: 2.2.0
+- **Spigot/Paper**: 26.3
+- **Java**: 25+
+- **Kotlin**: 2.4.21
 - **MCBuddy Server**: requires running server
 
 ## Installation
@@ -106,15 +131,15 @@
 
 ### System Requirements
 
-- **Minecraft server**: Spigot/Paper 1.21+ or higher
-- **Java**: 21 or higher
+- **Minecraft server**: Spigot or Paper 26.3
+- **Java**: 25 or higher
 - **MCBuddy Server**: Available API server (default `https://mcbuddy.ru`)
 
 ## Build from Source
 
 ### Build Requirements:
-- Java 21 or higher
-- Gradle 8.13 or higher
+- Java 25 or higher
+- No Gradle install needed: the repository ships `./gradlew` 9.5
 
 ### Build Process:
 
@@ -125,7 +150,7 @@
    ```
 
 2. **Build JAR file:**
-   - Execute `./gradlew shadowJar`
+   - Execute `./gradlew build`: it builds the plugin and runs the tests
 
 3. **Result:**
    - `build/libs/mcbuddy-spigot-X.X.X.jar` — Base version (without dependencies)
@@ -138,39 +163,28 @@
 
 ### Configuration
 
-Edit `plugins/mcbuddy-spigot/config.yml`:
+Edit `plugins/mcbuddy-spigot/config.yml`. The new keys:
 
-```yaml
-# MCBuddy Server URL
-server-url: "https://mcbuddy.ru"
+| Key | What it sets |
+|---|---|
+| `ui.action_bar.format` | The status line: `{spinner}`, `{verb}`, `{elapsed}`, `{tokens}` |
+| `ui.action_bar.spinner`, `frame_millis` | Spinner frames and speed |
+| `ui.action_bar.verbs`, `askx_verbs`, `verb_seconds` | Verbs and how often they change |
+| `ui.action_bar.show_reasoning` | Show the tail of the model’s reasoning |
+| `ui.tool_lines.*` | The `⏺`/`⎿` chat lines and tool labels |
+| `tools.enabled.<tool>` | Switch a tool on or off |
+| `tools.locate_structure_radius` | Structure search radius in chunks |
+| `http.tool_timeout` | Seconds a tool may run |
 
-# HTTP request timeout (in seconds)
-request-timeout: 30
-
-# Optional OpenRouter token
-openrouter-token: ""
-
-# Visual effects
-effects:
-  action-bar: true
-  particles: true
-  sounds: true
-
-# Blocked commands for /askx
-blocked-commands:
-  - "stop"
-  - "restart"
-  - "op"
-  - "deop"
-```
+An old `config.yml` keeps working: missing keys take their defaults.
 
 ## Tech Stack
 
-- **Kotlin 2.2.0** — main development language
-- **Spigot API 1.21.4** — platform for Minecraft plugin development
+- **Kotlin 2.4.21** — main development language
+- **Spigot API 26.3** — runs on both Spigot and Paper
 - **kotlinx-coroutines** — asynchronous programming and non-blocking operations
 - **kotlinx-serialization** — JSON serialization for API interaction
-- **OkHttp 4.12.0** — HTTP client for MCBuddy Server requests
+- **OkHttp 5.5** — HTTP client and Server-Sent Events from MCBuddy Server; shaded under `ru.mcbuddy.spigot.libs` so it can’t clash with other plugins
 - **Gradle + Shadow** — build system and fat JAR creation
 
 ## AI Participation

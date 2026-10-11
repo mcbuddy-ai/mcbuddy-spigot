@@ -2,10 +2,10 @@
 
 [![AI Capable](https://img.shields.io/badge/AI-Capable-brightgreen?style=flat&logo=openai&logoColor=white)](https://github.com/mcbuddy-ai/mcbuddy-spigot)
 [![GitHub Release](https://img.shields.io/github/v/release/mcbuddy-ai/mcbuddy-spigot?style=flat&logo=github&color=blue)](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases)
-[![Spigot](https://img.shields.io/badge/Spigot-1.21.10-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.0-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Gradle](https://img.shields.io/badge/Gradle-8.13-02303A?style=flat&logo=gradle&logoColor=white)](https://gradle.org/)
+[![Spigot](https://img.shields.io/badge/Spigot-26.3-ED8106?style=flat&logo=minecraft&logoColor=white)](https://www.spigotmc.org/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Java](https://img.shields.io/badge/Java-25-007396?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-9.5-02303A?style=flat&logo=gradle&logoColor=white)](https://gradle.org/)
 
 **语言**: [🇷🇺 Русский](README.md) | [🇺🇸 English](README.EN.md) | 🇨🇳 中文
 
@@ -19,13 +19,38 @@
 
 - **`/ask <问题>`** — 向 MCBuddy AI 助手询问有关 Minecraft 的问题
 - **`/askx <动作描述>`** — 通过 AI 助手执行 Minecraft 命令
-- **`/ask reload`** — 重新加载插件配置
+- **`/ask cancel`** — 停止助手仍在处理的问题
+- **`/ask reload`** — 重新加载插件配置（权限 `mcbuddy.reload`）
 
-### 视觉效果
+### 助手了解游戏
 
-- **Action Bar 动画** — 在快捷栏上方显示带有动画点的"思考中"状态指示器
-- **粒子效果** — 请求处理期间玩家头部周围的魔法效果
-- **声音效果** — 处理开始、成功和错误的通知
+助手会自己决定需要知道什么，并在回答过程中向插件询问。问它“我接下来该做什么？”，它会查看你的物品栏、进度和统计数据，而不是去猜。
+
+- **玩家状态** — 生命值、饥饿值、经验、坐标、生物群系、效果、手持物品
+- **物品栏** — 盔甲、副手，按需包括末影箱
+- **周围环境** — 附近的方块和生物：矿石、箱子、刷怪笼、怪物
+- **准星** — 你正在看的方块或生物
+- **世界** — 时间、天数、月相、天气、难度以及影响建议的游戏规则
+- **统计与进度** — 游戏时长、死亡次数、已获得和接下来的进度
+- **配方** — 你的服务器上的确切配方
+- **结构** — 最近的村庄、要塞等
+- **网络搜索** — 需要最新信息时，助手会自己搜索
+
+### 隐私
+
+工具只知道提问的玩家及其周围的世界。其他玩家只以附近人数的形式出现：没有昵称、坐标或物品栏。每个工具都可以在 `config.yml` 中关闭。
+
+### 实时状态（类似 Claude Code）
+
+- **Action Bar** — 旋转图标（`·✢✳✶✻✽`）、不断变化的动词、已用时间和 token 数：`✻ Сверяюсь с вики… (12с · ↓ 340 токенов)`。模型思考时显示其推理的末尾，写回答时显示“Пишу ответ…”
+- **聊天中的工具行** — 助手在做什么、发现了什么：
+  ```
+  ⏺ Заглядываю в инвентарь
+    ⎿ 12 стаков
+  ⏺ Ищу в интернете: «фантомы minecraft»
+    ⎿ 5 источников
+  ```
+- **粒子和声音** — 与以前一样，均可配置
 
 ### 安全性
 
@@ -63,21 +88,21 @@
 
 - `mcbuddy.ask` — 使用 `/ask` 命令的权限
 - `mcbuddy.askx` — 使用 `/askx` 命令的权限
-- `mcbuddy.reload` — 重新加载配置的权限
+- `mcbuddy.reload` — 重新加载配置的权限（默认仅限管理员）
 
 ### 工作原理
 
-1. 玩家在聊天中输入 `/ask` 或 `/askx` 命令
-2. 插件显示视觉效果（粒子、Action Bar）
-3. 请求通过 HTTP API 发送到 MCBuddy Server
-4. AI 处理问题并返回答案
-5. 玩家在 Minecraft 聊天中收到格式化的答案
+1. 玩家输入 `/ask` 或 `/askx`
+2. 插件向 MCBuddy Server 打开一个流（`POST /api/v2/chat`）并显示实时状态
+3. 当助手需要游戏中的信息时，服务器发送工具调用；插件在服务器主线程上执行并回传结果
+4. 答案出现在聊天中；对于 `/askx`，命令照常执行，被阻止的命令除外
+5. 如果后端较旧、没有 v2，插件会回退到 `/api/ask`，只给出回答
 
 ## 兼容性
 
-- **Spigot/Paper**: 1.21+
-- **Java**: 21+
-- **Kotlin**: 2.2.0
+- **Spigot/Paper**: 26.3
+- **Java**: 25+
+- **Kotlin**: 2.4.21
 - **MCBuddy Server**: 需要运行中的服务器
 
 ## 安装
@@ -106,15 +131,15 @@
 
 ### 系统要求
 
-- **Minecraft 服务器**: Spigot/Paper 1.21+ 或更高
-- **Java**: 21 或更高
+- **Minecraft 服务器**: Spigot 或 Paper 26.3
+- **Java**: 25 或更高
 - **MCBuddy Server**: 可用的 API 服务器（默认 `https://mcbuddy.ru`）
 
 ## 从源代码构建
 
 ### 构建要求：
-- Java 21 或更高
-- Gradle 8.13 或更高
+- Java 25 或更高
+- 无需安装 Gradle：仓库自带 `./gradlew` 9.5
 
 ### 构建过程：
 
@@ -125,7 +150,7 @@
    ```
 
 2. **构建 JAR 文件：**
-   - 执行 `./gradlew shadowJar`
+   - 执行 `./gradlew build`：构建插件并运行测试
 
 3. **结果：**
    - `build/libs/mcbuddy-spigot-X.X.X.jar` — 基础版本（不含依赖项）
@@ -138,39 +163,28 @@
 
 ### 配置
 
-编辑 `plugins/mcbuddy-spigot/config.yml`：
+编辑 `plugins/mcbuddy-spigot/config.yml`。新增的配置项：
 
-```yaml
-# MCBuddy Server URL
-server-url: "https://mcbuddy.ru"
+| 键 | 作用 |
+|---|---|
+| `ui.action_bar.format` | 状态行：`{spinner}`、`{verb}`、`{elapsed}`、`{tokens}` |
+| `ui.action_bar.spinner`、`frame_millis` | 旋转图标的帧和速度 |
+| `ui.action_bar.verbs`、`askx_verbs`、`verb_seconds` | 动词及其切换频率 |
+| `ui.action_bar.show_reasoning` | 显示模型推理的末尾 |
+| `ui.tool_lines.*` | 聊天中的 `⏺`/`⎿` 行和工具名称 |
+| `tools.enabled.<工具>` | 开启或关闭某个工具 |
+| `tools.locate_structure_radius` | 结构搜索半径（区块） |
+| `http.tool_timeout` | 工具最长运行秒数 |
 
-# HTTP 请求超时（以秒为单位）
-request-timeout: 30
-
-# 可选的 OpenRouter 令牌
-openrouter-token: ""
-
-# 视觉效果
-effects:
-  action-bar: true
-  particles: true
-  sounds: true
-
-# /askx 的阻止命令
-blocked-commands:
-  - "stop"
-  - "restart"
-  - "op"
-  - "deop"
-```
+旧的 `config.yml` 仍可使用：缺少的键会使用默认值。
 
 ## 技术栈
 
-- **Kotlin 2.2.0** — 主要开发语言
-- **Spigot API 1.21.4** — Minecraft 插件开发平台
+- **Kotlin 2.4.21** — 主要开发语言
+- **Spigot API 26.3** — 同时支持 Spigot 和 Paper
 - **kotlinx-coroutines** — 异步编程和非阻塞操作
 - **kotlinx-serialization** — 用于 API 交互的 JSON 序列化
-- **OkHttp 4.12.0** — 用于 MCBuddy Server 请求的 HTTP 客户端
+- **OkHttp 5.5** — HTTP 客户端以及来自 MCBuddy Server 的 Server-Sent Events；依赖被重定位到 `ru.mcbuddy.spigot.libs`，不会与其他插件冲突
 - **Gradle + Shadow** — 构建系统和 fat JAR 创建
 
 ## AI 参与
