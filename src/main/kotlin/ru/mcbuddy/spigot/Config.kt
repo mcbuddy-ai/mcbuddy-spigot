@@ -34,7 +34,8 @@ class Config(private val plugin: JavaPlugin) {
     val retryOnConnectionFailure = config.getBoolean("http.retry_on_connection_failure", true)
     val compressionEnabled = config.getBoolean("http.compression_enabled", true)
     val logging = config.getBoolean("http.logging", false)
-    val userAgent = config.getString("http.user_agent", "MCBuddy-Spigot/1.1.0 (Minecraft Plugin)")!!
+    val userAgent = config.getString("http.user_agent", "MCBuddy-Spigot/2.0.0 (Minecraft Plugin)")!!
+    val toolTimeout = config.getInt("http.tool_timeout", 10).toLong()
     val customHeaders = config.getConfigurationSection("http.custom_headers").let { it?.getKeys(false)?.associateWith(it::getString) } ?: emptyMap()
 
     init {
@@ -44,9 +45,24 @@ class Config(private val plugin: JavaPlugin) {
 
   val ui = UI() ; inner class UI(val config: FileConfiguration = plugin.config) {
     val actionBarEnabled = config.getBoolean("ui.action_bar.enabled", true)
-    val actionBarThinkingText = config.getString("ui.action_bar.thinking_text", "&eAI-ассистент думает")!!
-    val actionBarAskxText = config.getString("ui.action_bar.askx_text", "&eГенерирую команды")!!
-    val actionBarAnimationSpeed = config.getInt("ui.action_bar.animation_speed", 500).toLong()
+    val statusFormat = config.getString("ui.action_bar.format", "&6{spinner} &6{verb}… &7({elapsed} · ↓ {tokens})")!!
+    val answeringVerb = config.getString("ui.action_bar.answering", "Пишу ответ")!!
+    val spinnerFrames = config.getString("ui.action_bar.spinner", "·✢✳✶✻✽")!!
+    val frameMillis = config.getInt("ui.action_bar.frame_millis", 120).toLong().coerceAtLeast(50)
+    val verbSeconds = config.getInt("ui.action_bar.verb_seconds", 3).toLong()
+    val verbs = config.getStringList("ui.action_bar.verbs").ifEmpty { DEFAULT_VERBS }
+    val askxVerbs = config.getStringList("ui.action_bar.askx_verbs").ifEmpty { DEFAULT_ASKX_VERBS }
+    val showReasoning = config.getBoolean("ui.action_bar.show_reasoning", true)
+    val reasoningFormat = config.getString("ui.action_bar.reasoning_format", " &8&o{reasoning}")!!
+    val reasoningLength = config.getInt("ui.action_bar.reasoning_length", 40)
+
+    val toolLines = config.getBoolean("ui.tool_lines.enabled", true)
+    val toolStartFormat = config.getString("ui.tool_lines.started", "&7⏺ {label}")!!
+    val toolDoneFormat = config.getString("ui.tool_lines.finished", "&8  ⎿ {summary}")!!
+    val toolFailedFormat = config.getString("ui.tool_lines.failed", "&c  ⎿ {summary}")!!
+    val toolLabels = config.getConfigurationSection("ui.tool_lines.labels")?.let { section ->
+      section.getKeys(false).associateWith { section.getString(it)!! }
+    } ?: emptyMap()
 
     val particlesEnabled = config.getBoolean("ui.particles.enabled", true)
     val particleType = getParticle("ui.particles.type", "ENCHANT", Particle.ENCHANT)
@@ -96,6 +112,9 @@ class Config(private val plugin: JavaPlugin) {
     val askxUsageMessage = config.getString("messages.askx_usage", "&7Использование: &f/askx <описание действия>\n&7Пример: &f/askx дай мне алмазный меч с остротой 5")!!
     val blockedCommandMessage = config.getString("messages.blocked_command", "&cЭта команда заблокирована для выполнения через /askx из соображений безопасности.")!!
 
+    val cancelledMessage = config.getString("messages.cancelled", "&7Остановил.")!!
+    val nothingToCancelMessage = config.getString("messages.nothing_to_cancel", "&7Сейчас я ничего не делаю.")!!
+
     val reloadSuccessMessage = config.getString("messages.reload_success", "&aКонфигурация MCBuddy успешно перезагружена!")!!
     val reloadErrorMessage = config.getString("messages.reload_error", "&cОшибка при перезагрузке конфигурации: {error}")!!
 
@@ -107,6 +126,18 @@ class Config(private val plugin: JavaPlugin) {
 
     init {
       plugin.logger.info("✅ Messages Settings loaded")
+    }
+  }
+
+  val tools = Tools() ; inner class Tools(config: FileConfiguration = plugin.config) {
+    private val switches = config.getConfigurationSection("tools.enabled")
+    val structureRadius = config.getInt("tools.locate_structure_radius", 64).coerceIn(1, 128)
+
+    /** Missing keys mean on: an old config gets every tool. */
+    fun enabled(name: String) = switches?.getBoolean(name, true) ?: true
+
+    init {
+      plugin.logger.info("✅ Tool Settings loaded")
     }
   }
 
@@ -154,5 +185,10 @@ class Config(private val plugin: JavaPlugin) {
 
   init {
     plugin.logger.info("✅ Configuration successfully loaded")
+  }
+
+  private companion object {
+    val DEFAULT_VERBS = listOf("Обдумываю", "Прикидываю", "Вспоминаю рецепты", "Сверяюсь с вики", "Копаю глубже", "Колдую", "Размышляю", "Соображаю")
+    val DEFAULT_ASKX_VERBS = listOf("Подбираю команды", "Сверяю синтаксис", "Собираю команду", "Прикидываю")
   }
 }
