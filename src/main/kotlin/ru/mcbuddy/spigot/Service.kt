@@ -13,6 +13,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Protocol.Event
+import ru.mcbuddy.spigot.tools.OperatorTools
 import ru.mcbuddy.spigot.tools.Reminders
 import ru.mcbuddy.spigot.tools.ToolContext
 import ru.mcbuddy.spigot.tools.ToolError
@@ -127,9 +128,11 @@ class Service(
       locale = player?.locale,
       player = player?.let { Protocol.PlayerInfo(it.name, it.uniqueId.toString(), it.isOp) },
       server = Protocol.ServerInfo(server.name, ru.mcbuddy.spigot.tools.WorldTools.version(server.bukkitVersion), plugin.description.version),
-      tools = tools.offered(),
+      tools = tools.offered(isOperator(run.sender)),
     )
   }
+
+  private fun isOperator(sender: org.bukkit.command.CommandSender) = (sender as? Player)?.isOp == true
 
   /** Runs a client tool on the server thread and posts what came out; failures go back as errors, never as exceptions. */
   private fun answerTool(run: Run, call: Protocol.ToolCall, listener: Listener) {
@@ -137,6 +140,9 @@ class Service(
     val context = ToolContext(run.sender, config.tools.structureRadius, plugin, reminders)
     val result = if (tool == null) {
       Protocol.ToolResult(ok = false, error = "the tool ${call.name} is switched off on this server")
+    } else if (tool.operator && !isOperator(run.sender)) {
+      listener.toolFinished(call.call_id, OperatorTools.NOT_OPERATOR, failed = true)
+      Protocol.ToolResult(ok = false, error = OperatorTools.NOT_OPERATOR)
     } else {
       try {
         val output = plugin.server.scheduler.callSyncMethod(plugin) { tool.run(context, call.args) }.get(config.http.toolTimeout, TimeUnit.SECONDS)

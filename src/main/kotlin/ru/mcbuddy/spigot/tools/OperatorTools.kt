@@ -1,0 +1,161 @@
+package ru.mcbuddy.spigot.tools
+
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.bukkit.GameMode
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.NamespacedKey
+import org.bukkit.Registry
+import org.bukkit.World
+import org.bukkit.attribute.Attribute
+import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
+import org.bukkit.potion.PotionEffect
+import ru.mcbuddy.spigot.Plurals
+import ru.mcbuddy.spigot.tools.Facts.round1
+
+/**
+ * Tools that change the game for the asker. Only operators get them: the plugin lists them only
+ * for operators, and every tool checks again when it runs, so a non-operator can't talk the
+ * assistant into a sword.
+ */
+object OperatorTools {
+  private fun tool(name: String, body: (Player, JsonObject) -> ToolOutput) = object : ClientTool {
+    override val name = name
+    override val operator = true
+
+    override fun run(context: ToolContext, args: JsonObject): ToolOutput {
+      val player = context.requirePlayer()
+      if (!player.isOp) throw ToolError(NOT_OPERATOR)
+      return body(player, args)
+    }
+  }
+
+  const val NOT_OPERATOR = "only operators can do this"
+
+  private fun key(id: String) = NamespacedKey.fromString(id) ?: throw ToolError("$id is not a valid id")
+
+  private val give = tool("give_item") { player, args ->
+    val id = OperatorArgs.id(args.string("item")) ?: throw ToolError("item is required")
+    val material = Material.matchMaterial(id)?.takeIf { it.isItem && !it.isAir } ?: throw ToolError("there is no item called $id")
+    val count = OperatorArgs.count(args.int("count"))
+    val enchantments = (args["enchantments"] as? JsonObject)?.map { (name, level) ->
+      val enchantment = Registry.ENCHANTMENT.get(key(OperatorArgs.id(name) ?: name)) ?: throw ToolError("there is no enchantment called $name")
+      enchantment to OperatorArgs.enchantmentLevel((level as? JsonPrimitive)?.content?.toIntOrNull())
+    }.orEmpty()
+    val max = material.maxStackSize.coerceAtLeast(1)
+    var dropped = 0
+    var left = count
+    while (left > 0) {
+      val stack = ItemStack(material, minOf(max, left))
+      enchantments.forEach { (enchantment, level) -> stack.addUnsafeEnchantment(enchantment, level) }
+      left -= stack.amount
+      player.inventory.addItem(stack).values.forEach { rest ->
+        dropped += rest.amount
+        player.world.dropItemNaturally(player.location, rest)
+      }
+    }
+    val result = buildJsonObject {
+      put("item", material.key.key)
+      put("count", count)
+      if (dropped > 0) put("dropped_at_feet", dropped)
+    }
+    ToolOutput(result, "выдал ${material.key.key} × $count")
+  }
+
+  private fun worldFor(player: Player, dimension: String?): World {
+    val environment = when (OperatorArgs.id(dimension)) {
+      null -> return player.world
+      "overworld", "normal" -> World.Environment.NORMAL
+      "nether", "the_nether" -> World.Environment.NETHER
+      "end", "the_end" -> World.Environment.THE_END
+      else -> throw ToolError("dimension must be overworld, the_nether, or the_end")
+    }
+    return player.server.worlds.firstOrNull { it.environment == environment } ?: throw ToolError("this server has no $environment world")
+  }
+
+  private val teleport = tool("teleport") { player, args ->
+    val name = args.string("player")
+    val target = if (name != null) {
+      val other = player.server.getPlayerExact(name)?.takeIf { it.isOnline } ?: throw ToolError("player $name is offline")
+      other.location
+    } else {
+      val world = worldFor(player, args.string("dimension"))
+      val x = args.double("x") ?: throw ToolError("x is required, or player")
+      val y = args.double("y") ?: throw ToolError("y is required")
+      val z = args.double("z") ?: throw ToolError("z is required")
+      if (y < world.minHeight || y > world.maxHeight + 64) throw ToolError("y must be ${world.minHeight}–${world.maxHeight + 64}")
+      if (Math.abs(x) > 29_999_984 || Math.abs(z) > 29_999_984) throw ToolError("the point is outside the world")
+      Location(world, x, y, z, player.location.yaw, player.location.pitch)
+    }
+    if (!player.teleport(target)) throw ToolError("the server refused the teleport")
+    val result = buildJsonObject {
+      put("x", target.blockX)
+      put("y", target.blockY)
+      put("z", target.blockZ)
+      put("dimension", target.world!!.environment.name.lowercase())
+    }
+    ToolOutput(result, name?.let { "к игроку $it" } ?: "${target.blockX} ${target.blockY} ${target.blockZ}")
+  }
+
+  private val gamemode = tool("set_gamemode") { player, args ->
+    val mode = OperatorArgs.gamemode(args.string("mode"))
+    player.gameMode = GameMode.valueOf(mode.uppercase())
+    ToolOutput(buildJsonObject { put("mode", mode) }, mode)
+  }
+
+  private val heal = tool("heal") { player, _ ->
+    val max = player.getAttribute(Attribute.MAX_HEALTH)?.value ?: 20.0
+    player.health = max
+    player.foodLevel = 20
+    player.saturation = 20f
+    player.fireTicks = 0
+    ToolOutput(buildJsonObject { put("health", round1(max)) }, "❤ ${round1(max)}/${round1(max)} · 🍗 20/20")
+  }
+
+  private val effect = tool("apply_effect") { player, args ->
+    if (args.bool("clear") == true) {
+      val count = player.activePotionEffects.size.toLong()
+      player.activePotionEffects.forEach { player.removePotionEffect(it.type) }
+      return@tool ToolOutput(buildJsonObject { put("cleared", count) }, "снял $count ${Plurals.ru(count, "эффект", "эффекта", "эффектов")}")
+    }
+    val id = OperatorArgs.id(args.string("effect")) ?: throw ToolError("effect is required, or clear: true")
+    val type = Registry.EFFECT.get(key(id)) ?: throw ToolError("there is no effect called $id")
+    val seconds = OperatorArgs.effectSeconds(args.int("seconds"))
+    val level = OperatorArgs.effectLevel(args.int("level"))
+    player.addPotionEffect(PotionEffect(type, seconds * 20, level - 1))
+    ToolOutput(buildJsonObject { put("effect", id); put("seconds", seconds); put("level", level) }, "$id $level на $seconds с")
+  }
+
+  private val time = tool("set_time") { player, args ->
+    val ticks = OperatorArgs.time((args["time"] as? JsonPrimitive)?.content)
+    player.world.time = ticks
+    ToolOutput(buildJsonObject { put("time", ticks) }, "время $ticks")
+  }
+
+  private val weather = tool("set_weather") { player, args ->
+    val weather = OperatorArgs.weather(args.string("weather"))
+    val ticks = OperatorArgs.weatherSeconds(args.int("seconds")) * 20
+    val world = player.world
+    when (weather) {
+      "clear" -> {
+        world.setStorm(false)
+        world.isThundering = false
+        world.clearWeatherDuration = ticks
+      }
+      else -> {
+        world.setStorm(true)
+        world.weatherDuration = ticks
+        world.isThundering = weather == "thunder"
+        if (weather == "thunder") world.thunderDuration = ticks
+      }
+    }
+    ToolOutput(buildJsonObject { put("weather", weather); put("seconds", ticks / 20) }, weather)
+  }
+
+  val all = listOf(give, teleport, gamemode, heal, effect, time, weather)
+  val NAMES = all.map { it.name }.toSet()
+}

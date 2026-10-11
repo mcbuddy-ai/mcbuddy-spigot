@@ -8,6 +8,7 @@ import org.bukkit.Registry
 import org.bukkit.Sound
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
+import ru.mcbuddy.spigot.tools.OperatorTools
 
 class Config(private val plugin: JavaPlugin) {
   init {
@@ -129,10 +130,15 @@ class Config(private val plugin: JavaPlugin) {
 
   val tools = Tools() ; inner class Tools(config: FileConfiguration = plugin.config) {
     private val switches = config.getConfigurationSection("tools.enabled")
+    private val operator = config.getConfigurationSection("tools.operator")
     val structureRadius = config.getInt("tools.locate_structure_radius", 64).coerceIn(1, 128)
 
-    /** Missing keys mean on: an old config gets every tool. */
-    fun enabled(name: String) = switches?.getBoolean(name, true) ?: true
+    /** Missing keys mean on: an old config gets every tool. Operator tools also need `tools.operator.enabled`. */
+    fun enabled(name: String) = if (name in OperatorTools.NAMES) {
+      (operator?.getBoolean("enabled", true) ?: true) && (operator?.getBoolean(name, true) ?: true)
+    } else {
+      switches?.getBoolean(name, true) ?: true
+    }
 
     init {
       plugin.logger.info("✅ Tool Settings loaded")

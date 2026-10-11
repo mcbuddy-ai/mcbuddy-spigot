@@ -32,6 +32,9 @@ internal fun JsonObject.string(key: String) = (get(key) as? JsonPrimitive)?.take
 interface ClientTool {
   val name: String
 
+  /** Changes the game for the asker; offered to operators only. */
+  val operator: Boolean get() = false
+
   fun run(context: ToolContext, args: JsonObject): ToolOutput
 }
 
@@ -39,12 +42,13 @@ interface ClientTool {
 class ToolRegistry(tools: List<ClientTool>, private val enabled: (String) -> Boolean) {
   private val byName = tools.associateBy { it.name }
 
-  fun offered(): List<String> = byName.keys.filter(enabled)
+  /** What the asker may use: operator tools only for operators. */
+  fun offered(operator: Boolean): List<String> = byName.values.filter { enabled(it.name) && (operator || !it.operator) }.map { it.name }
 
   fun find(name: String): ClientTool? = byName[name]?.takeIf { enabled(it.name) }
 
   companion object {
-    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + ActionTools.all
+    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + ActionTools.all + OperatorTools.all
   }
 }
 
@@ -74,6 +78,13 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "point_to" to "Показываю дорогу",
       "sort_inventory" to "Навожу порядок в инвентаре",
       "set_reminder" to "Ставлю напоминание",
+      "give_item" to "Выдаю {item}",
+      "teleport" to "Телепортирую",
+      "set_gamemode" to "Меняю режим игры: {mode}",
+      "heal" to "Лечу",
+      "apply_effect" to "Накладываю эффект {effect}",
+      "set_time" to "Меняю время: {time}",
+      "set_weather" to "Меняю погоду: {weather}",
       "search_web" to "Ищу в интернете: «{query}»",
     )
   }

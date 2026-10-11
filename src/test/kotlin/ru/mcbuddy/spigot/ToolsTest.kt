@@ -10,6 +10,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import ru.mcbuddy.spigot.tools.ClientTool
 import ru.mcbuddy.spigot.tools.Facts
+import ru.mcbuddy.spigot.tools.OperatorTools
 import ru.mcbuddy.spigot.tools.ToolContext
 import ru.mcbuddy.spigot.tools.ToolLabels
 import ru.mcbuddy.spigot.tools.ToolOutput
@@ -21,25 +22,39 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ToolsTest {
-  private fun fake(name: String) = object : ClientTool {
+  private fun fake(name: String, operator: Boolean = false) = object : ClientTool {
     override val name = name
+    override val operator = operator
     override fun run(context: ToolContext, args: JsonObject) = ToolOutput(JsonPrimitive(name), name)
   }
 
   @Test fun `the plugin offers exactly the tools of the protocol`() {
     val names = ToolRegistry.all().map { it.name }.toSet()
     assertEquals(
-      setOf("get_player_status", "get_inventory", "get_surroundings", "get_target", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server", "get_locations", "get_villager_trades", "point_to", "sort_inventory", "set_reminder"),
+      setOf("get_player_status", "get_inventory", "get_surroundings", "get_target", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server", "get_locations", "get_villager_trades", "point_to", "sort_inventory", "set_reminder",
+        "give_item", "teleport", "set_gamemode", "heal", "apply_effect", "set_time", "set_weather"),
       names,
     )
   }
 
   @Test fun `switched off tools are neither offered nor runnable`() {
     val registry = ToolRegistry(listOf(fake("get_world"), fake("locate_structure"))) { it != "locate_structure" }
-    assertEquals(listOf("get_world"), registry.offered())
+    assertEquals(listOf("get_world"), registry.offered(operator = true))
     assertNull(registry.find("locate_structure"))
     assertNull(registry.find("unknown"))
     assertEquals("get_world", registry.find("get_world")?.name)
+  }
+
+  @Test fun `operator tools are offered to operators only`() {
+    val registry = ToolRegistry(listOf(fake("get_world"), fake("give_item", operator = true), fake("heal", operator = true))) { it != "heal" }
+    assertEquals(listOf("get_world"), registry.offered(operator = false))
+    assertEquals(listOf("get_world", "give_item"), registry.offered(operator = true))
+  }
+
+  @Test fun `every tool that changes the game is an operator tool`() {
+    val operator = ToolRegistry.all().filter { it.operator }.map { it.name }.toSet()
+    assertEquals(setOf("give_item", "teleport", "set_gamemode", "heal", "apply_effect", "set_time", "set_weather"), operator)
+    assertEquals(OperatorTools.NAMES, operator)
   }
 
   @Test fun `other players collapse into a count`() {
