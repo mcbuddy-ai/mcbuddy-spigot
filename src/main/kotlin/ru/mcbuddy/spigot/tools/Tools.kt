@@ -12,7 +12,7 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 
 /** Who asked. Tools see only this sender: the owner decided the agent may learn about the asker alone. */
-class ToolContext(val sender: CommandSender, val structureRadius: Int, val plugin: Plugin, val reminders: Reminders) {
+class ToolContext(val sender: CommandSender, val structureRadius: Int, val plugin: Plugin, val reminders: Reminders, val notes: Notes) {
   val player: Player? get() = sender as? Player
 
   fun requirePlayer(): Player = player ?: throw ToolError("there is no player: the question came from the console")
@@ -48,7 +48,7 @@ class ToolRegistry(tools: List<ClientTool>, private val enabled: (String) -> Boo
   fun find(name: String): ClientTool? = byName[name]?.takeIf { enabled(it.name) }
 
   companion object {
-    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + ActionTools.all + OperatorTools.all
+    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + NotebookTools.all + ActionTools.all + OperatorTools.all
   }
 }
 
@@ -80,6 +80,9 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "set_reminder" to "Ставлю напоминание",
       "get_reminders" to "Смотрю напоминания",
       "cancel_reminder" to "Отменяю напоминание",
+      "add_note" to "Записываю в блокнот",
+      "find_notes" to "Листаю блокнот",
+      "delete_note" to "Вычёркиваю из блокнота",
       "give_item" to "Выдаю {item}",
       "teleport" to "Телепортирую",
       "set_gamemode" to "Меняю режим игры: {mode}",

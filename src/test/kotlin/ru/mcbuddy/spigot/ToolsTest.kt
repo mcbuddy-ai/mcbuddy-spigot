@@ -31,7 +31,7 @@ class ToolsTest {
   @Test fun `the plugin offers exactly the tools of the protocol`() {
     val names = ToolRegistry.all().map { it.name }.toSet()
     assertEquals(
-      setOf("get_player_status", "get_inventory", "get_surroundings", "get_target", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server", "get_locations", "get_villager_trades", "point_to", "sort_inventory", "set_reminder", "get_reminders", "cancel_reminder",
+      setOf("get_player_status", "get_inventory", "get_surroundings", "get_target", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server", "get_locations", "get_villager_trades", "point_to", "sort_inventory", "set_reminder", "get_reminders", "cancel_reminder", "add_note", "find_notes", "delete_note",
         "give_item", "teleport", "set_gamemode", "heal", "apply_effect", "set_time", "set_weather"),
       names,
     )

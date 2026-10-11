@@ -144,6 +144,7 @@ class Config(private val plugin: JavaPlugin) {
     private val operator = config.getConfigurationSection("tools.operator")
     val structureRadius = config.getInt("tools.locate_structure_radius", 64).coerceIn(1, 128)
     val maxReminders = config.getInt("tools.reminders.max_pending", 10).coerceIn(1, 100)
+    val maxNotes = config.getInt("tools.notes.max_per_player", 200).coerceIn(1, 1000)
 
     /** Missing keys mean on: an old config gets every tool. Operator tools also need `tools.operator.enabled`. */
     fun enabled(name: String) = if (name in OperatorTools.NAMES) {
