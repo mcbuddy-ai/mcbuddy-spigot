@@ -86,6 +86,9 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "set_time" to "Меняю время: {time}",
       "set_weather" to "Меняю погоду: {weather}",
       "search_web" to "Ищу в интернете: «{query}»",
+      "exact_calculations" to "Считаю точно",
+      "remember" to "Запоминаю",
+      "forget" to "Забываю",
     )
   }
 }
