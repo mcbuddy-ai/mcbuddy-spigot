@@ -39,12 +39,23 @@ The assistant decides what it needs to know and asks the plugin while it answers
 - **Structures** — the nearest village, stronghold, and so on
 - **Key places** — your respawn point, the world spawn, and where you last died
 - **Trades** — the deals of the villager or wandering trader you’re looking at
+- **Containers** — what’s in the chest in front of you and which chest nearby holds the item you need
+- **Blocks** — hardness, the right tool, what drops with what you hold, crop growth
+- **Gear** — how much life your tools and armor have left and what needs repair
+- **XP and food** — points to the level you want and what to eat from your inventory right now
+- **Maps, enchanting tables, mobs** — the scale of the map in hand, how many bookshelves count, how many hits a mob takes
+- **Dark spots** — where hostile mobs can spawn around you
+- **Potions and farms** — what you have for brewing, how crops grow, and how many animals are around
 - **Web search** — the assistant looks up fresh facts by itself when it needs them
 - **Exact math** — stacks, Nether coordinates, XP, and time get calculated, not estimated
 
 ### The Assistant Lends a Hand
 
-For any player, the assistant can show the way (it points your compass and draws a particle trail only you see), tidy your inventory (the hotbar stays put), and remind you of something in 1–120 minutes. It lists and cancels reminders on request, and up to 10 can wait per player. None of this hands out items or changes the world.
+For any player, the assistant can show the way (it points your compass and draws a particle trail only you see), tidy your inventory (the hotbar stays put), and remind you of something in 1–120 minutes. It lists and cancels reminders on request, and up to 10 can wait per player. Ask it to ping you, and a sound and particles go off above you so friends can find you. None of this hands out items or changes the world.
+
+### Notebook
+
+Say “remember, there’s a villager selling arrows here”, and the assistant writes it down with your coordinates. Later ask in your own words, like “where was the arrow guy?”, and it finds the note and shows the way. Notes live on the server in `plugins/mcbuddy-spigot/notes`, up to 200 per player.
 
 For operators, it also gives items, teleports, switches the game mode, heals, applies effects, and changes the time and weather. The plugin offers these tools to the assistant only when an operator asks, and checks again before running one: a regular player can’t talk the assistant into a sword. Switch them off under `tools.operator`.
 
@@ -191,6 +202,7 @@ Edit `plugins/mcbuddy-spigot/config.yml`. The new keys:
 | `tools.operator.enabled`, `tools.operator.<tool>` | Operator tools: all at once or one by one |
 | `messages.reminder`, `messages.memory_*`, `messages.forget*` | Texts for reminders and memory |
 | `tools.reminders.max_pending` | How many reminders can wait per player (10) |
+| `tools.notes.max_per_player` | How many notes one player’s notebook can hold (200) |
 | `tools.locate_structure_radius` | Structure search radius in chunks |
 | `http.tool_timeout` | Seconds a tool may run |
 
