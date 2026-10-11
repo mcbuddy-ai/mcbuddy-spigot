@@ -43,6 +43,11 @@ object Facts {
     return listOf("north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west")[((degrees + 22.5) / 45).toInt() % 8]
   }
 
+  val DIRECTIONS_RU = mapOf(
+    "north" to "север", "north-east" to "северо-восток", "east" to "восток", "south-east" to "юго-восток",
+    "south" to "юг", "south-west" to "юго-запад", "west" to "запад", "north-west" to "северо-запад",
+  )
+
   fun dayPhase(time: Long): String = when ((time % 24_000 + 24_000) % 24_000) {
     in 0 until 12_000 -> "day"
     in 12_000 until 13_800 -> "sunset"

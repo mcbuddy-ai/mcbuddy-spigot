@@ -3,7 +3,10 @@ package ru.mcbuddy.spigot.tools
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -18,6 +21,11 @@ class ToolContext(val sender: CommandSender, val structureRadius: Int) {
 class ToolOutput(val result: JsonElement, val summary: String)
 
 class ToolError(message: String) : Exception(message)
+
+internal fun JsonObject.int(key: String) = (get(key) as? JsonPrimitive)?.let { it.intOrNull ?: it.doubleOrNull?.toInt() }
+internal fun JsonObject.double(key: String) = (get(key) as? JsonPrimitive)?.doubleOrNull
+internal fun JsonObject.bool(key: String) = (get(key) as? JsonPrimitive)?.booleanOrNull
+internal fun JsonObject.string(key: String) = (get(key) as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull?.trim()?.ifEmpty { null }
 
 /** A tool the backend can ask the plugin to run. Runs on the server thread. */
 interface ClientTool {
@@ -35,7 +43,7 @@ class ToolRegistry(tools: List<ClientTool>, private val enabled: (String) -> Boo
   fun find(name: String): ClientTool? = byName[name]?.takeIf { enabled(it.name) }
 
   companion object {
-    fun all(): List<ClientTool> = PlayerTools.all + WorldTools.all + KnowledgeTools.all
+    fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all
   }
 }
 
@@ -60,6 +68,8 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "get_recipes" to "Ищу рецепт: {item}",
       "locate_structure" to "Ищу ближайшую структуру: {structure}",
       "get_server" to "Узнаю о сервере",
+      "get_locations" to "Вспоминаю важные места",
+      "get_villager_trades" to "Смотрю, чем торгует житель",
       "search_web" to "Ищу в интернете: «{query}»",
     )
   }

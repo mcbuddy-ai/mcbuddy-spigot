@@ -1,19 +1,18 @@
 package ru.mcbuddy.spigot.tools
 
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import org.bukkit.Material
 import org.bukkit.Statistic
 import org.bukkit.attribute.Attribute
+import org.bukkit.entity.AbstractVillager
 import org.bukkit.entity.Enemy
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import org.bukkit.entity.Villager
 import ru.mcbuddy.spigot.Plurals
 import ru.mcbuddy.spigot.tools.Facts.round1
 import ru.mcbuddy.spigot.tools.Facts.short
@@ -24,9 +23,6 @@ object PlayerTools {
     override val name = name
     override fun run(context: ToolContext, args: JsonObject) = body(context.requirePlayer(), args)
   }
-
-  private fun JsonObject.int(key: String) = (get(key) as? JsonPrimitive)?.intOrNull
-  private fun JsonObject.bool(key: String) = (get(key) as? JsonPrimitive)?.booleanOrNull
 
   private val status = tool("get_player_status") { player, _ ->
     val location = player.location
@@ -184,5 +180,33 @@ object PlayerTools {
     ToolOutput(result, "${round1(stat(Statistic.PLAY_ONE_MINUTE) / 72_000.0)} ч в игре")
   }
 
-  val all = listOf(status, inventory, surroundings, target, statistics)
+  private val trades = tool("get_villager_trades") { player, _ ->
+    val eye = player.eyeLocation
+    val trader = player.world.rayTraceEntities(eye, eye.direction, 8.0) { it is AbstractVillager }?.hitEntity as? AbstractVillager
+      ?: throw ToolError("there is no villager or wandering trader under the crosshair within 8 blocks")
+    val offers = trader.recipes
+    val result = buildJsonObject {
+      put("type", short(trader.type.key.toString()))
+      if (trader is Villager) {
+        put("profession", trader.profession.key.key)
+        put("level", trader.villagerLevel)
+      }
+      put("trades", buildJsonArray {
+        offers.forEach { offer ->
+          add(buildJsonObject {
+            // The first price is what this player pays right now, with demand and discounts applied.
+            val prices = listOfNotNull(offer.getAdjustedIngredient1() ?: offer.ingredients.firstOrNull()) + offer.ingredients.drop(1)
+            put("buy", buildJsonArray { prices.forEach { item -> item.compact()?.let(::add) } })
+            offer.result.compact()?.let { put("sell", it) }
+            put("uses", offer.uses)
+            put("max_uses", offer.maxUses)
+          })
+        }
+      })
+    }
+    val count = offers.size.toLong()
+    ToolOutput(result, "$count ${Plurals.ru(count, "сделка", "сделки", "сделок")}")
+  }
+
+  val all = listOf(status, inventory, surroundings, target, statistics, trades)
 }

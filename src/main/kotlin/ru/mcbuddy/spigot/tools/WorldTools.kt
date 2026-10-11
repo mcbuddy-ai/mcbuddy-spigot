@@ -102,7 +102,7 @@ object WorldTools {
         put("distance", distance)
         put("direction", direction)
       }
-      return ToolOutput(result, "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")} на ${DIRECTIONS[direction]}")
+      return ToolOutput(result, "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")} на ${Facts.DIRECTIONS_RU[direction]}")
     }
   }
 
@@ -112,11 +112,6 @@ object WorldTools {
   } ?: bukkitVersion
 
   private val PHASES = mapOf("day" to "светло", "sunset" to "закат", "night" to "ночь", "sunrise" to "рассвет")
-
-  private val DIRECTIONS = mapOf(
-    "north" to "север", "north-east" to "северо-восток", "east" to "восток", "south-east" to "юго-восток",
-    "south" to "юг", "south-west" to "юго-запад", "west" to "запад", "north-west" to "северо-запад",
-  )
 
   val all = listOf(world, server, locate)
 }
