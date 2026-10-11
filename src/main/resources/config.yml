@@ -32,11 +32,11 @@ http:
 
   # Настройки сжатия и заголовков
   compression_enabled: true # Включить сжатие gzip/deflate для запросов/ответов
-  user_agent: "MCBuddy-Spigot/2.1.0 (Minecraft Plugin)" # User-Agent заголовок
+  user_agent: "MCBuddy-Spigot/2.2.0 (Minecraft Plugin)" # User-Agent заголовок
 
   # Дополнительные заголовки для всех запросов
   custom_headers:
-    "X-Plugin-Version": "2.1.0"
+    "X-Plugin-Version": "2.2.0"
     "X-Platform": "Spigot"
     # "X-OpenRouter-Token": "sk-or-v1-1234567890"
 
