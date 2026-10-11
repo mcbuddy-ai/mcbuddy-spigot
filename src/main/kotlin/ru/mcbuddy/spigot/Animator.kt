@@ -2,69 +2,83 @@ package ru.mcbuddy.spigot
 
 import net.md_5.bungee.api.ChatMessageType.ACTION_BAR
 import net.md_5.bungee.api.chat.TextComponent
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
 import ru.mcbuddy.spigot.Minecraft.formatMessage
+import ru.mcbuddy.spigot.tools.ToolLabels
+import kotlinx.serialization.json.JsonObject
 
+/**
+ * The live display, modeled on Claude Code: a spinner with a changing verb, elapsed time, and
+ * tokens in the action bar, and one chat line per tool the assistant uses.
+ */
 class Animator(private val plugin: JavaPlugin, private val config: Config) {
   private val activeAnimations = mutableMapOf<Player, BukkitRunnable>()
+  private val ui = config.ui
+  private val spinner = Spinner(ui.spinnerFrames)
+  private val format = StatusFormat(ui.statusFormat, ui.answeringVerb, ui.reasoningFormat, ui.reasoningLength)
+  private val labels = ToolLabels(ui.toolLabels)
 
-  fun startThinkingAnimationActionBar(player: Player, isAskx: Boolean = false) {
+  /** The current action bar text for a run. */
+  fun statusLine(run: Run): String {
+    val elapsed = run.elapsedMillis
+    return format.line(
+      spinner = spinner.frame(elapsed / ui.frameMillis),
+      verb = run.verbs.at(elapsed),
+      phase = run.phase,
+      elapsedSeconds = elapsed / 1000,
+      tokens = run.tokens.get(),
+      reasoning = if (ui.showReasoning) run.reasoningTail() else null,
+    )
+  }
+
+  fun start(run: Run) {
+    val player = run.sender as? Player ?: return
     stopPlayerAnimation(player)
 
-    val baseText = if (isAskx) config.ui.actionBarAskxText else config.ui.actionBarThinkingText
-
-    if (config.ui.soundsEnabled) {
-      player.playSound(player.location, config.ui.thinkingSound, config.ui.thinkingVolume, config.ui.thinkingPitch)
+    if (ui.soundsEnabled) {
+      player.playSound(player.location, ui.thinkingSound, ui.thinkingVolume, ui.thinkingPitch)
     }
 
     val animation = object : BukkitRunnable() {
-      var dots = 0
-      var particleTicks = 0
+      var lastParticles = 0L
 
       override fun run() {
-        if (!player.isOnline) {
+        if (!player.isOnline || run.cancelled) {
           cancel()
           return
         }
-
-        if (config.ui.actionBarEnabled) {
-          val dotsText = ".".repeat((dots % 4) + 1)
-          val message = formatMessage("$baseText$dotsText")
-          player.spigot().sendMessage(ACTION_BAR, TextComponent(message))
-          dots++
+        if (ui.actionBarEnabled) {
+          player.spigot().sendMessage(ACTION_BAR, *TextComponent.fromLegacyText(formatMessage(statusLine(run))))
         }
-
-        if (config.ui.particlesEnabled && particleTicks * 50 >= config.ui.particleAnimationInterval) {
-          startThinkingAnimationParticles(player)
-          particleTicks = 0
-        } else {
-          particleTicks++
+        val now = System.currentTimeMillis()
+        if (ui.particlesEnabled && now - lastParticles >= ui.particleAnimationInterval) {
+          lastParticles = now
+          player.world.spawnParticle(ui.particleType, player.location.add(0.0, ui.particleHeightOffset, 0.0), ui.particleCount, 0.3, 0.3, 0.3, 0.01)
         }
       }
     }
 
-    animation.runTaskTimer(plugin, 0L, config.ui.actionBarAnimationSpeed / 50L)
+    animation.runTaskTimer(plugin, 0L, 2L)
     activeAnimations[player] = animation
   }
 
-  private fun startThinkingAnimationParticles(player: Player) {
-    val location = player.location.add(0.0, config.ui.particleHeightOffset, 0.0)
-    player.world.spawnParticle(
-      config.ui.particleType,
-      location,
-      config.ui.particleCount,
-      0.3, 0.3, 0.3, 0.01
-    )
+  fun toolStarted(sender: CommandSender, name: String, args: JsonObject?) {
+    if (ui.toolLines) sender.sendMessage(formatMessage(ui.toolStartFormat.replace("{label}", labels.label(name, args))))
+  }
+
+  fun toolFinished(sender: CommandSender, summary: String?, failed: Boolean) {
+    if (!ui.toolLines || summary.isNullOrBlank()) return
+    val template = if (failed) ui.toolFailedFormat else ui.toolDoneFormat
+    sender.sendMessage(formatMessage(template.replace("{summary}", summary)))
   }
 
   fun stopPlayerAnimation(player: Player) {
-    activeAnimations[player]?.let { animation ->
+    activeAnimations.remove(player)?.let { animation ->
       animation.cancel()
-      activeAnimations.remove(player)
-
-      if (config.ui.actionBarEnabled) {
+      if (ui.actionBarEnabled) {
         player.spigot().sendMessage(ACTION_BAR, TextComponent(""))
       }
     }
@@ -76,14 +90,14 @@ class Animator(private val plugin: JavaPlugin, private val config: Config) {
   }
 
   fun playSuccessSound(player: Player) {
-    if (config.ui.soundsEnabled) {
-      player.playSound(player.location, config.ui.successSound, config.ui.successVolume, config.ui.successPitch)
+    if (ui.soundsEnabled) {
+      player.playSound(player.location, ui.successSound, ui.successVolume, ui.successPitch)
     }
   }
 
   fun playErrorSound(player: Player) {
-    if (config.ui.soundsEnabled) {
-      player.playSound(player.location, config.ui.errorSound, config.ui.errorVolume, config.ui.errorPitch)
+    if (ui.soundsEnabled) {
+      player.playSound(player.location, ui.errorSound, ui.errorVolume, ui.errorPitch)
     }
   }
 }
