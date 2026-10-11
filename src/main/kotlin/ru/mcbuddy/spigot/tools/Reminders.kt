@@ -6,42 +6,79 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.Plugin
-import org.bukkit.scheduler.BukkitTask
 import ru.mcbuddy.spigot.Minecraft.formatMessage
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-/** Reminders the assistant set for players. They live in memory: a restart or the player leaving drops them. */
-class Reminders(private val plugin: Plugin, private val template: () -> String) : Listener {
-  private val pending = ConcurrentHashMap<UUID, MutableList<BukkitTask>>()
+/** One player's pending reminders, apart from Bukkit so tests can reach it. The cap is read on every add, so `/ask reload` applies it. */
+class ReminderBook(private val max: () -> Int, private val newId: () -> String = ::shortId) {
+  class Reminder(val id: String, val text: String, val dueAt: Long, val cancel: () -> Unit)
 
-  fun add(player: Player, minutes: Int, text: String) {
-    val tasks = pending.computeIfAbsent(player.uniqueId) { mutableListOf() }
-    synchronized(tasks) {
-      tasks.removeIf { it.isCancelled || !plugin.server.scheduler.isQueued(it.taskId) }
-      if (tasks.size >= MAX_PER_PLAYER) throw ToolError("this player already has $MAX_PER_PLAYER reminders pending")
-      lateinit var task: BukkitTask
-      task = plugin.server.scheduler.runTaskLater(plugin, Runnable {
-        synchronized(tasks) { tasks.remove(task) }
+  private val reminders = mutableListOf<Reminder>()
+
+  @Synchronized fun add(text: String, dueAt: Long, schedule: (String) -> () -> Unit): Reminder {
+    val cap = max()
+    if (reminders.size >= cap) throw ToolError("this player already has $cap reminders pending; cancel one first")
+    val id = generateSequence(newId).first { candidate -> reminders.none { it.id == candidate } }
+    return Reminder(id, text, dueAt, schedule(id)).also { reminders += it }
+  }
+
+  /** Soonest first. */
+  @Synchronized fun list(): List<Reminder> = reminders.sortedBy { it.dueAt }
+
+  /** Drops a reminder that just fired, without cancelling its timer. */
+  @Synchronized fun fired(id: String) {
+    reminders.removeIf { it.id == id }
+  }
+
+  @Synchronized fun cancel(id: String): Int {
+    val reminder = reminders.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: return 0
+    reminders.remove(reminder)
+    reminder.cancel()
+    return 1
+  }
+
+  @Synchronized fun cancelAll(): Int {
+    val count = reminders.size
+    reminders.forEach { it.cancel() }
+    reminders.clear()
+    return count
+  }
+
+  companion object {
+    private const val ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
+
+    /** Four characters without look-alikes (l, 1, o, 0, i): easy to read back from chat. */
+    fun shortId() = (1..4).map { ALPHABET.random() }.joinToString("")
+  }
+}
+
+/** Reminders the assistant set for players. They live in memory: a restart or the player leaving drops them. */
+class Reminders(private val plugin: Plugin, private val maxPending: () -> Int, private val template: () -> String) : Listener {
+  private val books = ConcurrentHashMap<UUID, ReminderBook>()
+
+  fun of(player: Player): ReminderBook = books.computeIfAbsent(player.uniqueId) { ReminderBook(maxPending) }
+
+  fun add(player: Player, minutes: Int, text: String): ReminderBook.Reminder {
+    val book = of(player)
+    return book.add(text, System.currentTimeMillis() + minutes * 60_000L) { id ->
+      val task = plugin.server.scheduler.runTaskLater(plugin, Runnable {
+        book.fired(id)
         if (!player.isOnline) return@Runnable
         player.sendMessage(formatMessage(template().replace("{text}", text)))
         player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BELL, 0.8f, 1.2f)
       }, minutes * 1_200L)
-      tasks += task
+      task::cancel
     }
   }
 
   fun cancelAll() {
-    pending.values.forEach { tasks -> synchronized(tasks) { tasks.forEach(BukkitTask::cancel) } }
-    pending.clear()
+    books.values.forEach(ReminderBook::cancelAll)
+    books.clear()
   }
 
   @EventHandler
   fun onQuit(event: PlayerQuitEvent) {
-    pending.remove(event.player.uniqueId)?.let { tasks -> synchronized(tasks) { tasks.forEach(BukkitTask::cancel) } }
-  }
-
-  companion object {
-    const val MAX_PER_PLAYER = 3
+    books.remove(event.player.uniqueId)?.cancelAll()
   }
 }

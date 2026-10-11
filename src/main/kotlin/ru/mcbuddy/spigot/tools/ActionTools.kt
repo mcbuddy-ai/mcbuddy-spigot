@@ -1,6 +1,7 @@
 package ru.mcbuddy.spigot.tools
 
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.bukkit.Location
@@ -8,6 +9,7 @@ import org.bukkit.Particle
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import ru.mcbuddy.spigot.Plurals
+import java.time.Instant
 
 /** Harmless things any player may ask for: nothing here creates items or changes the world. */
 object ActionTools {
@@ -79,9 +81,37 @@ object ActionTools {
     val minutes = args.int("minutes") ?: throw ToolError("minutes is required")
     if (minutes !in 1..120) throw ToolError("minutes must be 1–120")
     val text = args.string("text")?.take(100) ?: throw ToolError("text is required")
-    context.reminders.add(player, minutes, text)
-    ToolOutput(buildJsonObject { put("minutes", minutes); put("text", text) }, "через $minutes ${Plurals.ru(minutes.toLong(), "минуту", "минуты", "минут")}")
+    val reminder = context.reminders.add(player, minutes, text)
+    ToolOutput(buildJsonObject { put("id", reminder.id); put("minutes", minutes); put("text", text) }, "через $minutes ${Plurals.ru(minutes.toLong(), "минуту", "минуты", "минут")}")
   }
 
-  val all = listOf(pointTo, sortInventory, reminder)
+  private val reminders = tool("get_reminders") { context, player, _ ->
+    val list = context.reminders.of(player).list()
+    val now = System.currentTimeMillis()
+    val result = buildJsonArray {
+      list.forEach { reminder ->
+        add(buildJsonObject {
+          put("id", reminder.id)
+          put("text", reminder.text)
+          put("minutes_left", ((reminder.dueAt - now).coerceAtLeast(0) + 59_999) / 60_000)
+          put("due_at", Instant.ofEpochMilli(reminder.dueAt).toString())
+        })
+      }
+    }
+    val count = list.size.toLong()
+    ToolOutput(result, if (count == 0L) "напоминаний нет" else "$count ${Plurals.ru(count, "напоминание", "напоминания", "напоминаний")}")
+  }
+
+  private val cancelReminder = tool("cancel_reminder") { context, player, args ->
+    val book = context.reminders.of(player)
+    val cancelled = when {
+      args.bool("all") == true -> book.cancelAll()
+      else -> book.cancel(args.string("id") ?: throw ToolError("id is required, or all: true"))
+    }
+    if (cancelled == 0 && args.bool("all") != true) throw ToolError("there is no reminder with this id")
+    val count = cancelled.toLong()
+    ToolOutput(buildJsonObject { put("cancelled", cancelled) }, "отменил $count ${Plurals.ru(count, "напоминание", "напоминания", "напоминаний")}")
+  }
+
+  val all = listOf(pointTo, sortInventory, reminder, reminders, cancelReminder)
 }

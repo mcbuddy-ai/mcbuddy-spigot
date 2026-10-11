@@ -78,6 +78,8 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "point_to" to "Показываю дорогу",
       "sort_inventory" to "Навожу порядок в инвентаре",
       "set_reminder" to "Ставлю напоминание",
+      "get_reminders" to "Смотрю напоминания",
+      "cancel_reminder" to "Отменяю напоминание",
       "give_item" to "Выдаю {item}",
       "teleport" to "Телепортирую",
       "set_gamemode" to "Меняю режим игры: {mode}",

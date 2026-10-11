@@ -28,7 +28,7 @@ class Zygote : JavaPlugin(), TabCompleter {
   override fun onEnable() {
     saveDefaultConfig()
     // Outlives /ask reload, so reminders already set keep their schedule.
-    reminders = Reminders(this) { configuration.messages.reminderMessage }
+    reminders = Reminders(this, { configuration.tools.maxReminders }) { configuration.messages.reminderMessage }
     server.pluginManager.registerEvents(reminders, this)
     initializeComponents()
     listOf("ask", "askx").map(::getCommand).forEach {
