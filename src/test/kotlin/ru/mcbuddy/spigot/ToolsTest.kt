@@ -34,6 +34,7 @@ class ToolsTest {
       setOf("get_player_status", "get_inventory", "get_surroundings", "get_target", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server", "get_locations", "get_villager_trades", "point_to", "sort_inventory", "set_reminder", "get_reminders", "cancel_reminder",
         "get_container", "scan_nearby_containers", "get_block_info", "get_map_info", "get_enchant_options", "get_mob_info", "get_light_spawn_check", "get_brewing_items", "scan_farm",
         "get_item_durability", "get_xp_info", "get_food_options", "add_note", "find_notes", "delete_note", "ping_me",
+        "locate_biome", "get_death_info", "find_villagers", "get_anvil_plan", "add_buttons", "write_book", "set_timezone", "set_goal", "get_goals", "cancel_goal",
         "give_item", "teleport", "set_gamemode", "heal", "apply_effect", "set_time", "set_weather"),
       names,
     )

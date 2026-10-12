@@ -208,5 +208,51 @@ object PlayerTools {
     ToolOutput(result, "$count ${Plurals.ru(count, "сделка", "сделки", "сделок")}")
   }
 
-  val all = listOf(status, inventory, surroundings, target, statistics, trades)
+  /** A trade in as few tokens as the model needs; enchanted books name the enchantment they hold. */
+  private fun trade(offer: org.bukkit.inventory.MerchantRecipe) = buildJsonObject {
+    put("buy", buildJsonArray { Villagers.prices(offer).forEach { item -> item.compact()?.let(::add) } })
+    offer.result.compact()?.let { sell ->
+      val stored = (offer.result.itemMeta as? org.bukkit.inventory.meta.EnchantmentStorageMeta)?.storedEnchants.orEmpty()
+      put("sell", if (stored.isEmpty()) sell else buildJsonObject {
+        sell.forEach { (key, value) -> put(key, value) }
+        putJsonObject("book") { stored.forEach { (enchantment, level) -> put(enchantment.key.key, level) } }
+      })
+    }
+    put("left", offer.maxUses - offer.uses)
+  }
+
+  private val villagers = object : ClientTool {
+    override val name = "find_villagers"
+
+    override fun run(context: ToolContext, args: JsonObject): ToolOutput {
+      val player = context.requirePlayer()
+      val limit = context.features.villagerRadius()
+      val radius = (args.int("radius") ?: limit).coerceIn(4, limit)
+      val item = args.string("item")?.let(InteractTools::material)
+      val profession = args.string("profession")?.lowercase()
+      val found = Villagers.around(player, radius, item).filter { profession == null || Villagers.profession(it.trader) == profession }.take(10)
+      val result = buildJsonObject {
+        put("radius", radius)
+        put("villagers", buildJsonArray {
+          found.forEach { villager ->
+            val at = villager.trader.location
+            add(buildJsonObject {
+              put("profession", Villagers.profession(villager.trader))
+              (villager.trader as? Villager)?.let { put("level", it.villagerLevel) }
+              put("x", at.blockX)
+              put("y", at.blockY)
+              put("z", at.blockZ)
+              put("distance", Math.round(villager.distance))
+              put("direction", Facts.direction(at.x - player.location.x, at.z - player.location.z))
+              put("trades", buildJsonArray { villager.trades.take(10).forEach { add(trade(it)) } })
+            })
+          }
+        })
+      }
+      val count = found.size.toLong()
+      return ToolOutput(result, if (count == 0L) "никого рядом" else "$count ${Plurals.ru(count, "житель", "жителя", "жителей")}")
+    }
+  }
+
+  val all = listOf(status, inventory, surroundings, target, statistics, trades, villagers)
 }

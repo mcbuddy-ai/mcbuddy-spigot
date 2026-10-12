@@ -104,5 +104,36 @@ object CareTools {
     ToolOutput(result, if (n == 0L) "еды нет" else "$n ${Plurals.ru(n, "вид", "вида", "видов")} еды")
   }
 
-  val all = listOf(durability, xp, food)
+  private val anvil = tool("get_anvil_plan") { player, args ->
+    val item = player.inventory.itemInMainHand.takeUnless { it.type.isAir } ?: throw ToolError("the player holds nothing; ask them to hold the item")
+    val wanted = args["enchantments"] as? JsonObject ?: throw ToolError("enchantments is required, such as { \"sharpness\": 5, \"mending\": 1 }")
+    if (wanted.isEmpty() || wanted.size > 10) throw ToolError("give 1–10 enchantments")
+    val books = wanted.keys.map { key ->
+      val id = key.lowercase().removePrefix("minecraft:")
+      val enchantment = org.bukkit.Registry.ENCHANTMENT.get(org.bukkit.NamespacedKey.minecraft(id)) ?: throw ToolError("no enchantment called $id")
+      if (!enchantment.canEnchantItem(item)) throw ToolError("$id doesn't go on ${item.type.key.key}")
+      val level = (wanted.int(key) ?: enchantment.maxLevel).coerceIn(1, enchantment.maxLevel)
+      enchantment to level
+    }
+    val all = books.map { it.first } + item.enchantments.keys
+    books.forEach { (enchantment, _) ->
+      all.firstOrNull { it != enchantment && it.conflictsWith(enchantment) }?.let { throw ToolError("${enchantment.key.key} conflicts with ${it.key.key}") }
+    }
+    val penalty = (item.itemMeta as? org.bukkit.inventory.meta.Repairable)?.repairCost ?: 0
+    val plan = Mechanics.anvilPlan(penalty, books.map { (e, level) -> Mechanics.Book(e.key.key, level, Mechanics.bookWeight(e.key.key)) })
+    fun names(pieces: List<Int>) = buildJsonArray { pieces.forEach { add(kotlinx.serialization.json.JsonPrimitive(if (it == 0) "item" else "${books[it - 1].first.key.key} ${books[it - 1].second}")) } }
+    val result = buildJsonObject {
+      put("item", item.type.key.key)
+      put("item_repair_cost", penalty)
+      put("steps", buildJsonArray {
+        plan.steps.forEach { step -> add(buildJsonObject { put("left", names(step.left)); put("right", names(step.right)); put("levels", step.cost) }) }
+      })
+      put("total_levels", plan.total)
+      put("too_expensive", plan.tooExpensive)
+    }
+    val total = plan.total.toLong()
+    ToolOutput(result, if (plan.tooExpensive) "слишком дорого" else "$total ${Plurals.ru(total, "уровень", "уровня", "уровней")} за ${plan.steps.size} ${Plurals.ru(plan.steps.size.toLong(), "шаг", "шага", "шагов")}")
+  }
+
+  val all = listOf(durability, xp, food, anvil)
 }

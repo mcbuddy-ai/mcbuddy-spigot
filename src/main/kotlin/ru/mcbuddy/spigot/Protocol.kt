@@ -19,6 +19,8 @@ object Protocol {
     val platform: String = "minecraft",
     val user_id: String,
     val locale: String? = null,
+    /** The asker's IANA time zone, so the backend can tell the model their real time. */
+    val timezone: String? = null,
     val player: PlayerInfo? = null,
     val server: ServerInfo,
     val tools: List<String>,

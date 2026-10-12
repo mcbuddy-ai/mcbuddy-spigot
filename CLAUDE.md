@@ -17,6 +17,10 @@ The Minecraft plugin of MCBuddy. `/ask` asks the AI buddy a question, `/askx` tu
 | `tools/` | Client tools. They run on the server thread and see only the asking player and the world around them; other players appear only as a count. Each can be switched off in `config.yml`. `ActionTools` change nothing that matters (compass, sorting, a ping, reminders with short ids that live in memory, capped by `tools.reminders.max_pending`); `NotebookTools` keep the player's notes with coordinates in `notes/<uuid>.json` (`Notebook.kt`, atomic writes, capped by `tools.notes.max_per_player`); `InspectTools` and `CareTools` read containers, blocks, gear, XP, food, farms; `Mechanics.kt` holds the vanilla formulas and tables they use, with tests; `OperatorTools` change the game and are operator-only |
 | `Run.kt`, `Status.kt`, `Animator.kt` | One active run per player and the live status: spinner, rotating verbs, elapsed time, tokens read (↑) and written (↓) in the action bar, `⏺`/`⎿` tool lines in chat |
 | `Executor.kt` | Runs `/askx` commands as the player, minus `blocked_commands` |
+| `Clicks.kt`, `tools/Buttons.kt` | Buttons under answers (`add_buttons`, books) and what each does when pressed |
+| `menus/` | The recipe, enchanting, and villager windows behind `/ask recipe`, `/ask enchants`, `/ask villagers` and their buttons |
+| `tools/Goals.kt`, `GoalTools` | Goals with a boss bar in `goals/<uuid>.json`: statistics count from a baseline, pickups from events minus the player's own death drops |
+| `tools/TimeZones.kt` | Each player's time zone in `timezones.json`, sent as `timezone` so the backend can put their real time in front of each question |
 
 The contract with the backend is `docs/protocol-v2.md` in mcbuddy-ai/mcbuddy-server. Change both sides together.
 
@@ -25,6 +29,9 @@ The contract with the backend is `docs/protocol-v2.md` in mcbuddy-ai/mcbuddy-ser
 - Spigot API only (`org.spigotmc:spigot-api`), so the jar runs on Spigot and Paper. Watch for types that differ between them: `GameRule` is an interface in Spigot and a class in Paper, so read rules through `Registry.GAME_RULE`.
 - Bukkit calls happen on the server thread; network calls never do.
 - A tool that creates items or changes the world is an operator tool (`operator = true`). The registry offers it only to operators, `Service` refuses it for anyone else, and the tool checks `isOp()` once more. Keep all three checks; non-operators must not be able to get gear through the assistant.
+- One deliberate exception: `[Взять книгу]` gives anyone the written book with the assistant's own long answer, once per book. The owner allowed it: a book of text is no gear. Don't extend it to other items.
+- Windows (`menus/`) only show pictures. `MenuListener` cancels every click, drag, and hopper move on a `Menu`; keep it that way, or the windows become a dupe.
+- Buttons run `/ask do <id>`. Ids belong to the player who got them (`ButtonStore`) and expire after an hour, so a typed command can't trigger an action nobody offered.
 - Keep tool results compact: they cost tokens on every call.
 - Kotlin, kotlinx, OkHttp, and Okio are shaded and relocated under `ru.mcbuddy.spigot.libs`.
 

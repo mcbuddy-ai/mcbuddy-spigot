@@ -70,6 +70,80 @@ object Mechanics {
 
   fun durabilityPercent(remaining: Int, maxDurability: Int): Int = if (maxDurability <= 0) 100 else min(100, remaining * 100 / maxDurability)
 
+  /** An anvil step costing this many levels or more says “Too Expensive!” in survival. */
+  const val TOO_EXPENSIVE = 40
+
+  /**
+   * The price of one enchantment level when it comes off an item, from the vanilla data (`anvil_cost`).
+   * A book pays half, at least 1. Enchantments missing here count as 4, the most common price.
+   */
+  val ANVIL_COSTS: Map<String, Int> = mapOf(
+    "protection" to 1, "fire_protection" to 2, "feather_falling" to 2, "blast_protection" to 4, "projectile_protection" to 2,
+    "respiration" to 4, "aqua_affinity" to 4, "thorns" to 8, "depth_strider" to 4, "frost_walker" to 4, "binding_curse" to 8,
+    "soul_speed" to 8, "swift_sneak" to 8, "sharpness" to 1, "smite" to 2, "bane_of_arthropods" to 2, "knockback" to 2,
+    "fire_aspect" to 4, "looting" to 4, "sweeping_edge" to 4, "efficiency" to 1, "silk_touch" to 8, "unbreaking" to 2,
+    "fortune" to 4, "power" to 1, "punch" to 4, "flame" to 4, "infinity" to 8, "luck_of_the_sea" to 4, "lure" to 4,
+    "loyalty" to 1, "impaling" to 4, "riptide" to 4, "channeling" to 8, "multishot" to 4, "quick_charge" to 2, "piercing" to 1,
+    "mending" to 4, "vanishing_curse" to 8, "density" to 2, "breach" to 4, "wind_burst" to 4,
+  )
+
+  fun bookWeight(enchantment: String): Int = max(1, (ANVIL_COSTS[enchantment] ?: 4) / 2)
+
+  /** One enchanted book for the anvil; [weight] is what one of its levels costs. */
+  data class Book(val key: String, val level: Int, val weight: Int) {
+    val value get() = level * weight
+  }
+
+  /** One use of the anvil: the pieces on the left and on the right (0 is the item, 1… the books) and its price in levels. */
+  data class AnvilStep(val left: List<Int>, val right: List<Int>, val cost: Int)
+
+  data class AnvilPlan(val steps: List<AnvilStep>, val total: Int, val tooExpensive: Boolean)
+
+  private class Merged(val pieces: List<Int>, val total: Int, val worst: Int, val steps: List<AnvilStep>) {
+    /** Plans that never hit “Too Expensive!” win, then the cheapest, then the one with the smallest single step. */
+    fun beats(other: Merged?) = other == null || compareValuesBy(this, other, { it.worst >= TOO_EXPENSIVE }, { it.total }, { it.worst }) < 0
+  }
+
+  /** The prior work penalty after this many anvil uses: 0, 1, 3, 7… */
+  fun penalty(works: Int) = (1 shl works) - 1
+
+  /**
+   * The cheapest order to put [books] on an item whose repair cost is [itemPenalty]. Every split of every set
+   * of pieces is tried, keeping the best plan per number of prior works, since that number prices later steps.
+   * The item always stays on the left; only the right side's enchantments are paid for.
+   */
+  fun anvilPlan(itemPenalty: Int, books: List<Book>): AnvilPlan {
+    require(books.size <= 10) { "at most 10 books" }
+    val n = books.size + 1
+    val full = (1 shl n) - 1
+    val values = IntArray(1 shl n)
+    for (mask in 1..full) {
+      val low = Integer.numberOfTrailingZeros(mask)
+      values[mask] = values[mask and (mask - 1)] + if (low == 0) 0 else books[low - 1].value
+    }
+    val best = Array(1 shl n) { HashMap<Int, Merged>() }
+    best[1][32 - Integer.numberOfLeadingZeros(itemPenalty.coerceAtLeast(0))] = Merged(listOf(0), 0, 0, emptyList())
+    for (i in 1 until n) best[1 shl i][0] = Merged(listOf(i), 0, 0, emptyList())
+    for (mask in (1..full).filter { Integer.bitCount(it) >= 2 }.sortedBy(Integer::bitCount)) {
+      var left = (mask - 1) and mask
+      while (left > 0) {
+        val right = mask xor left
+        // The item never goes on the right: that would put the books' enchantments nowhere.
+        if (right and 1 == 0) {
+          for ((lw, l) in best[left]) for ((rw, r) in best[right]) {
+            val cost = penalty(lw) + penalty(rw) + values[right]
+            val works = max(lw, rw) + 1
+            val merged = Merged(l.pieces + r.pieces, l.total + r.total + cost, maxOf(cost, l.worst, r.worst), l.steps + r.steps + AnvilStep(l.pieces, r.pieces, cost))
+            if (merged.beats(best[mask][works])) best[mask][works] = merged
+          }
+        }
+        left = (left - 1) and mask
+      }
+    }
+    val plan = best[full].values.reduce { a, b -> if (b.beats(a)) b else a }
+    return AnvilPlan(plan.steps, plan.total, plan.worst >= TOO_EXPENSIVE)
+  }
+
   /** Hunger points and saturation each food restores, plus what else eating it does. */
   data class Food(val nutrition: Int, val saturation: Double, val note: String? = null)
 

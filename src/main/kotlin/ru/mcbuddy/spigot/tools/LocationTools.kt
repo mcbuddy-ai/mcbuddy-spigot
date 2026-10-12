@@ -47,5 +47,43 @@ object LocationTools {
     }
   }
 
-  val all = listOf<ClientTool>(locations)
+  private val death = object : ClientTool {
+    override val name = "get_death_info"
+
+    override fun run(context: ToolContext, args: JsonObject): ToolOutput {
+      val player = context.requirePlayer()
+      val record = context.features.deaths.of(player.uniqueId)
+      val place = record?.location ?: player.lastDeathLocation ?: throw ToolError("this player hasn't died yet")
+      val world = place.world ?: throw ToolError("the world of the last death is gone")
+      val minutes = player.getStatistic(org.bukkit.Statistic.TIME_SINCE_DEATH) / 1_200
+      val loaded = world.isChunkLoaded(place.blockX shr 4, place.blockZ shr 4)
+      // Only items of the kinds the player dropped count, so someone else's junk nearby doesn't.
+      val kinds = record?.drops?.keys.orEmpty()
+      val items = if (loaded) {
+        world.getNearbyEntities(place, 8.0, 8.0, 8.0).filterIsInstance<org.bukkit.entity.Item>().filter { record == null || it.itemStack.type.key.key in kinds }
+      } else emptyList()
+      val result = buildJsonObject {
+        put("place", describe(place, player))
+        put("minutes_ago", minutes)
+        record?.let {
+          put("kept_inventory", it.keptInventory)
+          put("dropped", buildJsonObject { it.drops.entries.sortedByDescending { e -> e.value }.take(20).forEach { (id, count) -> put(id, count) } })
+          put("dropped_experience", it.experience)
+        }
+        // Items despawn after five minutes, but their clock only runs while the area is loaded.
+        put("area_loaded", loaded)
+        if (loaded) {
+          put("items_on_ground", items.sumOf { it.itemStack.amount })
+          items.minOfOrNull { Deaths.DESPAWN_TICKS - it.ticksLived }?.let { put("seconds_until_first_despawn", (it / 20).coerceAtLeast(0)) }
+        }
+      }
+      val summary = if (world == player.world) {
+        val distance = Math.round(place.distance(player.location))
+        "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")} до места смерти"
+      } else "смерть в другом измерении"
+      return ToolOutput(result, summary)
+    }
+  }
+
+  val all = listOf<ClientTool>(locations, death)
 }

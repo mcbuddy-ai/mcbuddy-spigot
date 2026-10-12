@@ -106,6 +106,39 @@ object WorldTools {
     }
   }
 
+  private val biome = object : ClientTool {
+    override val name = "locate_biome"
+
+    override fun run(context: ToolContext, args: JsonObject): ToolOutput {
+      val player = context.requirePlayer()
+      val wanted = (args["biome"] as? JsonPrimitive)?.contentOrNull?.lowercase()?.removePrefix("minecraft:")?.trim()?.replace(' ', '_')
+        ?.takeIf { it.isNotEmpty() } ?: throw ToolError("say which biome, for example cherry_grove or mushroom_fields")
+      // “cherry” finds cherry_grove, “badlands” all three badlands; a handful at most, since the search runs on the server thread.
+      val candidates = Registry.BIOME.filter { it.key.key == wanted }.ifEmpty { Registry.BIOME.filter { wanted in it.key.key } }.take(6)
+      if (candidates.isEmpty()) throw ToolError("no biome called $wanted")
+      val origin = player.location
+      val radius = context.features.biomeRadius()
+      // The same steps as /locate biome: every 32 blocks across, every 64 up and down.
+      val found = player.world.locateNearestBiome(origin, radius, 32, 64, *candidates.toTypedArray())
+        ?: return ToolOutput(buildJsonObject { put("found", false); put("radius_blocks", radius) }, "не нашёл в радиусе $radius блоков")
+      val at = found.location
+      val dx = at.x - origin.x
+      val dz = at.z - origin.z
+      val distance = Math.round(Math.hypot(dx, dz))
+      val direction = Facts.direction(dx, dz)
+      val result = buildJsonObject {
+        put("found", true)
+        put("biome", found.biome.key.key)
+        put("x", at.blockX)
+        put("y", at.blockY)
+        put("z", at.blockZ)
+        put("distance", distance)
+        put("direction", direction)
+      }
+      return ToolOutput(result, "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")} на ${Facts.DIRECTIONS_RU[direction]}")
+    }
+  }
+
   /** `26.3-R0.1-SNAPSHOT` on Spigot and `26.3.build.169-beta` on Paper both mean 26.3. */
   fun version(bukkitVersion: String): String = Regex("^\\d+(\\.\\d+)*").find(bukkitVersion)?.value?.let { found ->
     if (".build" in bukkitVersion) bukkitVersion.substringBefore(".build") else found
@@ -113,5 +146,5 @@ object WorldTools {
 
   private val PHASES = mapOf("day" to "светло", "sunset" to "закат", "night" to "ночь", "sunrise" to "рассвет")
 
-  val all = listOf(world, server, locate)
+  val all = listOf(world, server, locate, biome)
 }

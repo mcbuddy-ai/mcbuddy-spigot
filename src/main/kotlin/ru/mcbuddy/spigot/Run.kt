@@ -25,6 +25,9 @@ class Run(val sender: CommandSender, val mode: Mode, verbs: List<String>, verbSe
   private val reported = AtomicLong()
   private val answer = StringBuilder()
 
+  /** Buttons the tools asked for; they go under the answer. */
+  val buttons: MutableList<ru.mcbuddy.spigot.tools.Button> = java.util.Collections.synchronizedList(mutableListOf())
+
   /** Calls whose `⏺` line is already in chat, so a `tool_status` and its `tool_call` don't print twice. */
   val announced: MutableSet<String> = ConcurrentHashMap.newKeySet()
 

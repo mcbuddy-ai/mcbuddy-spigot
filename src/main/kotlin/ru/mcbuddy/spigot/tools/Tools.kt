@@ -11,8 +11,29 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 
-/** Who asked. Tools see only this sender: the owner decided the agent may learn about the asker alone. */
-class ToolContext(val sender: CommandSender, val structureRadius: Int, val plugin: Plugin, val reminders: Reminders, val notes: Notes) {
+/** What tools keep between calls, built once and shared by every run. Limits are read on use, so `/ask reload` applies them. */
+class Features(
+  val plugin: Plugin,
+  val reminders: Reminders,
+  val notes: Notes,
+  val goals: Goals,
+  val books: Books,
+  val deaths: Deaths,
+  val zones: TimeZones,
+  val structureRadius: () -> Int,
+  val biomeRadius: () -> Int,
+  val villagerRadius: () -> Int,
+)
+
+/**
+ * Who asked. Tools see only this sender: the owner decided the agent may learn about the asker alone.
+ * [buttons] collects what goes under the answer; the handler shows them once the answer is out.
+ */
+class ToolContext(val sender: CommandSender, val features: Features, val buttons: MutableList<Button> = java.util.Collections.synchronizedList(mutableListOf())) {
+  val plugin: Plugin get() = features.plugin
+  val reminders: Reminders get() = features.reminders
+  val notes: Notes get() = features.notes
+  val structureRadius: Int get() = features.structureRadius()
   val player: Player? get() = sender as? Player
 
   fun requirePlayer(): Player = player ?: throw ToolError("there is no player: the question came from the console")
@@ -49,7 +70,7 @@ class ToolRegistry(tools: List<ClientTool>, private val enabled: (String) -> Boo
 
   companion object {
     fun all(): List<ClientTool> = PlayerTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + InspectTools.all + CareTools.all +
-      NotebookTools.all + ActionTools.all + OperatorTools.all
+      NotebookTools.all + ActionTools.all + InteractTools.all + GoalTools.all + OperatorTools.all
   }
 }
 
@@ -97,6 +118,16 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "get_light_spawn_check" to "Ищу тёмные места",
       "get_brewing_items" to "Проверяю запасы для зелий",
       "scan_farm" to "Осматриваю ферму",
+      "locate_biome" to "Ищу ближайший биом: {biome}",
+      "get_death_info" to "Вспоминаю, где ты погиб",
+      "find_villagers" to "Обхожу жителей рядом",
+      "get_anvil_plan" to "Прикидываю порядок на наковальне",
+      "add_buttons" to "Готовлю кнопки",
+      "write_book" to "Пишу книгу: «{title}»",
+      "set_goal" to "Ставлю цель: {title}",
+      "get_goals" to "Смотрю цели",
+      "cancel_goal" to "Снимаю цель",
+      "set_timezone" to "Запоминаю часовой пояс: {zone}",
       "give_item" to "Выдаю {item}",
       "teleport" to "Телепортирую",
       "set_gamemode" to "Меняю режим игры: {mode}",

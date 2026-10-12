@@ -23,6 +23,9 @@
 - **`/ask new`** — start the conversation over; what the assistant remembers about you stays
 - **`/ask memory`** — show what the assistant remembers about you
 - **`/ask forget <number|all>`** — forget one entry or all of them
+- **`/ask recipe <item>`** — open the recipe window for an item
+- **`/ask enchants`** — open the enchanting window for the item in your hand
+- **`/ask villagers`** — open the window of villagers around you and their trades
 - **`/ask reload`** — reload plugin configuration (`mcbuddy.reload`)
 
 ### The Assistant Knows the Game
@@ -36,9 +39,11 @@ The assistant decides what it needs to know and asks the plugin while it answers
 - **World** — time, day, moon phase, weather, difficulty, and the rules that change advice
 - **Statistics and advancements** — playtime, deaths, what you have and what comes next
 - **Recipes** — the exact recipes of your server
-- **Structures** — the nearest village, stronghold, and so on
+- **Structures and biomes** — the nearest village, stronghold, cherry grove, and so on
 - **Key places** — your respawn point, the world spawn, and where you last died
-- **Trades** — the deals of the villager or wandering trader you’re looking at
+- **Death** — where you died, what you dropped, and how long your things will lie there
+- **Trades** — the deals of the villager you’re looking at, and of every villager around: who sells Mending, who sells arrows
+- **Anvil** — the order to put books on that costs least and never hits “Too Expensive!”
 - **Containers** — what’s in the chest in front of you and which chest nearby holds the item you need
 - **Blocks** — hardness, the right tool, what drops with what you hold, crop growth
 - **Gear** — how much life your tools and armor have left and what needs repair
@@ -52,6 +57,32 @@ The assistant decides what it needs to know and asks the plugin while it answers
 ### The Assistant Lends a Hand
 
 For any player, the assistant can show the way (it points your compass and draws a particle trail only you see), tidy your inventory (the hotbar stays put), and remind you of something in 1–120 minutes. It lists and cancels reminders on request, and up to 10 can wait per player. Ask it to ping you, and a sound and particles go off above you so friends can find you. None of this hands out items or changes the world.
+
+### Buttons under the answer
+The assistant puts buttons under its answer, and you just click:
+
+- **Options** — when a question can mean several things, it asks back and offers buttons: `[Iron] [Gold] [Mob]`
+- **Next question** — “Want to know how to enchant it? `[Sure]`”. The button asks for you
+- **Places** — `[Show the way]` and `[Save to notebook]` under any coordinates
+- **Windows** — `[Open recipe]`, `[Open enchantments]`, `[Villagers nearby]`
+
+Only the player who got a button can press it. It stops working after an hour.
+
+### Windows
+- **Recipes** — the crafting grid, furnace, stonecutter, or smithing table. Click an ingredient to open its recipe; “Back” returns. When any of several items works (any planks), they take turns
+- **Enchantments** — everything that fits the item in your hand: what it already has, what clashes, and where to get each one. Pick the books you want, and the window shows the cheapest anvil order step by step
+- **Villagers** — each villager nearby with their best trades and prices. Click one to see the way
+
+Items in these windows are pictures only: you can’t take them.
+
+### Goals
+Say “set a goal to collect 16 diamonds”, and a bar appears at the top of the screen. The assistant picks its color, style, and text. The bar counts only what happens after you set it: items picked up, blocks mined, mobs killed, things crafted, blocks walked, your level, advancements, a place, a biome, or a dimension. Your own thrown items and the ones from your own death don’t count twice. When you reach the goal, the challenge sound plays, the bar goes away, and a message lands in chat. Goals survive restarts; one player can have up to 5.
+
+### Long answers as a book
+Ask it to “explain in detail”, and the assistant writes the answer into a book, with `[Open book]` and `[Take book]` in chat. You can take the book into your inventory for free, once.
+
+### Real time
+The assistant sees your date and time with each question: it knows it’s late at night or that your last question was yesterday. The default is Moscow time (`time.zone`). If you live elsewhere, tell the assistant, for example “I’m in Yekaterinburg”, and it remembers.
 
 ### Notebook
 
@@ -203,6 +234,13 @@ Edit `plugins/mcbuddy-spigot/config.yml`. The new keys:
 | `messages.reminder`, `messages.memory_*`, `messages.forget*` | Texts for reminders and memory |
 | `tools.reminders.max_pending` | How many reminders can wait per player (10) |
 | `tools.notes.max_per_player` | How many notes one player’s notebook can hold (200) |
+| `tools.goals.max_per_player` | How many goals one player can have at once (5) |
+| `tools.locate_biome_radius` | Biome search radius in blocks (2048) |
+| `tools.villager_radius` | Villager search radius in blocks (32) |
+| `time.zone` | The players’ default time zone (`Europe/Moscow`) |
+| `ui.buttons.*` | How buttons under answers look and their hover texts |
+| `menus.*` | Texts of the recipe, enchanting, and villager windows |
+| `messages.goal_done`, `messages.button_*`, `messages.path_*`, and so on | Texts for goals, buttons, and windows |
 | `tools.locate_structure_radius` | Structure search radius in chunks |
 | `http.tool_timeout` | Seconds a tool may run |
 

@@ -63,4 +63,46 @@ class MechanicsTest {
     assertEquals(true, Mechanics.FOODS["rotten_flesh"]!!.note?.contains("Hunger"))
     Mechanics.FOODS.values.forEach { assert(it.nutrition in 1..10 && it.saturation >= 0) }
   }
+
+  private fun book(key: String, level: Int) = Mechanics.Book(key, level, Mechanics.bookWeight(key))
+
+  @Test fun `books cost half the item price of a level`() {
+    assertEquals(1, Mechanics.bookWeight("sharpness"))
+    assertEquals(2, Mechanics.bookWeight("mending"))
+    assertEquals(4, Mechanics.bookWeight("silk_touch"))
+    assertEquals(2, Mechanics.bookWeight("some_new_enchantment"))
+  }
+
+  @Test fun `one book on a fresh item costs its levels`() {
+    val plan = Mechanics.anvilPlan(0, listOf(book("sharpness", 5)))
+    assertEquals(listOf(Mechanics.AnvilStep(listOf(0), listOf(1), 5)), plan.steps)
+    assertEquals(5, plan.total)
+    assertEquals(0, Mechanics.anvilPlan(0, emptyList()).steps.size)
+  }
+
+  @Test fun `two books go on one at a time, paying the penalty once`() {
+    val plan = Mechanics.anvilPlan(0, listOf(book("sharpness", 5), book("unbreaking", 3)))
+    // 5, then 1 for the item's first work plus 3.
+    assertEquals(9, plan.total)
+    assertEquals(2, plan.steps.size)
+    assertEquals(false, plan.tooExpensive)
+  }
+
+  @Test fun `a worn item takes its books merged first rather than hit too expensive`() {
+    val plan = Mechanics.anvilPlan(31, listOf(book("protection", 4), book("mending", 1)))
+    // Book onto book for 2, then 31 + 1 + 6 on the item: one pass instead of two.
+    assertEquals(40, plan.total)
+    assertEquals(false, plan.tooExpensive)
+    assertEquals(listOf(0), plan.steps.last().left)
+    val hopeless = Mechanics.anvilPlan(31, listOf(book("protection", 4), book("mending", 1), book("unbreaking", 3)))
+    assertEquals(true, hopeless.tooExpensive)
+  }
+
+  @Test fun `every plan uses each book exactly once`() {
+    val books = listOf("sharpness" to 5, "unbreaking" to 3, "mending" to 1, "looting" to 3, "fire_aspect" to 2, "sweeping_edge" to 3).map { (k, l) -> book(k, l) }
+    val plan = Mechanics.anvilPlan(0, books)
+    assertEquals(books.size, plan.steps.size)
+    assertEquals((0..books.size).toList(), (plan.steps.last().left + plan.steps.last().right).sorted())
+    assertEquals(plan.total, plan.steps.sumOf { it.cost })
+  }
 }

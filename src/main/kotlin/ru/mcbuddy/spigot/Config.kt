@@ -70,6 +70,19 @@ class Config(private val plugin: JavaPlugin) {
 
     val chatStatusEnabled = config.getBoolean("ui.chat_status.enabled", true)
 
+    val buttonFormat = config.getString("ui.buttons.format", "&a[{label}]")!!
+    val buttonHoverAsk = config.getString("ui.buttons.hover.ask", "&7Спросить: &f{question}")!!
+    val buttonHoverPoint = config.getString("ui.buttons.hover.point", "&7Показать путь к &f{x} {y} {z}")!!
+    val buttonHoverNote = config.getString("ui.buttons.hover.note", "&7Записать в блокнот: &f{text} &7({x} {y} {z})")!!
+    val buttonHoverRecipe = config.getString("ui.buttons.hover.recipe", "&7Открыть рецепт")!!
+    val buttonHoverEnchants = config.getString("ui.buttons.hover.enchants", "&7Открыть чары для предмета в руке")!!
+    val buttonHoverVillagers = config.getString("ui.buttons.hover.villagers", "&7Открыть жителей рядом")!!
+    val buttonHoverReadBook = config.getString("ui.buttons.hover.read_book", "&7Открыть книгу «{title}»")!!
+    val buttonHoverTakeBook = config.getString("ui.buttons.hover.take_book", "&7Положить книгу «{title}» в инвентарь")!!
+    val buttonReadBook = config.getString("ui.buttons.read_book", "Открыть книгу")!!
+    val buttonTakeBook = config.getString("ui.buttons.take_book", "Взять книгу")!!
+    val bookAuthor = config.getString("ui.book_author", "MCBuddy")!!
+
     val soundsEnabled = config.getBoolean("ui.sounds.enabled", true)
     val successSound = getSound("ui.sounds.success_sound", "ENTITY_EXPERIENCE_ORB_PICKUP", Sound.ENTITY_EXPERIENCE_ORB_PICKUP)
     val successVolume = config.getDouble("ui.sounds.success_volume", 0.5).toFloat()
@@ -125,6 +138,21 @@ class Config(private val plugin: JavaPlugin) {
     val forgetNotFoundMessage = config.getString("messages.forget_not_found", "&cНет записи с номером {n}. Список: &f/ask memory")!!
     val memoryUnsupportedMessage = config.getString("messages.memory_unsupported", "&cСервер MCBuddy пока не умеет хранить память.")!!
 
+    val goalDoneMessage = config.getString("messages.goal_done", "&a✔ Цель выполнена: &f{title}")!!
+    val buttonExpiredMessage = config.getString("messages.button_expired", "&7Эта кнопка уже не работает. Спроси ещё раз.")!!
+    val buttonQuestionMessage = config.getString("messages.button_question", "&7› {question}")!!
+    val pathShownMessage = config.getString("messages.path_shown", "&7Показываю путь: &f{distance} &7блоков на {direction}.")!!
+    val pathOtherWorldMessage = config.getString("messages.path_other_world", "&7Эта точка в другом измерении.")!!
+    val noteSavedMessage = config.getString("messages.note_saved", "&aЗаписал в блокнот: &f{text}")!!
+    val bookTakenMessage = config.getString("messages.book_taken", "&aКнига у тебя в инвентаре.")!!
+    val bookGoneMessage = config.getString("messages.book_gone", "&7Этой книги уже нет. Попроси расписать ещё раз.")!!
+    val noRecipeMessage = config.getString("messages.no_recipe", "&7У этого предмета нет рецепта: его добывают, находят или выменивают.")!!
+    val unknownItemMessage = config.getString("messages.unknown_item", "&cНет такого предмета: {item}")!!
+    val recipeUsageMessage = config.getString("messages.recipe_usage", "&7Использование: &f/ask recipe <предмет>")!!
+    val holdItemMessage = config.getString("messages.hold_item", "&7Возьми в руку предмет, который хочешь зачаровать.")!!
+    val noEnchantsMessage = config.getString("messages.no_enchants", "&7На этот предмет нельзя наложить чары.")!!
+    val noVillagersMessage = config.getString("messages.no_villagers", "&7Рядом нет жителей.")!!
+
     val reloadSuccessMessage = config.getString("messages.reload_success", "&aКонфигурация MCBuddy успешно перезагружена!")!!
     val reloadErrorMessage = config.getString("messages.reload_error", "&cОшибка при перезагрузке конфигурации: {error}")!!
 
@@ -145,6 +173,9 @@ class Config(private val plugin: JavaPlugin) {
     val structureRadius = config.getInt("tools.locate_structure_radius", 64).coerceIn(1, 128)
     val maxReminders = config.getInt("tools.reminders.max_pending", 10).coerceIn(1, 100)
     val maxNotes = config.getInt("tools.notes.max_per_player", 200).coerceIn(1, 1000)
+    val maxGoals = config.getInt("tools.goals.max_per_player", 5).coerceIn(1, 20)
+    val biomeRadius = config.getInt("tools.locate_biome_radius", 2048).coerceIn(64, 6400)
+    val villagerRadius = config.getInt("tools.villager_radius", 32).coerceIn(8, 64)
 
     /** Missing keys mean on: an old config gets every tool. Operator tools also need `tools.operator.enabled`. */
     fun enabled(name: String) = if (name in OperatorTools.NAMES) {
@@ -156,6 +187,59 @@ class Config(private val plugin: JavaPlugin) {
     init {
       plugin.logger.info("✅ Tool Settings loaded")
     }
+  }
+
+  /** Texts of the recipe, enchanting, and villager windows. */
+  val menus = Menus() ; inner class Menus(private val config: FileConfiguration = plugin.config) {
+    private fun text(key: String, default: String) = config.getString("menus.$key", default)!!
+
+    val recipeTitle = text("recipe.title", "Рецепт")
+    val back = text("back", "&eНазад")
+    val close = text("close", "&cЗакрыть")
+    val previous = text("previous", "&eНазад по списку")
+    val next = text("next", "&eДальше по списку")
+    val recipePage = text("recipe.page", "&7Рецепт {n} из {total}")
+    val recipeOpen = text("recipe.open", "&7Нажми — рецепт этого предмета")
+    val recipeNone = text("recipe.none", "&8Не крафтится: добывается, выпадает или выменивается")
+    val recipeMakes = text("recipe.makes", "&7Получится: {count} шт.")
+    val recipeCooking = text("recipe.cooking", "&7{seconds} с, {xp} опыта")
+    val recipeOptions = text("recipe.options", "&7Подойдёт любой из вариантов")
+
+    val enchantTitle = text("enchant.title", "Чары")
+    val planTitle = text("enchant.plan_title", "Порядок на наковальне")
+    val enchantPick = text("enchant.pick", "&7Нажми, чтобы выбрать")
+    val enchantSelected = text("enchant.selected", "&a✔ Выбрано")
+    val enchantHas = text("enchant.has", "&aУже есть на предмете")
+    val enchantConflict = text("enchant.conflict", "&cНе сочетается с выбранными или с чарами предмета")
+    val enchantTreasure = text("enchant.treasure", "&7Сокровище: только из сундуков, у жителей и на рыбалке")
+    val enchantCurse = text("enchant.curse", "&cПроклятие")
+    val enchantPrice = text("enchant.price", "&7Уровень с книги стоит {cost} ур.")
+    val enchantPenalty = text("enchant.penalty", "&7Штраф за прошлые работы: {penalty} ур.")
+    val planButton = text("enchant.plan", "&aПоказать порядок")
+    val planHint = text("enchant.plan_hint", "&7Выбери чары и нажми")
+    val planEmpty = text("enchant.plan_empty", "&7Сначала выбери хотя бы одни чары")
+    val planStep = text("enchant.step", "&eШаг {n}: {cost} ур.")
+    val planTooExpensive = text("enchant.too_expensive", "&cСлишком дорого: наковальня берёт до 39 уровней")
+    val planTotal = text("enchant.total", "&7Всего: {total} ур.")
+    val planItem = text("enchant.item", "&7Твой предмет")
+    val planPlus = text("enchant.plus", "&7+")
+    val planResult = text("enchant.result", "&7=")
+
+    val villagersTitle = text("villagers.title", "Жители рядом")
+    val villagerWhere = text("villagers.where", "&7{distance} блоков на {direction}")
+    val villagerLevel = text("villagers.level", "&7Уровень {level}")
+    val villagerPath = text("villagers.path", "&7Нажми — показать путь")
+    val tradePrice = text("villagers.price", "&7Цена: &f{price}")
+    val tradeLeft = text("villagers.left", "&7Осталось сделок: {left}")
+    val tradeOut = text("villagers.out", "&cРаспродано до пополнения")
+
+    init {
+      plugin.logger.info("✅ Menu texts loaded")
+    }
+  }
+
+  val time = Time() ; inner class Time(config: FileConfiguration = plugin.config) {
+    val zone = config.getString("time.zone", "Europe/Moscow")!!.let { zone -> zone.takeIf { ru.mcbuddy.spigot.tools.TimeZones.parse(it) != null } ?: "UTC" }
   }
 
   val blockedCommands = BlockedCommands() ; inner class BlockedCommands(config: FileConfiguration = plugin.config) {

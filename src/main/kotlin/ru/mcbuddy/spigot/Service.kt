@@ -13,9 +13,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Protocol.Event
+import ru.mcbuddy.spigot.tools.Features
 import ru.mcbuddy.spigot.tools.OperatorTools
-import ru.mcbuddy.spigot.tools.Notes
-import ru.mcbuddy.spigot.tools.Reminders
 import ru.mcbuddy.spigot.tools.ToolContext
 import ru.mcbuddy.spigot.tools.ToolError
 import ru.mcbuddy.spigot.tools.ToolRegistry
@@ -28,8 +27,7 @@ class Service(
   private val config: Config,
   private val client: OkHttpClient,
   private val tools: ToolRegistry,
-  private val reminders: Reminders,
-  private val notes: Notes,
+  private val features: Features,
   private val scope: CoroutineScope,
 ) {
   @Serializable data class AskRequest(val question: String, val platform: String = "minecraft", val user_id: String? = null)
@@ -128,6 +126,7 @@ class Service(
       message = message,
       user_id = player?.uniqueId?.toString() ?: "console",
       locale = player?.locale,
+      timezone = player?.let { features.zones.of(it.uniqueId) } ?: config.time.zone,
       player = player?.let { Protocol.PlayerInfo(it.name, it.uniqueId.toString(), it.isOp) },
       server = Protocol.ServerInfo(server.name, ru.mcbuddy.spigot.tools.WorldTools.version(server.bukkitVersion), plugin.description.version),
       tools = tools.offered(isOperator(run.sender)),
@@ -139,7 +138,7 @@ class Service(
   /** Runs a client tool on the server thread and posts what came out; failures go back as errors, never as exceptions. */
   private fun answerTool(run: Run, call: Protocol.ToolCall, listener: Listener) {
     val tool = tools.find(call.name)
-    val context = ToolContext(run.sender, config.tools.structureRadius, plugin, reminders, notes)
+    val context = ToolContext(run.sender, features, run.buttons)
     val result = if (tool == null) {
       Protocol.ToolResult(ok = false, error = "the tool ${call.name} is switched off on this server")
     } else if (tool.operator && !isOperator(run.sender)) {

@@ -31,7 +31,7 @@ object ActionTools {
     // Compasses point at this only in the overworld; elsewhere the trail still shows the way.
     player.compassTarget = target
     val seconds = args.int("seconds")?.also { if (it !in 1..30) throw ToolError("seconds must be 1–30") } ?: 2
-    trail(context, player, target, seconds)
+    trail(context.plugin, player, target, seconds)
     val dx = x - player.location.x
     val dz = z - player.location.z
     val distance = Math.round(Math.hypot(dx, dz))
@@ -45,10 +45,10 @@ object ActionTools {
   }
 
   /** A short line of particles from the player toward the target; only this player sees it. */
-  private fun trail(context: ToolContext, player: Player, target: Location, seconds: Int) {
+  fun trail(plugin: org.bukkit.plugin.Plugin, player: Player, target: Location, seconds: Int) {
     // Two pulses a second, so the line follows the player as they turn and walk.
     repeat(seconds * 2) { pulse ->
-      context.plugin.server.scheduler.runTaskLater(context.plugin, Runnable {
+      plugin.server.scheduler.runTaskLater(plugin, Runnable {
         if (!player.isOnline || player.world != target.world) return@Runnable
         val from = player.eyeLocation.subtract(0.0, 0.4, 0.0)
         val way = target.toVector().subtract(from.toVector())

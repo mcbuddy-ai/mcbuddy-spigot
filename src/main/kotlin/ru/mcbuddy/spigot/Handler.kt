@@ -11,7 +11,15 @@ import ru.mcbuddy.spigot.Minecraft.formatMessage
 import java.util.concurrent.ConcurrentHashMap
 
 /** Runs `/ask` and `/askx`: one stream per sender, a live display while it runs, then the answer or the commands. */
-class Handler(private val plugin: JavaPlugin, private val configuration: Config, private val service: Service, private val animator: Animator, private val executor: Executor, private val scope: CoroutineScope) {
+class Handler(
+  private val plugin: JavaPlugin,
+  private val configuration: Config,
+  private val service: Service,
+  private val animator: Animator,
+  private val executor: Executor,
+  private val scope: CoroutineScope,
+  private val clicks: () -> Clicks,
+) {
   private val errorHandler = ErrorHandler(configuration)
   private val runs = ConcurrentHashMap<String, Run>()
 
@@ -95,6 +103,7 @@ class Handler(private val plugin: JavaPlugin, private val configuration: Config,
     if (run.mode == Run.Mode.ASK) {
       player?.let(animator::playSuccessSound)
       sender.sendMessage(formatMessage(outcome.answer))
+      player?.let { clicks().show(it, run.buttons.toList()) }
       plugin.logger.info("✅ Ask command handled")
       return
     }
