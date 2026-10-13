@@ -5,8 +5,8 @@ plugins {
 }
 
 group = "ru.mcbuddy"
-// .version is the single source: CI names the release jars after it.
-version = file(".version").readText().trim()
+// The release workflow passes the version; every other build is a dev build.
+version = (findProperty("releaseVersion") as String?)?.takeIf { it.isNotBlank() } ?: "dev"
 
 repositories {
   mavenCentral()
@@ -38,6 +38,7 @@ tasks {
   }
 
   shadowJar {
+    archiveClassifier = ""
     // Relocated so other plugins that ship their own Kotlin or OkHttp can't clash with ours.
     listOf("kotlin", "kotlinx", "okhttp3", "okio").forEach { relocate(it, "ru.mcbuddy.spigot.libs.$it") }
     mergeServiceFiles()
@@ -45,7 +46,10 @@ tasks {
     dependencies { exclude(dependency("org.jetbrains:annotations")) }
   }
 
-  build {
+  // One jar with everything inside; a jar without Kotlin wouldn't load anyway.
+  jar { enabled = false }
+
+  assemble {
     dependsOn(shadowJar)
   }
 

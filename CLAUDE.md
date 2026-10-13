@@ -37,12 +37,12 @@ The contract with the backend is `docs/protocol-v2.md` in mcbuddy-ai/mcbuddy-ser
 
 ## Building and releasing
 
-- `./gradlew build` runs the tests and builds the shaded jar; Java 25.
-- The version lives in `.version` only. A push to `master` builds the plugin; a changed `.version` also creates a GitHub release with the jars. Bump it only when the owner asks.
+- `./gradlew build` runs the tests and builds `build/libs/mcbuddy-spigot-<version>.jar`, shaded; Java 25. Nothing in the repo holds the version: local builds are `dev`, CI builds on `master` and pull requests are `dev-<sha>`.
+- Releases are made by hand, only when the owner asks. Add a “## X.Y.Z” section to CHANGELOG.md, push, then run `gh workflow run release.yml -R mcbuddy-ai/mcbuddy-spigot -f version=X.Y.Z` (its `changelog` field overrides the section; one of the two must be there). It builds with `-PreleaseVersion`, tags `vX.Y.Z`, and attaches `mcbuddy-spigot-X.Y.Z.jar` to a GitHub release. Watch it with `gh run watch`. Never delete or re-tag a published release.
 
 ## Installing on Moonlands
 
-The owner's server, Moonlands, runs this plugin. When the owner asks to put a change “on the server”, release it here (bump `.version`, push, wait for the release), then follow “Shipping a plugin or backend update” in `~/c/personal/minecraft/CLAUDE.md` (MairwunNx/minecraft). That repo's rules about restarts and the live world apply.
+The owner's server, Moonlands, runs this plugin. When the owner asks to put a change “on the server”, release it here (the “Release” workflow above), then follow “Shipping a plugin or backend update” in `~/c/personal/minecraft/CLAUDE.md` (MairwunNx/minecraft). That repo's rules about restarts and the live world apply.
 
 ## Commits
 
