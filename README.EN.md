@@ -34,6 +34,7 @@ The assistant decides what it needs to know and asks the plugin while it answers
 
 - **Player state** — health, food, XP, coordinates, biome, effects, the item in hand
 - **Inventory** — armor, offhand, and the ender chest on request
+- **Items** — which enchantments a book holds, what a potion does, the trim on your armor, what’s in a shulker box or bundle; a weapon’s attack damage and speed as the game’s tooltip shows them, so the assistant can compare two swords
 - **Surroundings** — blocks and creatures around you: ores, chests, spawners, mobs
 - **Crosshair** — the block or creature you’re looking at
 - **World** — time, day, moon phase, weather, difficulty, and the rules that change advice
@@ -44,7 +45,7 @@ The assistant decides what it needs to know and asks the plugin while it answers
 - **Death** — where you died, what you dropped, and how long your things will lie there
 - **Trades** — the deals of the villager you’re looking at, and of every villager around: who sells Mending, who sells arrows
 - **Anvil** — the order to put books on that costs least and never hits “Too Expensive!”
-- **Containers** — what’s in the chest in front of you and which chest nearby holds the item you need
+- **Containers** — what’s in the chest in front of you, down to each item’s enchantments, and which chest nearby holds the item you need
 - **Blocks** — hardness, the right tool, what drops with what you hold, crop growth
 - **Gear** — how much life your tools and armor have left and what needs repair
 - **XP and food** — points to the level you want and what to eat from your inventory right now
