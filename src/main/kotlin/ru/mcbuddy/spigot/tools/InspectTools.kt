@@ -23,10 +23,10 @@ import org.bukkit.entity.Animals
 import org.bukkit.entity.Enemy
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.BlockStateMeta
 import org.bukkit.inventory.meta.MapMeta
-import org.bukkit.inventory.meta.PotionMeta
 import ru.mcbuddy.spigot.Plurals
 import ru.mcbuddy.spigot.tools.Facts.round1
 import ru.mcbuddy.spigot.tools.Facts.short
@@ -68,16 +68,31 @@ object InspectTools {
   private fun target(player: Player, range: Int = 6): Block =
     player.getTargetBlockExact(range) ?: throw ToolError("the player isn't looking at a block within $range blocks")
 
-  private val container = tool("get_container") { player, _ ->
+  /** The container under the crosshair, by the same reach and rules for every tool that opens one. */
+  private fun targetContainer(player: Player): Pair<Block, Container> {
     val block = target(player)
     val state = block.state as? Container ?: throw ToolError("${block.type.key.key} under the crosshair is not a container")
+    return block to state
+  }
+
+  /** Stacks `detail` lists at most: a full double chest, every one of its slots. */
+  private const val MAX_DETAIL = 54
+
+  private val container = tool("get_container") { player, args ->
+    val (block, state) = targetContainer(player)
     val inventory = state.inventory
     val result = buildJsonObject {
       put("type", block.type.key.key)
       (state as? Nameable)?.customName?.let { put("name", it) }
       put("slots", inventory.size)
       put("used_slots", inventory.contents.count { it != null && !it.type.isAir })
-      contents(inventory.contents.asIterable()).forEach { (key, value) -> put(key, value) }
+      if (args.bool("detail") == true) {
+        val (shown, more) = Mechanics.capped(inventory.contents.mapIndexedNotNull { slot, item -> item.compact(slot) }, MAX_DETAIL)
+        put("stacks", buildJsonArray { shown.forEach(::add) })
+        if (more > 0) put("more_stacks", more)
+      } else {
+        contents(inventory.contents.asIterable()).forEach { (key, value) -> put(key, value) }
+      }
     }
     val used = inventory.contents.count { it != null && !it.type.isAir }.toLong()
     ToolOutput(result, "$used ${Plurals.ru(used, "слот занят", "слота заняты", "слотов занято")} из ${inventory.size}")
@@ -274,18 +289,13 @@ object InspectTools {
     "breeze_rod", "cobweb", "slime_block", "stone", "brown_mushroom", "brewing_stand", "cauldron", "water_bucket",
   )
 
-  private fun potion(item: ItemStack): JsonObject? = item.compact()?.let { base ->
-    val type = (item.itemMeta as? PotionMeta)?.basePotionType ?: return@let base
-    buildJsonObject { base.forEach { (k, v) -> put(k, v) }; put("potion", type.key.key) }
-  }
-
   private val brewing = tool("get_brewing_items") { player, _ ->
     val items = player.inventory.contents.filterNotNull().filter { it.type.key.key in brewingIds }
     val origin = player.location
     val stands = blockEntitiesNear(origin, 8).filterIsInstance<BrewingStand>()
       .sortedBy { it.location.distanceSquared(origin) }.take(4)
     val result = buildJsonObject {
-      put("inventory", buildJsonArray { items.forEach { potion(it)?.let(::add) } })
+      put("inventory", buildJsonArray { items.forEach { it.compact()?.let(::add) } })
       put("brewing_stands", buildJsonArray {
         stands.forEach { stand ->
           val inventory = stand.inventory
@@ -297,7 +307,7 @@ object InspectTools {
             if (stand.brewingTime > 0) put("seconds_left", stand.brewingTime / 20)
             inventory.ingredient.compact()?.let { put("ingredient", it) }
             inventory.fuel.compact()?.let { put("fuel", it) }
-            put("bottles", buildJsonArray { (0..2).forEach { slot -> inventory.getItem(slot)?.let { potion(it) }?.let(::add) } })
+            put("bottles", buildJsonArray { (0..2).forEach { slot -> inventory.getItem(slot).compact()?.let(::add) } })
           })
         }
       })
@@ -363,5 +373,32 @@ object InspectTools {
     ToolOutput(result, "$planted ${Plurals.ru(planted, "растение", "растения", "растений")}, $herd ${Plurals.ru(herd, "животное", "животных", "животных")}")
   }
 
-  val all = listOf(container, scanContainers, blockInfo, mapInfo, enchantOptions, mobInfo, spawnCheck, brewing, farm)
+  private val armorSlots = mapOf("head" to EquipmentSlot.HEAD, "chest" to EquipmentSlot.CHEST, "legs" to EquipmentSlot.LEGS, "feet" to EquipmentSlot.FEET)
+  private val slotted = setOf("inventory", "enderchest", "container")
+
+  /** One item the player can reach: in hand, worn, in the inventory or ender chest, or in the container under the crosshair. */
+  private val inspectItem = tool("inspect_item") { player, args ->
+    val from = args.string("from")?.lowercase() ?: "hand"
+    val slot = args.int("slot")
+    fun slotIn(size: Int): Int = slot?.takeIf { it in 0 until size } ?: throw ToolError("$from needs a slot from 0 to ${size - 1}")
+    val inventory = player.inventory
+    val item = when (from) {
+      "hand" -> inventory.itemInMainHand
+      "offhand" -> inventory.itemInOffHand
+      in armorSlots -> inventory.getItem(armorSlots.getValue(from))
+      "inventory" -> inventory.storageContents.let { it[slotIn(it.size)] }
+      "enderchest" -> player.enderChest.let { it.getItem(slotIn(it.size)) }
+      "container" -> targetContainer(player).second.inventory.let { it.getItem(slotIn(it.size)) }
+      else -> throw ToolError("from must be hand, offhand, head, chest, legs, feet, inventory, enderchest, or container")
+    }
+    if (item == null || item.type.isAir) throw ToolError(if (slot != null && from in slotted) "slot $slot of $from is empty" else "nothing in $from")
+    val result = buildJsonObject {
+      put("from", from)
+      slot?.takeIf { from in slotted }?.let { put("slot", it) }
+      Items.detail(item).forEach { (key, value) -> put(key, value) }
+    }
+    ToolOutput(result, item.type.key.key)
+  }
+
+  val all = listOf(container, scanContainers, blockInfo, mapInfo, enchantOptions, mobInfo, spawnCheck, brewing, farm, inspectItem)
 }

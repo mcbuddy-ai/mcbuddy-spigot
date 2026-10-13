@@ -105,4 +105,44 @@ class MechanicsTest {
     assertEquals((0..books.size).toList(), (plan.steps.last().left + plan.steps.last().right).sorted())
     assertEquals(plan.total, plan.steps.sumOf { it.cost })
   }
+
+  private fun modifier(attribute: String, amount: Double, operation: String = "add_value", slot: String = "mainhand") = Mechanics.Modifier(attribute, amount, operation, slot)
+
+  @Test fun `weapon tooltips add the player's base to the item's modifiers`() {
+    val diamondSword = listOf(modifier("attack_damage", 6.0), modifier("attack_speed", -2.4))
+    assertEquals(mapOf("attack_damage" to 7.0, "attack_speed" to 1.6), Mechanics.tooltip(diamondSword))
+    val netheriteAxe = listOf(modifier("attack_damage", 9.0), modifier("attack_speed", -3.0))
+    assertEquals(mapOf("attack_damage" to 10.0, "attack_speed" to 1.0), Mechanics.tooltip(netheriteAxe))
+    // Armor changes no attack numbers, and modifiers for another slot don't count in hand.
+    assertEquals(emptyMap(), Mechanics.tooltip(listOf(modifier("armor", 8.0, slot = "chest"))))
+    assertEquals(emptyMap(), Mechanics.tooltip(listOf(modifier("attack_damage", 3.0, slot = "offhand"))))
+    // Multipliers come after the added values: (1 + 6) × 1.5, then × 2.
+    val custom = diamondSword + modifier("attack_damage", 0.5, "add_multiplied_base") + modifier("attack_damage", 1.0, "add_multiplied_total")
+    assertEquals(21.0, Mechanics.tooltip(custom)["attack_damage"])
+  }
+
+  @Test fun `an item's own modifiers replace its type's defaults`() {
+    val defaults = listOf(modifier("attack_damage", 6.0), modifier("attack_speed", -2.4))
+    val own = listOf(modifier("movement_speed", 0.1, "add_multiplied_base", "any"))
+    assertEquals(defaults, Mechanics.effectiveModifiers(emptyList(), defaults))
+    // Vanilla then uses only the item's own: no sword damage is left on top.
+    assertEquals(own, Mechanics.effectiveModifiers(own, defaults))
+    assertEquals(emptyMap(), Mechanics.tooltip(Mechanics.effectiveModifiers(own, defaults)))
+  }
+
+  @Test fun `tipped arrows and lingering potions show shorter effects`() {
+    assertEquals(1.0, Mechanics.potionDurationScale("potion"))
+    assertEquals(1.0, Mechanics.potionDurationScale("splash_potion"))
+    // Swiftness lasts 3:00 in a bottle, 0:45 in a lingering cloud, 0:22 on an arrow.
+    assertEquals(180, Mechanics.effectSeconds(3600, Mechanics.potionDurationScale("potion")))
+    assertEquals(45, Mechanics.effectSeconds(3600, Mechanics.potionDurationScale("lingering_potion")))
+    assertEquals(22, Mechanics.effectSeconds(3600, Mechanics.potionDurationScale("tipped_arrow")))
+    assertEquals(-1, Mechanics.effectSeconds(3600, 1.0, infinite = true))
+  }
+
+  @Test fun `capped lists say how many were left out`() {
+    assertEquals(listOf(1, 2) to 3, Mechanics.capped(listOf(1, 2, 3, 4, 5), 2))
+    assertEquals(listOf(1, 2) to 0, Mechanics.capped(listOf(1, 2), 27))
+    assertEquals(emptyList<Int>() to 0, Mechanics.capped(emptyList<Int>(), 27))
+  }
 }

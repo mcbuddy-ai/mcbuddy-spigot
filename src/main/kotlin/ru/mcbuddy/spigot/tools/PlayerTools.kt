@@ -214,7 +214,8 @@ object PlayerTools {
     offer.result.compact()?.let { sell ->
       val stored = (offer.result.itemMeta as? org.bukkit.inventory.meta.EnchantmentStorageMeta)?.storedEnchants.orEmpty()
       put("sell", if (stored.isEmpty()) sell else buildJsonObject {
-        sell.forEach { (key, value) -> put(key, value) }
+        // `book` predates compact()'s stored_enchantments; one copy is enough.
+        sell.forEach { (key, value) -> if (key != "stored_enchantments") put(key, value) }
         putJsonObject("book") { stored.forEach { (enchantment, level) -> put(enchantment.key.key, level) } }
       })
     }

@@ -1,6 +1,7 @@
 package ru.mcbuddy.spigot.tools
 
 import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
@@ -143,6 +144,49 @@ object Mechanics {
     val plan = best[full].values.reduce { a, b -> if (b.beats(a)) b else a }
     return AnvilPlan(plan.steps, plan.total, plan.worst >= TOO_EXPENSIVE)
   }
+
+  /**
+   * How much of a potion's duration an item gives, as its tooltip shows it: a tipped arrow an eighth,
+   * a lingering potion a quarter. Read from the item type: Paper's API has no duration scale to ask.
+   */
+  fun potionDurationScale(id: String): Double = when (id) {
+    "tipped_arrow" -> 0.125
+    "lingering_potion" -> 0.25
+    else -> 1.0
+  }
+
+  /** Whole seconds the tooltip shows for an effect of [ticks] on an item with this [scale]; −1 lasts forever. */
+  fun effectSeconds(ticks: Int, scale: Double, infinite: Boolean = false): Int = if (infinite) -1 else floor(ticks * scale).toInt() / 20
+
+  /** One attribute modifier: [operation] and [slot] as commands name them (`add_value`, `mainhand`). */
+  data class Modifier(val attribute: String, val amount: Double, val operation: String, val slot: String)
+
+  /** The modifiers that work: an item with modifiers of its own uses only those, never its type's defaults. */
+  fun effectiveModifiers(own: List<Modifier>, defaults: List<Modifier>): List<Modifier> = own.ifEmpty { defaults }
+
+  /** What an attribute comes to: the base plus every added value, then the base multipliers, then the total ones. */
+  fun attributeValue(base: Double, modifiers: List<Modifier>): Double {
+    val added = base + modifiers.filter { it.operation == "add_value" }.sumOf { it.amount }
+    val multiplied = added * (1 + modifiers.filter { it.operation == "add_multiplied_base" }.sumOf { it.amount })
+    return modifiers.filter { it.operation == "add_multiplied_total" }.fold(multiplied) { value, modifier -> value * (1 + modifier.amount) }
+  }
+
+  /** The player's own values a weapon's tooltip builds on: a fist hits for 1 and swings 4 times a second. */
+  val PLAYER_BASE = mapOf("attack_damage" to 1.0, "attack_speed" to 4.0)
+
+  private val MAIN_HAND = setOf("mainhand", "hand", "any")
+
+  /**
+   * Attack damage and speed as the tooltip shows them in the main hand: a diamond sword's 6 and −2.4 read as 7 and 1.6.
+   * Enchantments aren't in it, as in the game. Only attributes the item changes are listed.
+   */
+  fun tooltip(modifiers: List<Modifier>): Map<String, Double> = PLAYER_BASE.mapNotNull { (attribute, base) ->
+    val applied = modifiers.filter { it.attribute == attribute && it.slot in MAIN_HAND }
+    if (applied.isEmpty()) null else attribute to Math.round(attributeValue(base, applied) * 100) / 100.0
+  }.toMap()
+
+  /** The first [max] items and how many were left out. */
+  fun <T> capped(items: List<T>, max: Int): Pair<List<T>, Int> = items.take(max) to (items.size - max).coerceAtLeast(0)
 
   /** Hunger points and saturation each food restores, plus what else eating it does. */
   data class Food(val nutrition: Int, val saturation: Double, val note: String? = null)

@@ -122,6 +122,7 @@ class ToolLabels(private val overrides: Map<String, String>) {
       "get_death_info" to "Вспоминаю, где ты погиб",
       "find_villagers" to "Обхожу жителей рядом",
       "get_anvil_plan" to "Прикидываю порядок на наковальне",
+      "inspect_item" to "Разглядываю предмет",
       "add_buttons" to "Готовлю кнопки",
       "write_book" to "Пишу книгу: «{title}»",
       "set_goal" to "Ставлю цель: {title}",
