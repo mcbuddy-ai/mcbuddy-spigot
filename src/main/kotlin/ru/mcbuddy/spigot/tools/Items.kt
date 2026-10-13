@@ -93,6 +93,17 @@ object Items {
     else -> null
   }
 
+  /** Totals by item id of what the shulker boxes and bundles among [items] hold, one level deep. */
+  fun inside(items: Iterable<ItemStack?>, bundles: Boolean = true, shulkerBoxes: Boolean = true): Map<String, Int> {
+    val totals = mutableMapOf<String, Int>()
+    items.filterNotNull().filterNot { it.type.isAir }.forEach { item ->
+      val meta = item.itemMeta
+      if (if (meta is BundleMeta) !bundles else !shulkerBoxes) return@forEach
+      contents(item, meta)?.filterNotNull()?.filterNot { it.type.isAir }?.forEach { totals.merge(it.type.key.key, it.amount, Int::plus) }
+    }
+    return totals
+  }
+
   /** Every effect the item gives, with the seconds its tooltip shows. */
   fun effects(item: ItemStack, meta: ItemMeta?): List<JsonObject> {
     val all: List<PotionEffect> = when (meta) {

@@ -13,7 +13,6 @@ import org.bukkit.block.Block
 import org.bukkit.block.BrewingStand
 import org.bukkit.block.Container
 import org.bukkit.block.CreatureSpawner
-import org.bukkit.block.ShulkerBox
 import org.bukkit.block.data.Ageable
 import org.bukkit.block.data.Levelled
 import org.bukkit.block.data.Waterlogged
@@ -25,7 +24,6 @@ import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.BlockStateMeta
 import org.bukkit.inventory.meta.MapMeta
 import ru.mcbuddy.spigot.Plurals
 import ru.mcbuddy.spigot.tools.Facts.round1
@@ -38,19 +36,18 @@ object InspectTools {
     override fun run(context: ToolContext, args: JsonObject) = body(context.requirePlayer(), args)
   }
 
-  /** Items grouped by id with counts, biggest first; shulker boxes add their own contents under `inside`. */
+  /** Items grouped by id with counts, biggest first; shulker boxes and bundles add their own contents. */
   private fun contents(items: Iterable<ItemStack?>, limit: Int = 27): JsonObject {
     val counts = mutableMapOf<String, Int>()
-    val inside = mutableMapOf<String, Int>()
-    items.filterNotNull().filterNot { it.type.isAir }.forEach { item ->
-      counts.merge(item.type.key.key, item.amount, Int::plus)
-      val box = (item.itemMeta as? BlockStateMeta)?.takeIf { it.hasBlockState() }?.blockState as? ShulkerBox
-      box?.inventory?.contents?.filterNotNull()?.filterNot { it.type.isAir }?.forEach { inside.merge(it.type.key.key, it.amount, Int::plus) }
-    }
+    items.filterNotNull().filterNot { it.type.isAir }.forEach { item -> counts.merge(item.type.key.key, item.amount, Int::plus) }
+    fun top(totals: Map<String, Int>) = buildJsonObject { totals.entries.sortedByDescending { it.value }.take(limit).forEach { (id, n) -> put(id, n) } }
+    val boxes = Items.inside(items, bundles = false)
+    val bundles = Items.inside(items, shulkerBoxes = false)
     return buildJsonObject {
-      putJsonObject("items") { counts.entries.sortedByDescending { it.value }.take(limit).forEach { (id, n) -> put(id, n) } }
+      put("items", top(counts))
       if (counts.size > limit) put("more_kinds", counts.size - limit)
-      if (inside.isNotEmpty()) putJsonObject("inside_shulker_boxes") { inside.entries.sortedByDescending { it.value }.take(limit).forEach { (id, n) -> put(id, n) } }
+      if (boxes.isNotEmpty()) put("inside_shulker_boxes", top(boxes))
+      if (bundles.isNotEmpty()) put("inside_bundles", top(bundles))
     }
   }
 

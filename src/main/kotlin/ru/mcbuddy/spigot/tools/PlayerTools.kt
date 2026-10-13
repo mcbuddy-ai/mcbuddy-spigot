@@ -72,6 +72,10 @@ object PlayerTools {
         inventory.boots.compact()?.let { put("feet", it) }
       }
       inventory.itemInOffHand.compact()?.let { put("offhand", it) }
+      // Totals so “how many arrows do I have” counts the ones in a bundle too.
+      Items.inside(inventory.storageContents.asIterable() + inventory.itemInOffHand).takeIf { it.isNotEmpty() }?.let { totals ->
+        putJsonObject("inside_containers") { totals.entries.sortedByDescending { it.value }.forEach { (id, n) -> put(id, n) } }
+      }
       if (args.bool("include_enderchest") == true) {
         put("enderchest", buildJsonArray { player.enderChest.contents.forEachIndexed { slot, item -> item.compact(slot)?.let(::add) } })
       }
