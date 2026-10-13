@@ -170,12 +170,10 @@
 
 1. **下载插件：**
    - 访问 [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases) 页面
-   - 下载最新版本的文件 `mcbuddy-spigot-X.X.X-all.jar`
-   
-   > **重要**：使用带有 `-all.jar` 后缀的版本，它包含所有必需的依赖项！
+   - 下载最新的 `mcbuddy-spigot-X.X.X.jar`：所有依赖项都已包含在内
 
 2. **在服务器上安装：**
-   - 将 `mcbuddy-spigot-X.X.X-all.jar` 复制到您服务器的 `plugins/` 文件夹
+   - 将 `mcbuddy-spigot-X.X.X.jar` 复制到您服务器的 `plugins/` 文件夹
 
 3. **重启服务器：**
 
@@ -212,11 +210,10 @@
    - 执行 `./gradlew build`：构建插件并运行测试
 
 3. **结果：**
-   - `build/libs/mcbuddy-spigot-X.X.X.jar` — 基础版本（不含依赖项）
-   - `build/libs/mcbuddy-spigot-X.X.X-all.jar` — 完整版本，包含所有依赖项
+   - `build/libs/mcbuddy-spigot-dev.jar`，包含所有依赖项
 
 4. **安装：**
-   - 将 `mcbuddy-spigot-X.X.X-all.jar` 复制到您服务器的 `plugins/` 文件夹
+   - 将 `mcbuddy-spigot-dev.jar` 复制到您服务器的 `plugins/` 文件夹
    - 重启服务器
    - 配置 `plugins/mcbuddy-spigot/config.yml`
 

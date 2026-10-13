@@ -113,12 +113,10 @@
 
 1. **Скачайте плагин:**
   - Перейдите на страницу [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases)
-  - Скачайте последнюю версию файла `mcbuddy-spigot-X.X.X-all.jar`
-
-  > **Важно**: Используйте версию с суффиксом `-all.jar`, она содержит все необходимые зависимости!
+  - Скачайте `mcbuddy-spigot-X.X.X.jar` последней версии: все зависимости уже внутри
 
 1. **Установите на сервер:**
-  - Скопируйте `mcbuddy-spigot-X.X.X-all.jar` в папку `plugins/` вашего сервера
+  - Скопируйте `mcbuddy-spigot-X.X.X.jar` в папку `plugins/` вашего сервера
 
 2. **Перезапустите сервер:**
 
@@ -180,11 +178,10 @@
   - Выполните `./gradlew build` — он соберёт плагин и прогонит тесты
 
 3. **Результат:**
-  - `build/libs/mcbuddy-spigot-X.X.X.jar` — Базовая версия (без зависимостей)
-  - `build/libs/mcbuddy-spigot-X.X.X-all.jar` — Полная версия со всеми зависимостями
+  - `build/libs/mcbuddy-spigot-dev.jar` со всеми зависимостями внутри
 
 4. **Установка:**
-  - Скопируйте `mcbuddy-spigot-X.X.X-all.jar` в папку `plugins/` вашего сервера
+  - Скопируйте `mcbuddy-spigot-dev.jar` в папку `plugins/` вашего сервера
   - Перезапустите сервер
   - Настройте `plugins/mcbuddy-spigot/config.yml`
 
@@ -196,7 +193,7 @@
 - **kotlinx-serialization** — сериализация JSON для взаимодействия с API
 - **OkHttp 5.5** — HTTP клиент и потоковые ответы (Server-Sent Events) от MCBuddy Server
 
-Зависимости лежат внутри `-all.jar` под пакетом `ru.mcbuddy.spigot.libs`, поэтому не конфликтуют с другими плагинами.
+Зависимости лежат внутри jar под пакетом `ru.mcbuddy.spigot.libs`, поэтому не конфликтуют с другими плагинами.
 
 ## Структура проекта
 

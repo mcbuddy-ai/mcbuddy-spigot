@@ -170,12 +170,10 @@ Tools only know about the player who asked and the world around them. Other play
 
 1. **Download the plugin:**
    - Go to the [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases) page
-   - Download the latest version of the file `mcbuddy-spigot-X.X.X-all.jar`
-   
-   > **Important**: Use the version with the `-all.jar` suffix, it contains all necessary dependencies!
+   - Download the latest `mcbuddy-spigot-X.X.X.jar`: every dependency is inside
 
 2. **Install on server:**
-   - Copy `mcbuddy-spigot-X.X.X-all.jar` to the `plugins/` folder of your server
+   - Copy `mcbuddy-spigot-X.X.X.jar` to the `plugins/` folder of your server
 
 3. **Restart the server:**
 
@@ -212,11 +210,10 @@ Tools only know about the player who asked and the world around them. Other play
    - Execute `./gradlew build`: it builds the plugin and runs the tests
 
 3. **Result:**
-   - `build/libs/mcbuddy-spigot-X.X.X.jar` — Base version (without dependencies)
-   - `build/libs/mcbuddy-spigot-X.X.X-all.jar` — Full version with all dependencies
+   - `build/libs/mcbuddy-spigot-dev.jar` with every dependency inside
 
 4. **Installation:**
-   - Copy `mcbuddy-spigot-X.X.X-all.jar` to the `plugins/` folder of your server
+   - Copy `mcbuddy-spigot-dev.jar` to the `plugins/` folder of your server
    - Restart the server
    - Configure `plugins/mcbuddy-spigot/config.yml`
 
