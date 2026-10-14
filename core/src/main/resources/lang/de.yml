@@ -231,7 +231,8 @@ memory:
 # Chatmodus: Was ein Spieler in den Chat schreibt, geht an Allay. ! führt Befehle aus, ? fragt vor allen,
 # ~ schreibt in den normalen Chat. Der Tipp dazu erscheint unter dem zweiten /ask pro Besuch.
 chat_mode:
-  echo: "&8› &7{text}"
+  # Your own line in chat mode, marked like Allay's answers but without a name.
+  own: "&3✦ &7{text}"
   enabled: "&a✔ Der Chatmodus ist an. &7Alles, was du in den Chat schreibst, geht jetzt an mich statt an die anderen."
   prefix_askx: "&f  ! &7am Anfang führt Befehle aus, wie /askx"
   prefix_public: "&f  ? &7am Anfang fragt so, dass alle es sehen"

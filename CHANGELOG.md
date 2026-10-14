@@ -2,6 +2,10 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 5.0.2
+
+- ✦ **Your own line in chat mode gets the star too.** What you write to Allay in chat mode now shows as “✦ your question”, without your name, so your side of the talk matches Allay's. The text has a new key, `chat_mode.own`, so servers with their own `lang/` files get it without editing them; the old `chat_mode.echo` is no longer read.
+
 ## 5.0.1
 
 - ✦ **Every answer carries Allay's name.** Private answers and `/askx` notes now start with “✦ Allay »”, as answers everyone sees already did, so they stand out in a busy chat.

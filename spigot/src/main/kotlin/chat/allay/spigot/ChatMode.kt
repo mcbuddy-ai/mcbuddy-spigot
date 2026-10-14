@@ -75,9 +75,9 @@ class ChatMode(
     }
   }
 
-  /** The player's own line in gray, so a question doesn't just vanish from the chat. */
+  /** The player's own line under Allay's star, so a question doesn't just vanish from the chat. */
   private fun echo(player: Player, text: String) {
-    player.sendMessage(Minecraft.withText(locales.of(player).text("chat_mode.echo", "text" to Minecraft.SLOT), text))
+    player.sendMessage(Minecraft.withText(locales.of(player).text("chat_mode.own", "text" to Minecraft.SLOT), text))
   }
 
   @EventHandler
