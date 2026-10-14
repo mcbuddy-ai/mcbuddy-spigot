@@ -74,7 +74,8 @@ class Announcements(private val folder: File, private val log: Logger) {
       if (payment != null && payment != state.last_payment_at) notices += Notice.Paid(status.paid_until)
       next = next.copy(last_payment_at = payment ?: state.last_payment_at)
 
-      status.quota?.let { quota ->
+      // Before the first payment or after the period, there's no limit to speak of.
+      status.quota?.takeIf { status.active }?.let { quota ->
         val level = when {
           quota.used_percent >= 100 -> 100
           quota.used_percent >= 80 -> 80

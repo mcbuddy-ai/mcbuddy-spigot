@@ -48,9 +48,9 @@ class BillingWatch(
       val lang = locales.of(player)
       val text = formatMessage(text(lang, notice, commands.zone(player)))
       if (notice is Notice.Paid) {
-        player.sendMessage(text)
+        player.spigot().sendMessage(*plain(text))
       } else {
-        player.spigot().sendMessage(*TextComponent.fromLegacyText(text), TextComponent(" "), commands.linkButton(lang, "billing.notice.renew"))
+        player.spigot().sendMessage(*plain(text), TextComponent(" "), commands.linkButton(lang, "billing.notice.renew"))
       }
     }
     val console = plugin.server.consoleSender
@@ -59,7 +59,12 @@ class BillingWatch(
 
   private fun text(lang: Lang, notice: Notice, zone: java.time.ZoneId): String = when (notice) {
     is Notice.Paid -> lang.text("billing.notice.paid", "date" to (BillingDates.format(lang, notice.until, zone) ?: "?"))
-    is Notice.Quota -> lang.text(if (notice.level >= 100) "billing.notice.quota_100" else "billing.notice.quota_80", "date" to (BillingDates.format(lang, notice.resetsAt, zone) ?: "?"))
+    is Notice.Quota -> {
+      val key = if (notice.level >= 100) "billing.notice.quota_100" else "billing.notice.quota_80"
+      // A week or a month that's spent refills only with a payment; a year's month says when.
+      val date = BillingDates.format(lang, notice.resetsAt, zone)
+      if (date == null) lang.text("${key}_no_reset") else lang.text(key, "date" to date)
+    }
     is Notice.Expiring -> lang.text("billing.notice.expiring", "date" to (BillingDates.format(lang, notice.until, zone) ?: "?"))
   }
 }

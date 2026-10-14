@@ -451,6 +451,8 @@ billing:
     paid: "&a✔ Allay is active until {date}."
     quota_80: "&eAllay has used 80% of this server's limit. It refills {date}."
     quota_100: "&cAllay has used up this server's limit: players get a short note instead of answers until it refills {date}, or until you top it up."
+    quota_80_no_reset: "&eAllay has used 80% of this server's limit for this period."
+    quota_100_no_reset: "&cAllay has used up this server's limit: players get a short note instead of answers until you top it up."
     expiring: "&eAllay's subscription ends {date} and doesn't renew by itself."
     renew: "&a[Renew]"
     renew_hover: "&7Runs /allay link: a link to pay in Telegram"

@@ -103,7 +103,7 @@ class BillingCommands(
       add(Line(lang.text("billing.status.plan", "plan" to plan, "date" to until)))
       add(Line(lang.text(if (status.renews) "billing.status.renews" else "billing.status.no_renew")))
     }
-    status.quota?.let { quota ->
+    status.quota?.takeIf { status.active }?.let { quota ->
       add(Line(lang.text("billing.status.quota", "bar" to QuotaBar.render(quota.used_percent))))
       val percent = QuotaBar.percent(quota.used_percent)
       val refills = BillingDates.format(lang, quota.resets_at, zone)
@@ -156,15 +156,15 @@ class BillingCommands(
 
   private fun copy(lang: Lang, url: String) = button(lang.text("billing.link.copy"), lang.text("billing.link.copy_hover"), ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, url))
 
-  private fun button(text: String, hover: String, click: ClickEvent) = TextComponent(*TextComponent.fromLegacyText(formatMessage(text))).apply {
+  private fun button(text: String, hover: String, click: ClickEvent) = TextComponent(*plain(formatMessage(text))).apply {
     clickEvent = click
-    hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Text(TextComponent.fromLegacyText(formatMessage(hover))))
+    hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Text(plain(formatMessage(hover))))
   }
 
   private fun show(sender: CommandSender, line: Line) {
-    if (sender is Player && line.buttons.isNotEmpty()) {
-      val text = if (line.text.isEmpty()) emptyArray() else TextComponent.fromLegacyText(formatMessage(line.text))
-      sender.spigot().sendMessage(*text, *line.buttons.toTypedArray())
+    if (sender is Player) {
+      val text = if (line.text.isEmpty()) emptyArray() else plain(formatMessage(line.text))
+      if (text.isNotEmpty() || line.buttons.isNotEmpty()) sender.spigot().sendMessage(*text, *line.buttons.toTypedArray())
     } else {
       val text = listOfNotNull(line.text.takeIf { it.isNotEmpty() }, line.console.takeIf { sender !is Player }).joinToString(" ")
       if (text.isNotEmpty()) sender.sendMessage(formatMessage(text))
@@ -192,3 +192,9 @@ class BillingCommands(
     }
   }
 }
+
+/**
+ * Legacy text as components without the links the game guesses: Bukkit makes `license.key` or `provider.mode`
+ * a link to http://license.key. The billing lines link only through their buttons.
+ */
+internal fun plain(text: String): Array<out BaseComponent> = TextComponent.fromLegacyText(text).onEach { it.clickEvent = null }
