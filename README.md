@@ -62,6 +62,7 @@ Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lin
 | `/ask <question>` | Asks the assistant; only you see the answer |
 | `/askall <question>` | Asks in front of everyone: every player online sees the question and the answer |
 | `/askx <what to do>` | Turns a request into commands and runs them as you, minus `blocked_commands` |
+| `/buddy` | Opens the settings window: chat mode and its tip, your time zone, memory, starting over, and the recipe, enchanting, and villager windows |
 | `/buddy chat [on\|off]` | Chat mode: what you write in chat goes to the assistant |
 | `/buddy hints [on\|off]` | The tip about chat mode under answers |
 | `/buddy cancel` | Stops the question it's working on |

@@ -21,7 +21,7 @@ The Minecraft plugin of MCBuddy. `/ask` asks the AI buddy a question, `/askall` 
 | `Executor.kt` | Runs `/askx` commands as the player, minus `blocked_commands` |
 | `Clicks.kt`, `tools/Buttons.kt` | Buttons under answers (`add_buttons`, books, the chat mode tip) and what each does when pressed |
 | `tools/BuddyTools.kt` | `get_buddy_guide` (the commands, prefixes, settings, and features this player has) and `buddy_settings`. A new command or permission goes into its lists too |
-| `menus/` | The recipe, enchanting, and villager windows behind `/buddy recipe`, `/buddy enchants`, `/buddy villagers` and their buttons |
+| `menus/` | The recipe, enchanting, and villager windows behind `/buddy recipe`, `/buddy enchants`, `/buddy villagers` and their buttons; `SettingsMenu`, the window `/buddy` opens |
 | `tools/Goals.kt`, `GoalTools` | Goals with a boss bar in `goals/<uuid>.json`: statistics count from a baseline, pickups from events minus the player's own death drops |
 | `tools/TimeZones.kt` | Each player's time zone in `timezones.json`, sent as `timezone` so the backend can put their real time in front of each question |
 

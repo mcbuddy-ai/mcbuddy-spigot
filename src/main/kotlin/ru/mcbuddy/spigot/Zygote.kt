@@ -12,6 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import ru.mcbuddy.spigot.menus.MenuListener
+import ru.mcbuddy.spigot.menus.SettingsMenu
 import ru.mcbuddy.spigot.tools.Books
 import ru.mcbuddy.spigot.tools.ButtonStore
 import ru.mcbuddy.spigot.tools.Deaths
@@ -125,6 +126,7 @@ class Zygote : JavaPlugin(), TabCompleter {
     val player = sender as? Player
     val asker = sender.hasPermission(Permissions.ASK)
     when {
+      word == null && player != null -> SettingsMenu(player, lang, features, clicks, memory, description.version).open()
       // Buttons under answers run this; a typed id works only if it was shown to this player.
       word == "do" && args.size == 2 && player != null -> clicks.press(player, args[1])
       word == "reload" && sender.hasPermission(Permissions.RELOAD) -> handleReloadCommand(sender)

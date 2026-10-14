@@ -43,6 +43,7 @@ The country lookup needs no account and sends no address anywhere. On the first 
 | `/ask <question>` | Asks the assistant privately |
 | `/askall <question>` | Asks in front of everyone online |
 | `/askx <what to do>` | Turns a request into commands, minus `blocked_commands` |
+| `/buddy` | Opens the settings window |
 | `/buddy chat [on\|off]`, `/buddy hints [on\|off]` | Chat mode and the tip about it |
 | `/buddy cancel`, `/buddy new` | Stops the current question; starts the conversation over |
 | `/buddy memory`, `/buddy forget <number\|all>` | Shows and erases what the assistant remembers about you |

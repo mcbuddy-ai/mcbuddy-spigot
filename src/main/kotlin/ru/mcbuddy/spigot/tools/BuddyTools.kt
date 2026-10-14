@@ -17,6 +17,7 @@ object BuddyTools {
     Triple("/ask <question>", Permissions.ASK, "a private question; only the player sees it and the answer"),
     Triple("/askall <question>", Permissions.ASKALL, "a question every player online sees, with the answer"),
     Triple("/askx <request>", Permissions.ASKX, "turns a request into commands and runs them as the player"),
+    Triple("/buddy", Permissions.ASK, "opens a settings window: chat mode and its tip, time zone, memory, starting over, and the windows below"),
     Triple("/buddy chat [on|off]", Permissions.CHAT, "chat mode: everything the player writes in chat goes to MCBuddy"),
     Triple("/buddy hints [on|off]", Permissions.CHAT, "the tip about chat mode under answers"),
     Triple("/buddy cancel", Permissions.ASK, "stops the answer being written"),

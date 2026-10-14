@@ -28,6 +28,9 @@ abstract class Menu(val player: Player, size: Int, title: String) : InventoryHol
   /** A click on one of the window's own slots. */
   abstract fun click(slot: Int)
 
+  /** The same, for windows where a shift-click means more, such as confirming. */
+  open fun click(slot: Int, shift: Boolean) = click(slot)
+
   /** Once a second while the window is open: cycling ingredients and the like. */
   open fun tick() {}
 
@@ -72,7 +75,7 @@ class MenuListener(plugin: Plugin) : Listener {
     val menu = event.view.topInventory.holder as? Menu ?: return
     // Shift-clicks from the player's inventory, number keys, double clicks: all of it stops here.
     event.isCancelled = true
-    if (event.clickedInventory == event.view.topInventory && event.whoClicked == menu.player) menu.click(event.rawSlot)
+    if (event.clickedInventory == event.view.topInventory && event.whoClicked == menu.player) menu.click(event.rawSlot, event.isShiftClick)
   }
 
   @EventHandler(priority = EventPriority.LOWEST)
