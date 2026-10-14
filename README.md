@@ -1,12 +1,16 @@
 # MCBuddy
 
-💬 **MCBuddy** puts an AI buddy into your server's chat. A player types `/ask` and gets an answer grounded in their real game: their inventory, what they're looking at, the chests around them, this server's recipes and rules. The assistant talks like a friend who knows Minecraft inside out, and each player reads the plugin in their own language.
+💬 **MCBuddy** puts an AI buddy into your server's chat. A player types `/ask`, or just writes in chat mode, and gets an answer grounded in their real game: their inventory, what they're looking at, the chests around them, this server's recipes and rules. The assistant talks like a friend who knows Minecraft inside out, and each player reads the plugin in their own language.
 
 [Русская версия](https://github.com/mcbuddy-ai/mcbuddy-spigot/blob/master/README.RU.md)
 
 ## What you get
 
 - 💬 **`/ask` about anything in the game.** “What should I do next?”, “which sword is better?”, “where did I put my redstone?”, “how many hits for this creeper?”. The assistant looks things up in the game while it answers instead of guessing.
+- 🗨️ **Chat mode.** When friends talk on Discord and the game chat is free, `/buddy chat` sends everything a player writes to the assistant. `!` in front runs commands, `?` asks in front of everyone, `~` writes to the ordinary chat. After a second `/ask`, a quiet tip offers it, with a button to switch it on and one to hide the tip.
+- 📣 **Questions everyone sees.** `/askall` shows the question and the answer to every player online. Public questions share one thread per server, so a friend can follow up on someone else's question.
+- 📖 **It explains itself.** Ask “what can you do?” or “how do I turn off chat mode?”: the assistant reads the commands and settings this player really has, and switches chat mode when asked in words.
+- 🧩 **It knows the server's plugins.** Questions about graves, claims, or AFK get answers for the plugin and version that really run.
 - 👀 **It sees what the player sees.** One look covers the block under the crosshair with its drops, a chest's contents, an enchanting table's bookshelves, a mob and the hits it takes, a villager's trades.
 - 🎒 **It knows the player's things.** Inventory, armor, the ender chest, what's inside bundles and shulker boxes, and any item in full: enchantments, potion durations, trims, a weapon's damage and speed as the tooltip shows them.
 - 🔍 **It finds things.** Where an item is and how many there are: in the inventory, the ender chest, and the chests nearby, inside shulker boxes too.
@@ -36,7 +40,7 @@ Join at `minecraft.mairwunnx.com`. The site has the live map, player stats, and 
 1. Download `mcbuddy-spigot-X.Y.Z.jar` from [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases).
 2. Put it in your server's `plugins/` folder and restart the server.
 3. Edit `plugins/mcbuddy-spigot/config.yml` and the texts in `plugins/mcbuddy-spigot/lang/` if you like.
-4. Run `/ask reload`, then try `/ask how do I craft a beacon?`.
+4. Run `/buddy reload`, then try `/ask how do I craft a beacon?`.
 
 ## How a player gets their language
 
@@ -49,21 +53,42 @@ When nothing matches, the player gets `locales.default`, English out of the box.
 
 The country lookup needs no account and sends no address anywhere. On the first start, the plugin downloads DB-IP's free country database (4 MB) into `plugins/mcbuddy-spigot/geoip/` and refreshes it every 30 days. Players who connect through a proxy or a relay show up with its address, so they get the relay's country.
 
-Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lines, buttons, windows, errors. A key missing from a file comes from the default language, then from English; an empty string turns a message off. To add a language, copy `lang/en.yml` to, say, `lang/it.yml`, translate it, add `it: [ IT, SM, VA ]` to `locales.countries`, and run `/ask reload`.
+Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lines, buttons, windows, errors. A key missing from a file comes from the default language, then from English; an empty string turns a message off. To add a language, copy `lang/en.yml` to, say, `lang/it.yml`, translate it, add `it: [ IT, SM, VA ]` to `locales.countries`, and run `/buddy reload`.
 
 ## Commands and permissions
 
 | Command | What it does |
 |---|---|
-| `/ask <question>` | Asks the assistant |
-| `/ask cancel` | Stops the question it's working on |
-| `/ask new` | Starts the conversation over; what it remembers about you stays |
-| `/ask memory`, `/ask forget <number\|all>` | Shows and erases what it remembers about you |
-| `/ask recipe <item>`, `/ask enchants`, `/ask villagers` | Opens the recipe, enchanting, or villager window |
+| `/ask <question>` | Asks the assistant; only you see the answer |
+| `/askall <question>` | Asks in front of everyone: every player online sees the question and the answer |
 | `/askx <what to do>` | Turns a request into commands and runs them as you, minus `blocked_commands` |
-| `/ask reload` | Reloads the settings and the languages |
+| `/buddy chat [on\|off]` | Chat mode: what you write in chat goes to the assistant |
+| `/buddy hints [on\|off]` | The tip about chat mode under answers |
+| `/buddy cancel` | Stops the question it's working on |
+| `/buddy new` | Starts the conversation over; what it remembers about you stays |
+| `/buddy memory`, `/buddy forget <number\|all>` | Shows and erases what it remembers about you |
+| `/buddy recipe <item>`, `/buddy enchants`, `/buddy villagers` | Opens the recipe, enchanting, or villager window |
+| `/buddy reload` | Reloads the settings and the languages |
 
-`mcbuddy.ask` is everyone's by default; `mcbuddy.askx` and `mcbuddy.reload` belong to operators.
+In chat mode, a line goes by its first character, with or without a space after it:
+
+| You write | It goes |
+|---|---|
+| `how do I find netherite?` | To the assistant, privately, like `/ask` |
+| `! give me a stack of torches` | To the assistant as commands, like `/askx` |
+| `? where's the nearest village?` | To everyone, like `/askall` |
+| `~ brb` | To the ordinary chat |
+
+Chat mode stays on between visits; the plugin reminds you when you join. `players.json` keeps each player's settings.
+
+| Permission | Who has it | What it allows |
+|---|---|---|
+| `mcbuddy.ask` | everyone | `/ask` and `/buddy`'s memory, windows, and cancel |
+| `mcbuddy.askall` | everyone | `/askall` and `?` in chat mode |
+| `mcbuddy.chat` | everyone | Chat mode and its tip |
+| `mcbuddy.askx` | operators | `/askx` and `!` in chat mode |
+| `mcbuddy.askall.nocooldown` | operators | Asking everyone without the cooldown |
+| `mcbuddy.reload` | operators | `/buddy reload` |
 
 ## Settings
 
@@ -77,11 +102,13 @@ Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lin
 | `tools.operator.*` | Tools that give items, teleport, heal, or change time and weather; operators only |
 | `tools.reminders.max_pending`, `tools.notes.max_per_player`, `tools.goals.max_per_player` | How many reminders (10), notes (200), and goals (5) one player can have |
 | `tools.locate_structure_radius`, `tools.locate_biome_radius`, `tools.villager_radius` | Search radii |
+| `tools.server.hidden_plugins` | Plugins `get_server` leaves out of its list, such as an anti-cheat |
+| `askall.cooldown_seconds` | How long a player waits between two questions everyone sees (30) |
 | `time.zone` | The players' default time zone; a player can tell the assistant theirs |
 | `ui.*` | The action bar, tool lines, particles, sounds, and the author of the assistant's books |
 | `blocked_commands` | Commands `/askx` never runs |
 
-A `config.yml` from 2.3 still loads; its texts are skipped, since they now live in `lang/`.
+A `config.yml` from 2.3 or 2.4 still loads; a 2.3 config's texts are skipped, since they now live in `lang/`.
 
 ## How it works
 
