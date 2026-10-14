@@ -1,7 +1,11 @@
+import io.papermc.hangarpublishplugin.model.Platforms
+
 plugins {
   kotlin("jvm") version "2.4.21"
   kotlin("plugin.serialization") version "2.4.21"
   id("com.gradleup.shadow") version "9.6.1"
+  id("com.modrinth.minotaur") version "2.10.0"
+  id("io.papermc.hangar-publish-plugin") version "0.1.4"
 }
 
 group = "ru.mcbuddy"
@@ -60,6 +64,45 @@ tasks {
     filteringCharset = "UTF-8"
     filesMatching("plugin.yml") {
       expand(props)
+    }
+  }
+}
+
+// The release workflow writes the notes to a file; a local upload falls back to the GitHub release.
+val changelogText = (findProperty("changelogFile") as String?)?.let { file(it).readText() }
+  ?: "https://github.com/mcbuddy-ai/mcbuddy-spigot/releases/tag/v${project.version}"
+
+// `./gradlew modrinth` with MODRINTH_TOKEN set; the release workflow runs it when asked to.
+modrinth {
+  token = providers.environmentVariable("MODRINTH_TOKEN")
+  projectId = "mcbuddy"
+  versionNumber = project.version.toString()
+  versionName = "MCBuddy ${project.version}"
+  versionType = "release"
+  uploadFile.set(tasks.shadowJar)
+  gameVersions.addAll("26.3")
+  loaders.addAll("spigot", "paper", "purpur")
+  changelog = changelogText
+  syncBodyFrom = file("MODRINTH.md").readText()
+}
+
+tasks.modrinth {
+  dependsOn(tasks.modrinthSyncBody)
+}
+
+// `./gradlew publishPluginPublicationToHangar` with HANGAR_TOKEN set; the release workflow runs it when asked to.
+hangarPublish {
+  publications.register("plugin") {
+    version = project.version.toString()
+    id = "MCBuddy"
+    channel = "Release"
+    apiKey = providers.environmentVariable("HANGAR_TOKEN")
+    changelog = changelogText
+    platforms {
+      register(Platforms.PAPER) {
+        jar = tasks.shadowJar.flatMap { it.archiveFile }
+        platformVersions = listOf("26.3")
+      }
     }
   }
 }
