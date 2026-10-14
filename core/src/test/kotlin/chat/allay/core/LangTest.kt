@@ -64,6 +64,6 @@ class LangTest {
 
   private companion object {
     val PLACEHOLDER = Regex("\\{(\\w+)")
-    val KEY = Regex("\"((?:status|tool_lines|summary|messages|memory|buttons|goals|menus|errors|chat_mode|public)\\.[a-z_.]+[a-z_])\"")
+    val KEY = Regex("\"((?:status|tool_lines|summary|messages|memory|buttons|goals|menus|errors|chat_mode|public|billing|locale)\\.[a-z_.]+[a-z_])\"")
   }
 }
