@@ -2,6 +2,19 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 4.1.0
+
+Your server now chooses who pays for the AI model: its own key, or Allay's subscription paid in Telegram Stars. Needs Allay Server 4.1 for both; an older backend answers as before.
+
+- 💳 **A subscription in Telegram Stars** (`provider.mode: hosted`, the default). `/allay link` gets a license, keeps it in `plugins/Allay/license.key`, and shows a **[Pay in Telegram]** button and a **[Copy link]** one; the link works once and for 24 hours. Plans: a week for 150 ⭐, a month for 500 ⭐ that renews by itself, a year for 10 000 ⭐. The bot sees your server's MOTD, so you know which server you pay for.
+- 🔑 **Your own key** (`provider.mode: byok`): `provider.byok` takes the `base_url` of any OpenAI-compatible API, the `api_key`, the `model`, and the `search_model` (empty: no web search). An `X-OpenRouter-Token` in `http.custom_headers` keeps working.
+- 📊 **`/allay status`** shows who pays. For your key: the API, the models, and the key with all but its ends hidden. For the subscription: linked or not, active or not, the plan, the date it's paid until in your language, a bar of this period's limit (“62% of this period's limit used, refills 14 November”), and whether it renews.
+- 🔔 **Operators hear about the subscription.** Every 5 minutes Allay checks it and tells operators online when a payment comes in, when the limit passes 80% and 100% (with a **[Renew]** button), and three days before a subscription that doesn't renew ends. `subscription.json` remembers what they heard, so a restart doesn't repeat it.
+- ☕ **Friendly notes when Allay can't answer.** A lapsed subscription reads “Allay is taking a break on this server: the subscription isn't paid. Your admins know what to do.” A spent limit says when it refills. Operators also get a **[/allay link]** button, or what to fix in `config.yml` when the provider refuses the key, doesn't know the model, the model can't call tools, or the API address isn't allowed. Too many questions at once says how many seconds to wait.
+- 🌍 **`/allay locale [player]`** shows which language a player reads Allay in and why: their IP's country, their game's language, or the default.
+- 🔒 The key and the license never go into the log; anywhere they show, only their ends do. `license.key` is readable by the server's user only.
+- New permission `allay.admin` (operators) for `/allay status`, `/allay link`, `/allay locale`, and the notes about the subscription.
+
 ## 4.0.1
 
 - The move from MCBuddy keeps only the language lines you wrote yourself. A server that has run since MCBuddy 2.4 kept that release's texts in `lang/`, and 4.0.0 took them for your own; now texts any MCBuddy release shipped give way to Allay's.

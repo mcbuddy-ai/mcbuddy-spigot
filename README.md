@@ -41,7 +41,51 @@ Join at `minecraft.mairwunnx.com`. The site has the live map, player stats, and 
 1. Download `allay-spigot-X.Y.Z.jar` from [Releases](https://github.com/allay-ai/minecraft/releases).
 2. Put it in your server's `plugins/` folder and restart the server.
 3. Edit `plugins/Allay/config.yml` and the texts in `plugins/Allay/lang/` if you like.
-4. Run `/allay reload`, then try `/ask how do I craft a beacon?`.
+4. Pick how to pay for the model (see below): run `/allay link` for a subscription, or put your own key in `provider.byok`.
+5. Run `/allay reload`, then try `/ask how do I craft a beacon?`.
+
+## Paying for the model
+
+Every answer costs a little: providers charge for the AI model behind Allay by the word. Your server pays one of two ways, picked by `provider.mode` in `config.yml`.
+
+### Your own key (`byok`)
+
+Bring a key from [OpenRouter](https://openrouter.ai) or any other OpenAI-compatible API, and you pay the provider directly:
+
+```yaml
+provider:
+  mode: byok
+  byok:
+    base_url: "https://openrouter.ai/api/v1"   # any OpenAI-compatible API
+    api_key: "sk-or-v1-…"
+    model: ""             # empty: the backend's default; it must be able to call tools
+    search_model: ""      # empty: no web search; on OpenRouter, say, "perplexity/sonar"
+```
+
+Run `/allay reload`, then `/allay status` to check: it shows the API, the models, and the key with all but its ends hidden. Allay looks into the game through tools, so a model that can't call them won't work; the note under a failed question tells an operator what to change. On `allay.chat` your own key costs nothing extra, up to 20 questions a minute and 2000 a day per server. A key from before 4.1 in `http.custom_headers` (`X-OpenRouter-Token`) keeps working as your own OpenRouter key.
+
+### A subscription (`hosted`, the default)
+
+Allay's backend answers on its own key and models, and you pay in Telegram Stars:
+
+1. Run `/allay link`. The plugin gets a license, saves it in `plugins/Allay/license.key`, and shows a **[Pay in Telegram]** button (the console gets the plain link). The link works once and for 24 hours.
+2. The bot shows the plans. Pay with Stars:
+
+   | Plan | Stars | Period |
+   |---|---|---|
+   | Week | 150 ⭐ | 7 days |
+   | Month | 500 ⭐ | 30 days, renews by itself |
+   | Year | 10 000 ⭐ | 365 days, the limit refills every 30 days |
+
+3. `/allay status` shows the plan, the date it's paid until, and a bar of how much of this period's limit is used.
+
+Each plan has a usage limit per period. Allay checks the subscription every 5 minutes and tells operators online when a payment comes in, when the limit passes 80% and 100%, and three days before a subscription that doesn't renew runs out, with a **[Renew]** button. When the subscription lapses, players get a short, friendly note instead of an answer, and operators also get a link to pay. To pay again, run `/allay link`: it keeps the same license.
+
+⚠️ **Keep `license.key` to yourself.** Whoever has it uses your subscription. Back it up with the server, but don't share it or commit it to a public repository. It never goes into the log, and `config.yml` doesn't hold it, so you can share your config when asking for help.
+
+### Your own backend
+
+An [Allay Server](https://github.com/allay-ai/server) started with `SELFHOSTED=1` has no billing: it answers every plugin on its own key. Point `server.url` at it, and there's nothing to pay or link; `/allay status` says so.
 
 ## Coming from MCBuddy
 
@@ -79,6 +123,9 @@ Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lin
 | `/allay memory`, `/allay forget <number\|all>` | Shows and erases what it remembers about you |
 | `/allay recipe <item>`, `/allay enchants`, `/allay villagers` | Opens the recipe, enchanting, or villager window |
 | `/allay reload` | Reloads the settings and the languages |
+| `/allay status` | Who pays for the model: your key, masked, or the subscription with its plan, paid-until date, and limit |
+| `/allay link` | A one-time link to pay for the subscription in Telegram |
+| `/allay locale [player]` | Which language a player reads Allay in, and why: their IP's country, their game's language, or the default |
 
 In chat mode, a line goes by its first character, with or without a space after it:
 
@@ -99,6 +146,7 @@ Chat mode stays on between visits; the plugin reminds you when you join. `player
 | `allay.askx` | operators | `/askx` and `!` in chat mode |
 | `allay.askall.nocooldown` | operators | Asking everyone without the cooldown |
 | `allay.reload` | operators | `/allay reload` |
+| `allay.admin` | operators | `/allay status`, `/allay link`, `/allay locale`, notes about the subscription, and the hint under an error that a payment or `config.yml` fixes |
 
 ## Settings
 
@@ -107,6 +155,7 @@ Chat mode stays on between visits; the plugin reminds you when you join. `player
 | Key | What it sets |
 |---|---|
 | `server.url` | The Allay backend |
+| `provider.*` | Who pays for the model: `hosted` (a subscription) or `byok` (your own key), see “Paying for the model” |
 | `locales.*`, `geoip.*` | Where a player's language comes from, and the country database |
 | `tools.enabled.<tool>` | Switches a tool off. `scan_nearby_containers` and `find_item` see through walls: turn them off if players have claims |
 | `tools.operator.*` | Tools that give items, teleport, heal, or change time and weather; operators only |

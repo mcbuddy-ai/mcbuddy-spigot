@@ -29,6 +29,19 @@ Coming from MCBuddy? Allay is its new name from 4.0.0 on. Swap the jar: Allay mo
 
 Allay runs on Spigot, Paper 26.3, and their forks, on Java 25. It talks to the Allay backend, `https://allay.chat` by default (`server.url`).
 
+## Paying for the model
+
+Providers charge for the AI model behind Allay by the word. Your server pays one of two ways, picked by `provider.mode` in `config.yml`:
+
+- **Your own key (`byok`).** Put a key from OpenRouter or any OpenAI-compatible API in `provider.byok.api_key`, with `base_url`, `model` (it must be able to call tools), and `search_model` (empty: no web search). You pay the provider directly; on `allay.chat` it costs nothing extra, up to 20 questions a minute and 2000 a day per server.
+- **A subscription (`hosted`, the default).** Run `/allay link`: the plugin saves a license in `plugins/Allay/license.key` and shows a **[Pay in Telegram]** button, a link that works once and for 24 hours. Pay in Telegram Stars: a week for 150 ⭐, a month for 500 ⭐ (renews by itself), or a year for 10 000 ⭐ (the limit refills every 30 days). `/allay status` shows the plan, the date it's paid until, and how much of this period's limit is used.
+
+Operators online hear when a payment comes in, when the limit passes 80% and 100%, and three days before a subscription that doesn't renew runs out. When it lapses, players get a short, friendly note, and operators get a link to pay.
+
+**Keep `license.key` to yourself:** whoever has it uses your subscription. It never goes into the log or `config.yml`.
+
+Running your own [Allay Server](https://github.com/allay-ai/server) with `SELFHOSTED=1`? It has no billing: point `server.url` at it, and there's nothing to pay.
+
 ## How a player gets their language
 
 1. **By IP.** The plugin looks up the player's country and checks `locales.countries`: Russia gets Russian, Brazil gets Portuguese, Germany gets German, and so on. You can change the lists.
@@ -52,8 +65,10 @@ The country lookup needs no account and sends no address anywhere. On the first 
 | `/allay memory`, `/allay forget <number\|all>` | Shows and erases what the assistant remembers about you |
 | `/allay recipe <item>`, `/allay enchants`, `/allay villagers` | Opens a window |
 | `/allay reload` | Reloads the settings and the languages |
+| `/allay status`, `/allay link` | Who pays for the model and how the subscription stands; a link to pay in Telegram |
+| `/allay locale [player]` | Which language a player reads Allay in, and why |
 
-`allay.ask`, `allay.askall`, and `allay.chat` are everyone's by default; `allay.askx`, `allay.askall.nocooldown`, and `allay.reload` belong to operators. `scan_nearby_containers` and `find_item` see through walls: switch them off under `tools.enabled` if your players have claims.
+`allay.ask`, `allay.askall`, and `allay.chat` are everyone's by default; `allay.askx`, `allay.askall.nocooldown`, `allay.reload`, and `allay.admin` (status, link, locale, and the subscription notes) belong to operators. `scan_nearby_containers` and `find_item` see through walls: switch them off under `tools.enabled` if your players have claims.
 
 ## Links
 
