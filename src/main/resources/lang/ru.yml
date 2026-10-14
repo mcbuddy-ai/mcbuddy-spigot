@@ -84,6 +84,8 @@ tools:
   add_buttons: "Готовлю кнопки"
   write_book: "Пишу книгу: «{title}»"
   set_timezone: "Запоминаю часовой пояс: {zone}"
+  get_buddy_guide: "Вспоминаю, что я умею"
+  buddy_settings: "Меняю настройки"
   give_item: "Выдаю {item}"
   teleport: "Телепортирую"
   set_gamemode: "Меняю режим игры: {mode}"
@@ -129,7 +131,7 @@ summary:
   recipes_none: "рецептов нет"
   advancements: "получено {done}, впереди {todo}"
   world: "день {day}, сейчас {phase}"
-  server: "{software} {version}, {online} {online|игрок|игрока|игроков} онлайн"
+  server_info: "{software} {version}, {online} {online|игрок|игрока|игроков} онлайн"
   distance: "{blocks} {blocks|блок|блока|блоков} на {direction}"
   not_found: "не нашёл поблизости"
   death_near: "смерть в {blocks} {blocks|блоке|блоках|блоках}"
@@ -157,6 +159,10 @@ summary:
   buttons: "{count} {count|кнопка|кнопки|кнопок}"
   book: "{pages} {pages|страница|страницы|страниц}"
   timezone: "{zone}, там сейчас {time}"
+  guide: "{count} {count|команда|команды|команд}"
+  settings: "режим чата {chat}, подсказка {hints}"
+  switched_on: "вкл."
+  switched_off: "выкл."
   given: "выдал {item} × {count}"
   teleported: "{x} {y} {z}"
   teleported_to_player: "к игроку {player}"
@@ -178,8 +184,12 @@ summary:
     no_such_memory: "такой записи нет"
 
 messages:
-  usage: "&7Использование: &f/ask <вопрос>\n&7Пример: &f/ask как скрафтить алмазную кирку?\n&7Остановить: &f/ask cancel&7, начать заново: &f/ask new&7, память: &f/ask memory"
+  usage: "&7Использование: &f/ask <вопрос>\n&7Пример: &f/ask как скрафтить алмазную кирку?\n&7При всех: &f/askall <вопрос>&7, режим чата и остальное: &f/buddy"
   askx_usage: "&7Использование: &f/askx <что сделать>\n&7Пример: &f/askx дай мне алмазный меч с остротой 5"
+  askall_usage: "&7Использование: &f/askall <вопрос>&7 — вопрос и ответ увидят все игроки онлайн"
+  buddy_usage: "&6MCBuddy\n&f/buddy chat &7[on|off] — режим чата\n&f/buddy hints &7[on|off] — подсказка о режиме чата\n&f/buddy cancel &7— остановить ответ\n&f/buddy new &7— начать разговор заново\n&f/buddy memory &7— что я о тебе помню\n&f/buddy forget &7<номер|all> — забыть\n&f/buddy recipe &7<предмет>, &f/buddy enchants&7, &f/buddy villagers &7— окна"
+  no_permission: "&cУ тебя нет на это прав."
+  players_only: "&cЭто только для игроков."
   thinking: "&eСпрашиваю AI-ассистента, секунду…"
   askx_thinking: "&eПодбираю команды…"
   cancelled: "&7Остановил."
@@ -192,7 +202,7 @@ messages:
   command_error: "&cОшибка при выполнении /{command}"
   no_commands: "&eНет команд для выполнения"
   blocked_command: "&cЭта команда запрещена для /askx ради безопасности."
-  recipe_usage: "&7Использование: &f/ask recipe <предмет>"
+  recipe_usage: "&7Использование: &f/buddy recipe <предмет>"
   unknown_item: "&cНет такого предмета: {item}"
   no_recipe: "&7У этого предмета нет рецепта: его добывают, находят или выменивают."
   hold_item: "&7Возьми в руку предмет, который хочешь зачаровать."
@@ -204,16 +214,44 @@ messages:
 # Разговор и память. Ассистент помнит последние вопросы сутки, а важное об игроке
 # (где база, какие цели) — пока игрок не попросит забыть.
 memory:
-  session_cleared: "&aНачинаем разговор заново. Что я о тебе помню, осталось: &f/ask memory"
+  session_cleared: "&aНачинаем разговор заново. Что я о тебе помню, осталось: &f/buddy memory"
   header: "&6Что я о тебе помню:"
   line: "&e{n}. &f{text}"
-  footer: "&7Забыть: &f/ask forget <номер|all>"
+  footer: "&7Забыть: &f/buddy forget <номер|all>"
   empty: "&7Я пока ничего о тебе не запомнил. Скажи «запомни, что…», и запомню."
   forgot: "&aЗабыл: &f{text}"
   forgot_all: "&aЗабыл всё, что помнил о тебе ({count})."
-  forget_usage: "&7Использование: &f/ask forget <номер|all>&7. Номера — в &f/ask memory"
-  not_found: "&cНет записи с номером {n}. Список: &f/ask memory"
+  forget_usage: "&7Использование: &f/buddy forget <номер|all>&7. Номера — в &f/buddy memory"
+  not_found: "&cНет записи с номером {n}. Список: &f/buddy memory"
   unsupported: "&cСервер MCBuddy пока не умеет хранить память."
+
+# Режим чата: всё, что игрок пишет в чат, уходит MCBuddy. ! — команды, ? — вопрос при всех,
+# ~ — сообщение в общий чат. Подсказка о режиме появляется под вторым /ask за заход.
+chat_mode:
+  echo: "&8› &7{text}"
+  enabled: "&a✔ Режим чата включён. &7Теперь всё, что ты пишешь в чат, уходит мне, а не другим игрокам."
+  prefix_askx: "&f  ! &7в начале — выполнить команды, как /askx"
+  prefix_public: "&f  ? &7в начале — спросить так, чтобы видели все"
+  prefix_chat: "&f  ~ &7в начале — написать в общий чат"
+  how_to_off: "&7Выключить: &f/buddy chat off"
+  disabled: "&7Режим чата выключен: чат снова для всех. Спросить меня можно через &f/ask&7."
+  reminder: "&8※ Режим чата включён: пиши мне прямо в чат. &7~&8 в начале — в общий чат, &7/buddy chat off&8 — выключить."
+  no_askx: "&cКоманды через ! тебе недоступны."
+  no_askall: "&cСпрашивать при всех тебе нельзя."
+  hints_off: "&7Хорошо, больше не предлагаю. Режим чата включается командой &f/buddy chat&7."
+  hints_on: "&7Подсказка о режиме чата снова включена."
+  tip: "&8※ Можно писать мне прямо в чат, без /ask."
+  tip_enable: "&7[Режим чата]"
+  tip_enable_hover: "&7Включить режим чата: всё, что ты пишешь в чат, уйдёт мне"
+  tip_hide: "&8[Не показывать]"
+  tip_hide_hover: "&7Больше не предлагать режим чата"
+
+# Вопросы при всех (/askall, ? в режиме чата): вопрос и ответ видят все игроки онлайн.
+public:
+  question: "&5✦ &d{player} &7спрашивает MCBuddy:&f {text}"
+  answer: "&5✦ &dMCBuddy &8»&r {text}"
+  failed: "&8✦ MCBuddy не смог ответить."
+  cooldown: "&7Спросить всех снова можно через {seconds} {seconds|секунду|секунды|секунд}."
 
 # Кнопки под ответами. Нажать кнопку может только тот, кому она пришла; через час она перестаёт работать.
 buttons:

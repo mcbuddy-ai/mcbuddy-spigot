@@ -35,6 +35,7 @@ class ToolsTest {
         "point_to", "sort_inventory", "reminders", "scan_nearby_containers", "find_item", "get_light_spawn_check", "get_brewing_items", "scan_farm",
         "get_item_durability", "get_xp_info", "get_food_options", "add_note", "find_notes", "delete_note", "ping_me",
         "locate_biome", "get_death_info", "find_villagers", "get_anvil_plan", "add_buttons", "write_book", "set_timezone", "goals", "inspect_item",
+        "get_buddy_guide", "buddy_settings",
         "give_item", "teleport", "set_gamemode", "heal", "apply_effect", "set_time", "set_weather"),
       names,
     )

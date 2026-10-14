@@ -9,7 +9,7 @@ import org.bukkit.plugin.Plugin
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-/** One player's pending reminders, apart from Bukkit so tests can reach it. The cap is read on every add, so `/ask reload` applies it. */
+/** One player's pending reminders, apart from Bukkit so tests can reach it. The cap is read on every add, so `/buddy reload` applies it. */
 class ReminderBook(private val max: () -> Int, private val newId: () -> String = ::shortId) {
   class Reminder(val id: String, val text: String, val dueAt: Long, val cancel: () -> Unit)
 

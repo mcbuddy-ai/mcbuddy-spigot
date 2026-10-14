@@ -26,7 +26,7 @@ import ru.mcbuddy.spigot.tools.ToolError
 import ru.mcbuddy.spigot.tools.Villagers
 
 /**
- * Buttons under answers and the windows behind them. A button runs `/ask do <id>`; the id leads to an action
+ * Buttons under answers and the windows behind them. A button runs `/buddy do <id>`; the id leads to an action
  * this player was offered, so nobody can press a button they weren't shown.
  */
 class Clicks(
@@ -48,12 +48,28 @@ class Clicks(
       if (index > 0) parts += TextComponent(" ")
       val id = store.add(player.uniqueId, button)
       val label = button.label.ifBlank { defaultLabel(lang, button) }
-      parts += TextComponent(*TextComponent.fromLegacyText(formatMessage(lang.text("buttons.format", "label" to label)))).apply {
-        clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ask do $id")
-        hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Text(TextComponent.fromLegacyText(formatMessage(hover(lang, player, button)))))
-      }
+      parts += clickable(lang.text("buttons.format", "label" to label), id, hover(lang, player, button))
     }
     player.spigot().sendMessage(*parts.toTypedArray())
+  }
+
+  /** The quiet tip under a second `/ask`, like Claude Code's: chat mode exists, with buttons to try it or hide the tip. */
+  fun tip(player: Player) {
+    val lang = lang(player)
+    val on = store.add(player.uniqueId, Button.ChatMode(""))
+    val off = store.add(player.uniqueId, Button.HideTips(""))
+    player.spigot().sendMessage(
+      *TextComponent.fromLegacyText(formatMessage(lang.text("chat_mode.tip"))),
+      TextComponent("  "),
+      clickable(lang.text("chat_mode.tip_enable"), on, lang.text("chat_mode.tip_enable_hover")),
+      TextComponent(" "),
+      clickable(lang.text("chat_mode.tip_hide"), off, lang.text("chat_mode.tip_hide_hover")),
+    )
+  }
+
+  private fun clickable(text: String, id: String, hover: String) = TextComponent(*TextComponent.fromLegacyText(formatMessage(text))).apply {
+    clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/buddy do $id")
+    hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Text(TextComponent.fromLegacyText(formatMessage(hover))))
   }
 
   private fun defaultLabel(lang: Lang, button: Button) = when (button) {
@@ -71,9 +87,11 @@ class Clicks(
     is Button.Villagers -> lang.text("buttons.hover.villagers")
     is Button.ReadBook -> lang.text("buttons.hover.read_book", "title" to (features.books.find(player.uniqueId, button.book)?.title ?: ""))
     is Button.TakeBook -> lang.text("buttons.hover.take_book", "title" to (features.books.find(player.uniqueId, button.book)?.title ?: ""))
+    is Button.ChatMode -> lang.text("chat_mode.tip_enable_hover")
+    is Button.HideTips -> lang.text("chat_mode.tip_hide_hover")
   }
 
-  /** `/ask do <id>`. */
+  /** `/buddy do <id>`. */
   fun press(player: Player, id: String) {
     val lang = lang(player)
     when (val button = store.take(player.uniqueId, id)) {
@@ -94,6 +112,8 @@ class Clicks(
         player.inventory.addItem(Books.item(book, ui.bookAuthor)).values.forEach { player.world.dropItemNaturally(player.location, it) }
         lang.send(player, "buttons.book_taken")
       } ?: lang.send(player, "buttons.book_gone")
+      is Button.ChatMode -> features.chat.set(player, true)
+      is Button.HideTips -> features.chat.hints(player, false)
     }
   }
 
@@ -125,7 +145,7 @@ class Clicks(
     }
   }
 
-  /** `/ask recipe <item>` and the recipe button. */
+  /** `/buddy recipe <item>` and the recipe button. */
   fun recipe(player: Player, item: String) {
     val material = try {
       InteractTools.material(item)
@@ -140,7 +160,7 @@ class Clicks(
     RecipeMenu(player, lang(player), material).open()
   }
 
-  /** `/ask enchants` and the enchanting button: the window for whatever is in hand right now. */
+  /** `/buddy enchants` and the enchanting button: the window for whatever is in hand right now. */
   fun enchants(player: Player) {
     val item = player.inventory.itemInMainHand.takeUnless { it.type.isAir || it.type == Material.BOOK || it.type == Material.ENCHANTED_BOOK }
       ?: return lang(player).send(player, "messages.hold_item")
@@ -148,7 +168,7 @@ class Clicks(
     EnchantMenu(player, lang(player), item.clone()).open()
   }
 
-  /** `/ask villagers` and the villagers button. */
+  /** `/buddy villagers` and the villagers button. */
   fun villagers(player: Player, item: String?) {
     val material = item?.let { runCatching { InteractTools.material(it) }.getOrNull() }
     val found = Villagers.around(player, features.villagerRadius(), material)

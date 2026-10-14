@@ -84,6 +84,8 @@ tools:
   add_buttons: "Preparing buttons"
   write_book: "Writing a book: “{title}”"
   set_timezone: "Remembering your time zone: {zone}"
+  get_buddy_guide: "Recalling what I can do"
+  buddy_settings: "Changing your settings"
   give_item: "Giving {item}"
   teleport: "Teleporting"
   set_gamemode: "Changing the game mode: {mode}"
@@ -129,7 +131,7 @@ summary:
   recipes_none: "no recipes"
   advancements: "{done} done, {todo} to go"
   world: "day {day}, {phase}"
-  server: "{software} {version}, {online} {online|player|players} online"
+  server_info: "{software} {version}, {online} {online|player|players} online"
   distance: "{blocks} {blocks|block|blocks} {direction}"
   not_found: "nothing nearby"
   death_near: "died {blocks} {blocks|block|blocks} away"
@@ -157,6 +159,10 @@ summary:
   buttons: "{count} {count|button|buttons}"
   book: "{pages} {pages|page|pages}"
   timezone: "{zone}, it's {time} there"
+  guide: "{count} {count|command|commands}"
+  settings: "chat mode {chat}, tip {hints}"
+  switched_on: "on"
+  switched_off: "off"
   given: "gave {item} × {count}"
   teleported: "{x} {y} {z}"
   teleported_to_player: "to {player}"
@@ -178,8 +184,12 @@ summary:
     no_such_memory: "no such memory"
 
 messages:
-  usage: "&7Usage: &f/ask <question>\n&7Example: &f/ask how do I craft a diamond pickaxe?\n&7Stop: &f/ask cancel&7, start over: &f/ask new&7, memory: &f/ask memory"
+  usage: "&7Usage: &f/ask <question>\n&7Example: &f/ask how do I craft a diamond pickaxe?\n&7In front of everyone: &f/askall <question>&7, chat mode and more: &f/buddy"
   askx_usage: "&7Usage: &f/askx <what to do>\n&7Example: &f/askx give me a diamond sword with sharpness 5"
+  askall_usage: "&7Usage: &f/askall <question>&7 – everyone online sees the question and the answer"
+  buddy_usage: "&6MCBuddy\n&f/buddy chat &7[on|off] – chat mode\n&f/buddy hints &7[on|off] – the tip about chat mode\n&f/buddy cancel &7– stop the answer\n&f/buddy new &7– start the conversation over\n&f/buddy memory &7– what I remember about you\n&f/buddy forget &7<number|all> – forget it\n&f/buddy recipe &7<item>, &f/buddy enchants&7, &f/buddy villagers &7– the windows"
+  no_permission: "&cYou don't have permission for that."
+  players_only: "&cThat's for players only."
   thinking: "&eAsking the AI assistant, one moment…"
   askx_thinking: "&eWorking out the commands…"
   cancelled: "&7Stopped."
@@ -192,7 +202,7 @@ messages:
   command_error: "&cError running /{command}"
   no_commands: "&eNo commands to run"
   blocked_command: "&cThis command is blocked for /askx for safety."
-  recipe_usage: "&7Usage: &f/ask recipe <item>"
+  recipe_usage: "&7Usage: &f/buddy recipe <item>"
   unknown_item: "&cThere's no such item: {item}"
   no_recipe: "&7This item has no recipe: you mine it, find it, or trade for it."
   hold_item: "&7Hold the item you want to enchant."
@@ -204,16 +214,44 @@ messages:
 # The conversation and memory. The assistant remembers recent questions for a day and lasting
 # facts about the player (their base, their goals) until the player asks it to forget.
 memory:
-  session_cleared: "&aStarting over. What I remember about you stays: &f/ask memory"
+  session_cleared: "&aStarting over. What I remember about you stays: &f/buddy memory"
   header: "&6What I remember about you:"
   line: "&e{n}. &f{text}"
-  footer: "&7To forget: &f/ask forget <number|all>"
+  footer: "&7To forget: &f/buddy forget <number|all>"
   empty: "&7I don't remember anything about you yet. Say “remember that…” and I will."
   forgot: "&aForgot: &f{text}"
   forgot_all: "&aForgot everything I remembered about you ({count})."
-  forget_usage: "&7Usage: &f/ask forget <number|all>&7. The numbers are in &f/ask memory"
-  not_found: "&cThere's no entry number {n}. The list: &f/ask memory"
+  forget_usage: "&7Usage: &f/buddy forget <number|all>&7. The numbers are in &f/buddy memory"
+  not_found: "&cThere's no entry number {n}. The list: &f/buddy memory"
   unsupported: "&cThis MCBuddy server can't keep memories yet."
+
+# Chat mode: what a player writes in chat goes to MCBuddy. ! runs commands, ? asks so everyone
+# sees it, ~ writes to the ordinary chat. The tip about it shows under the second /ask of a visit.
+chat_mode:
+  echo: "&8› &7{text}"
+  enabled: "&a✔ Chat mode is on. &7Everything you write in chat now comes to me instead of the other players."
+  prefix_askx: "&f  ! &7at the start runs commands, like /askx"
+  prefix_public: "&f  ? &7at the start asks so everyone sees it"
+  prefix_chat: "&f  ~ &7at the start writes to the ordinary chat"
+  how_to_off: "&7To turn it off: &f/buddy chat off"
+  disabled: "&7Chat mode is off: the chat is everyone's again. Ask me with &f/ask&7."
+  reminder: "&8※ Chat mode is on: write to me right in chat. &7~&8 at the start goes to the ordinary chat, &7/buddy chat off&8 turns it off."
+  no_askx: "&cCommands with ! aren't available to you."
+  no_askall: "&cYou can't ask in front of everyone."
+  hints_off: "&7Got it, I won't suggest it again. Chat mode turns on with &f/buddy chat&7."
+  hints_on: "&7The tip about chat mode is back on."
+  tip: "&8※ You can write to me right in chat, without /ask."
+  tip_enable: "&7[Chat mode]"
+  tip_enable_hover: "&7Turn on chat mode: whatever you write in chat comes to me"
+  tip_hide: "&8[Don't show again]"
+  tip_hide_hover: "&7Stop suggesting chat mode"
+
+# Questions everyone sees (/askall, ? in chat mode): every player online reads the question and the answer.
+public:
+  question: "&5✦ &d{player} &7asks MCBuddy:&f {text}"
+  answer: "&5✦ &dMCBuddy &8»&r {text}"
+  failed: "&8✦ MCBuddy couldn't answer this time."
+  cooldown: "&7You can ask everyone again in {seconds} {seconds|second|seconds}."
 
 # Buttons under answers. Only the player who got a button can press it; it stops working after an hour.
 buttons:

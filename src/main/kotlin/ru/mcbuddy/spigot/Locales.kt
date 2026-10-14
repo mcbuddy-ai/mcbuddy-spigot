@@ -26,7 +26,7 @@ class Locales(private val plugin: JavaPlugin) : Listener {
   @Volatile lateinit var texts: Texts; private set
   @Volatile private lateinit var resolver: LocaleResolver
 
-  /** Reads the language files and starts the GeoIP refresh; `/ask reload` runs it again. */
+  /** Reads the language files and starts the GeoIP refresh; `/buddy reload` runs it again. */
   fun load(config: Config) {
     val folder = File(plugin.dataFolder, "lang")
     Texts.BUNDLED.forEach { code -> if (!File(folder, "$code.yml").exists()) plugin.saveResource("lang/$code.yml", false) }

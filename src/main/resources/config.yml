@@ -1,11 +1,12 @@
 ###############################################################################
 #                           MCBuddy configuration                             #
 ###############################################################################
-# /ask asks the AI buddy about the game, /askx turns a request into commands.
-# This file holds settings only: every text players read lives in
-# lang/<language>.yml, and each player reads their own language. Every key here
-# has a default, so you can delete the ones you don't change. /ask reload applies
-# changes without a restart.
+# /ask asks the AI buddy about the game in private, /askall in front of everyone,
+# /askx turns a request into commands. /buddy chat sends whatever a player writes
+# in chat to the buddy. This file holds settings only: every text players read
+# lives in lang/<language>.yml, and each player reads their own language. Every
+# key here has a default, so you can delete the ones you don't change.
+# /buddy reload applies changes without a restart.
 
 # The MCBuddy backend that answers questions.
 server:
@@ -102,7 +103,7 @@ tools:
     get_recipes: true             # This server's recipes
     locate_structure: true        # The nearest village, stronghold, and so on (the search loads the server)
     locate_biome: true            # The nearest biome of a kind (the search loads the server)
-    get_server: true              # Server version and players online
+    get_server: true              # Server version, players online, and the plugins with their versions
     get_locations: true           # Respawn point, world spawn, and the last death
     get_death_info: true          # Where the player died, what dropped, and how long it will lie there
     find_villagers: true          # Villagers around and their trades; can look for one item
@@ -120,6 +121,9 @@ tools:
     add_buttons: true             # Buttons under the answer: next question, the way, a note, a recipe, enchantments, villagers
     write_book: true              # A long answer as a book when the player asks for detail; the book is free to take
     set_timezone: true            # The player's time zone, so the assistant knows their real time
+    # MCBuddy about itself
+    get_buddy_guide: true         # The commands, chat mode prefixes, and settings this player has, so the assistant can explain them
+    buddy_settings: true          # Chat mode and its tip on or off when the player asks in words
     # Goals with a bar at the top of the screen, kept in plugins/mcbuddy-spigot/goals
     goals: true                   # Set, list, and cancel goals: “collect 16 diamonds”, “reach level 30”
     # The player's notebook: notes with coordinates, kept in plugins/mcbuddy-spigot/notes
@@ -156,6 +160,15 @@ tools:
   villager_radius: 32
   # The structure search radius in chunks; it runs on the main thread, so keep it small.
   locate_structure_radius: 64
+  server:
+    # Plugins get_server leaves out of its list, by name, such as an anti-cheat.
+    hidden_plugins: []
+
+# Questions everyone sees: /askall, or ? in chat mode. The question and the answer
+# go to every player online.
+askall:
+  # How long a player waits between two of them; mcbuddy.askall.nocooldown skips it.
+  cooldown_seconds: 30
 
 # Players' real time. The assistant sees each player's date and time with every question.
 # The game doesn't say where a player is, so everyone starts in this zone; a player can
@@ -164,7 +177,8 @@ time:
   zone: "Europe/Moscow"       # An IANA time zone, such as Europe/Berlin or America/New_York
 
 # Commands /askx may never run, whatever the request. Who may use the commands is up to
-# permissions: mcbuddy.ask (everyone by default), mcbuddy.askx and mcbuddy.reload (operators).
+# permissions: mcbuddy.ask, mcbuddy.askall, and mcbuddy.chat (everyone by default),
+# mcbuddy.askx, mcbuddy.askall.nocooldown, and mcbuddy.reload (operators).
 blocked_commands:
   - "ban"
   - "config"

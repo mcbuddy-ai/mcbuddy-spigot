@@ -79,6 +79,8 @@ class Config(private val plugin: JavaPlugin) {
     val maxGoals = config.getInt("tools.goals.max_per_player", 5).coerceIn(1, 20)
     val biomeRadius = config.getInt("tools.locate_biome_radius", 2048).coerceIn(64, 6400)
     val villagerRadius = config.getInt("tools.villager_radius", 32).coerceIn(8, 64)
+    /** Plugins `get_server` leaves out of its list, by name, in any case. */
+    val hiddenPlugins = config.getStringList("tools.server.hidden_plugins").map(String::lowercase).toSet()
 
     /** Missing keys mean on: an old config gets every tool. Operator tools also need `tools.operator.enabled`. */
     fun enabled(name: String) = if (name in OperatorTools.NAMES) {
@@ -86,6 +88,10 @@ class Config(private val plugin: JavaPlugin) {
     } else {
       switches?.getBoolean(name, true) ?: true
     }
+  }
+
+  val askall = AskAll() ; inner class AskAll {
+    val cooldownSeconds = config.getInt("askall.cooldown_seconds", 30).toLong().coerceAtLeast(0)
   }
 
   val time = Time() ; inner class Time {

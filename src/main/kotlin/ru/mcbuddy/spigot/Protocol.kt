@@ -17,6 +17,8 @@ object Protocol {
     val mode: String,
     val message: String,
     val platform: String = "minecraft",
+    /** Since 3.0: "public" when every player online sees the question and the answer. */
+    val visibility: String = "private",
     val user_id: String,
     val locale: String? = null,
     /** The asker's IANA time zone, so the backend can tell the model their real time. */
@@ -28,7 +30,8 @@ object Protocol {
 
   @Serializable data class PlayerInfo(val name: String, val uuid: String, val op: Boolean)
 
-  @Serializable data class ServerInfo(val software: String, val version: String, val plugin_version: String)
+  /** [id] is random and kept by the plugin; it names the server's shared thread of public questions. */
+  @Serializable data class ServerInfo(val id: String? = null, val software: String, val version: String, val plugin_version: String)
 
   @Serializable data class Start(val run_id: String, val model: String? = null)
 

@@ -2,6 +2,7 @@ package ru.mcbuddy.spigot.tools
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
@@ -68,8 +69,28 @@ object WorldTools {
         put("online", online)
         put("max_players", server.maxPlayers)
         put("plugin_version", org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(WorldTools::class.java).description.version)
+        val hidden = context.features.config().tools.hiddenPlugins
+        put("plugins", buildJsonArray {
+          server.pluginManager.plugins.filter { it.isEnabled && it.name.lowercase() !in hidden }.sortedBy { it.name.lowercase() }.forEach { plugin ->
+            add(buildJsonObject {
+              put("name", plugin.name)
+              put("version", plugin.description.version)
+              plugin.description.description?.let(::shortDescription)?.let { put("description", it) }
+            })
+          }
+        })
       }
-      return ToolOutput(result, context.lang.text("summary.server", "software" to server.name, "version" to version, "online" to online))
+      return ToolOutput(result, context.lang.text("summary.server_info", "software" to server.name, "version" to version, "online" to online))
+    }
+  }
+
+  /** A plugin's own one-liner, cut to keep the tool result small; descriptions can run to paragraphs. */
+  fun shortDescription(text: String): String? {
+    val line = text.replace(Regex("\\s+"), " ").trim()
+    return when {
+      line.isEmpty() -> null
+      line.length <= 120 -> line
+      else -> line.take(119).trimEnd() + "…"
     }
   }
 

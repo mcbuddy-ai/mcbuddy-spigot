@@ -7,7 +7,7 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Minecraft.formatMessage
 
-/** `/ask new`, `/ask memory`, and `/ask forget`: what the backend remembers about the asker, under their control. */
+/** `/buddy new`, `/buddy memory`, and `/buddy forget`: what the backend remembers about the asker, under their control. */
 class MemoryCommands(private val plugin: JavaPlugin, private val locales: Locales, private val service: Service, private val scope: CoroutineScope) {
 
   fun newSession(sender: CommandSender): Boolean = request(sender) { lang ->
@@ -23,7 +23,7 @@ class MemoryCommands(private val plugin: JavaPlugin, private val locales: Locale
       lang.text("memory.footer")
   }
 
-  /** Numbers come from a fresh list, so they match what `/ask memory` shows right now. */
+  /** Numbers come from a fresh list, so they match what `/buddy memory` shows right now. */
   fun forget(sender: CommandSender, which: String): Boolean = request(sender) { lang ->
     val userId = userId(sender)
     if (which.equals("all", ignoreCase = true)) {

@@ -10,7 +10,11 @@ import org.bukkit.plugin.java.JavaPlugin
 import ru.mcbuddy.spigot.Minecraft.formatMessage
 import java.util.concurrent.ConcurrentHashMap
 
-/** Runs `/ask` and `/askx`: one stream per sender, a live display while it runs, then the answer or the commands. */
+/**
+ * Runs `/ask`, `/askall`, `/askx`, and chat mode's questions: one stream per sender, a live display while it runs,
+ * then the answer or the commands. A public question and its answer go to every player online; the rest of the
+ * display stays with the asker.
+ */
 class Handler(
   private val plugin: JavaPlugin,
   private val configuration: Config,
@@ -22,12 +26,10 @@ class Handler(
   private val clicks: () -> Clicks,
 ) {
   private val runs = ConcurrentHashMap<String, Run>()
+  /** When each player last asked everyone, for `askall.cooldown_seconds`. */
+  private val lastPublic = ConcurrentHashMap<String, Long>()
 
-  fun handleAskCommand(sender: CommandSender, args: Array<out String>) = handle(sender, args, Run.Mode.ASK)
-
-  fun handleAskxCommand(sender: CommandSender, args: Array<out String>) = handle(sender, args, Run.Mode.ASKX)
-
-  /** `/ask cancel`: stops the sender's run, like Esc in Claude Code. */
+  /** `/buddy cancel`: stops the sender's run, like Esc in Claude Code. */
   fun cancel(sender: CommandSender): Boolean {
     val run = runs.remove(key(sender))
     if (run == null) {
@@ -45,22 +47,40 @@ class Handler(
     runs.clear()
   }
 
-  private fun handle(sender: CommandSender, args: Array<out String>, mode: Run.Mode): Boolean {
+  /**
+   * Asks MCBuddy. [public] shows the question and the answer to everyone online; [tip] puts the chat mode tip
+   * under the answer.
+   */
+  fun ask(sender: CommandSender, message: String, mode: Run.Mode, public: Boolean = false, tip: Boolean = false): Boolean {
     val lang = locales.of(sender)
-    if (args.isEmpty()) {
-      lang.send(sender, if (mode == Run.Mode.ASK) "messages.usage" else "messages.askx_usage")
+    if (message.isBlank()) {
+      lang.send(sender, when {
+        mode == Run.Mode.ASKX -> "messages.askx_usage"
+        public -> "messages.askall_usage"
+        else -> "messages.usage"
+      })
       return true
     }
-    plugin.logger.info("🔄 Handling ${mode.wire} command")
+    if (public && !sender.hasPermission(Permissions.ASKALL_NO_COOLDOWN)) {
+      val now = System.currentTimeMillis()
+      val wait = configuration.askall.cooldownSeconds * 1000 - (now - (lastPublic[key(sender)] ?: 0))
+      if (wait > 0) {
+        lang.send(sender, "public.cooldown", "seconds" to (wait + 999) / 1000)
+        return true
+      }
+      lastPublic[key(sender)] = now
+    }
+    plugin.logger.info("🔄 Handling ${if (public) "public " else ""}${mode.wire} question")
 
-    val message = args.joinToString(" ")
+    if (public) broadcast("public.question", sender.name, message)
     if (configuration.ui.chatStatusEnabled) {
       lang.send(sender, if (mode == Run.Mode.ASK) "messages.thinking" else "messages.askx_thinking")
     }
 
     // A new question replaces the one still running.
     runs.remove(key(sender))?.cancel()
-    val run = Run(sender, mode, lang, configuration.ui.verbSeconds)
+    val run = Run(sender, mode, lang, configuration.ui.verbSeconds, public)
+    run.tip = tip
     runs[key(sender)] = run
     animator.start(run)
 
@@ -82,6 +102,7 @@ class Handler(
             animator.playErrorSound(it)
           }
           sender.sendMessage(formatMessage(ErrorHandler.message(lang, e)))
+          if (public) everyoneBut(sender).forEach { locales.of(it).send(it, "public.failed") }
         }
       } finally {
         runs.remove(key(sender), run)
@@ -97,9 +118,15 @@ class Handler(
 
     if (run.mode == Run.Mode.ASK) {
       player?.let(animator::playSuccessSound)
-      sender.sendMessage(formatMessage(outcome.answer))
+      if (run.public) {
+        broadcast("public.answer", sender.name, outcome.answer, colored = true)
+      } else {
+        sender.sendMessage(formatMessage(outcome.answer))
+      }
+      // Buttons belong to the asker, even under an answer everyone reads.
       player?.let { clicks().show(it, run.buttons.toList()) }
-      plugin.logger.info("✅ Ask command handled")
+      if (run.tip) player?.let { clicks().tip(it) }
+      plugin.logger.info("✅ Question answered")
       return
     }
 
@@ -117,6 +144,20 @@ class Handler(
     if (sequential) executor.executeCommandsSequentially(commands, sender) else executor.executeCommandsParallel(commands, sender)
     plugin.logger.info("✅ Askx command handled")
   }
+
+  /**
+   * A line every player online reads in their own language, and the console too. The question is the player's
+   * own text, so its `&` stays as typed; the answer is MCBuddy's and may use colors.
+   */
+  private fun broadcast(key: String, asker: String, text: String, colored: Boolean = false) {
+    val readers = plugin.server.onlinePlayers + plugin.server.consoleSender
+    readers.forEach { reader ->
+      val template = locales.of(reader).text(key, "player" to asker, "text" to Minecraft.SLOT)
+      reader.sendMessage(if (colored) formatMessage(template.replace(Minecraft.SLOT, text)) else Minecraft.withText(template, text))
+    }
+  }
+
+  private fun everyoneBut(sender: CommandSender) = plugin.server.onlinePlayers.filter { it != sender }
 
   private fun onMain(block: () -> Unit) {
     if (plugin.isEnabled) plugin.server.scheduler.runTask(plugin, Runnable(block))

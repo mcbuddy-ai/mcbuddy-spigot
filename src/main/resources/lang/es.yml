@@ -84,6 +84,8 @@ tools:
   add_buttons: "Preparando botones"
   write_book: "Escribiendo un libro: “{title}”"
   set_timezone: "Recordando tu zona horaria: {zone}"
+  get_buddy_guide: "Recordando lo que sé hacer"
+  buddy_settings: "Cambiando tus ajustes"
   give_item: "Dando {item}"
   teleport: "Teletransportando"
   set_gamemode: "Cambiando el modo de juego: {mode}"
@@ -129,7 +131,7 @@ summary:
   recipes_none: "no hay recetas"
   advancements: "{done} hechos, faltan {todo}"
   world: "día {day}, {phase}"
-  server: "{software} {version}, {online} {online|jugador|jugadores} en línea"
+  server_info: "{software} {version}, {online} {online|jugador|jugadores} en línea"
   distance: "{blocks} {blocks|bloque|bloques} al {direction}"
   not_found: "nada cerca"
   death_near: "moriste a {blocks} {blocks|bloque|bloques}"
@@ -157,6 +159,10 @@ summary:
   buttons: "{count} {count|botón|botones}"
   book: "{pages} {pages|página|páginas}"
   timezone: "{zone}, allí son las {time}"
+  guide: "{count} {count|comando|comandos}"
+  settings: "modo chat {chat}, consejo {hints}"
+  switched_on: "activado"
+  switched_off: "desactivado"
   given: "di {item} × {count}"
   teleported: "{x} {y} {z}"
   teleported_to_player: "hasta {player}"
@@ -178,8 +184,12 @@ summary:
     no_such_memory: "no existe ese recuerdo"
 
 messages:
-  usage: "&7Uso: &f/ask <pregunta>\n&7Ejemplo: &f/ask ¿cómo fabrico un pico de diamante?\n&7Parar: &f/ask cancel&7, empezar de nuevo: &f/ask new&7, memoria: &f/ask memory"
+  usage: "&7Uso: &f/ask <pregunta>\n&7Ejemplo: &f/ask ¿cómo fabrico un pico de diamante?\n&7Delante de todos: &f/askall <pregunta>&7, modo chat y más: &f/buddy"
   askx_usage: "&7Uso: &f/askx <qué hacer>\n&7Ejemplo: &f/askx dame una espada de diamante con filo 5"
+  askall_usage: "&7Uso: &f/askall <pregunta>&7 — todos los jugadores en línea ven la pregunta y la respuesta"
+  buddy_usage: "&6MCBuddy\n&f/buddy chat &7[on|off] — modo chat\n&f/buddy hints &7[on|off] — el consejo sobre el modo chat\n&f/buddy cancel &7— parar la respuesta\n&f/buddy new &7— empezar la conversación de nuevo\n&f/buddy memory &7— lo que recuerdo de ti\n&f/buddy forget &7<número|all> — olvidar\n&f/buddy recipe &7<objeto>, &f/buddy enchants&7, &f/buddy villagers &7— las ventanas"
+  no_permission: "&cNo tienes permiso para eso."
+  players_only: "&cEsto es solo para jugadores."
   thinking: "&ePreguntando al asistente de IA, un momento…"
   askx_thinking: "&eBuscando los comandos…"
   cancelled: "&7Parado."
@@ -192,7 +202,7 @@ messages:
   command_error: "&cError al ejecutar /{command}"
   no_commands: "&eNo hay comandos que ejecutar"
   blocked_command: "&cEste comando está bloqueado en /askx por seguridad."
-  recipe_usage: "&7Uso: &f/ask recipe <objeto>"
+  recipe_usage: "&7Uso: &f/buddy recipe <objeto>"
   unknown_item: "&cEse objeto no existe: {item}"
   no_recipe: "&7Este objeto no tiene receta: se pica, se encuentra o se consigue comerciando."
   hold_item: "&7Sujeta en la mano el objeto que quieres encantar."
@@ -204,16 +214,44 @@ messages:
 # La conversación y la memoria. El asistente recuerda las preguntas recientes durante un día, y los
 # datos duraderos del jugador (su base, sus objetivos) hasta que el jugador le pida olvidarlos.
 memory:
-  session_cleared: "&aEmpezamos de nuevo. Lo que recuerdo de ti sigue ahí: &f/ask memory"
+  session_cleared: "&aEmpezamos de nuevo. Lo que recuerdo de ti sigue ahí: &f/buddy memory"
   header: "&6Lo que recuerdo de ti:"
   line: "&e{n}. &f{text}"
-  footer: "&7Para olvidar: &f/ask forget <número|all>"
+  footer: "&7Para olvidar: &f/buddy forget <número|all>"
   empty: "&7Todavía no recuerdo nada de ti. Dime “recuerda que…” y lo haré."
   forgot: "&aOlvidado: &f{text}"
   forgot_all: "&aHe olvidado todo lo que recordaba de ti ({count})."
-  forget_usage: "&7Uso: &f/ask forget <número|all>&7. Los números están en &f/ask memory"
-  not_found: "&cNo hay ninguna entrada con el número {n}. La lista: &f/ask memory"
+  forget_usage: "&7Uso: &f/buddy forget <número|all>&7. Los números están en &f/buddy memory"
+  not_found: "&cNo hay ninguna entrada con el número {n}. La lista: &f/buddy memory"
   unsupported: "&cEste servidor de MCBuddy aún no puede guardar recuerdos."
+
+# Modo chat: lo que el jugador escribe en el chat va a MCBuddy. ! ejecuta comandos, ? pregunta delante de
+# todos, ~ escribe en el chat normal. El consejo aparece bajo el segundo /ask de cada visita.
+chat_mode:
+  echo: "&8› &7{text}"
+  enabled: "&a✔ Modo chat activado. &7Ahora todo lo que escribas en el chat me llega a mí, no a los demás jugadores."
+  prefix_askx: "&f  ! &7al principio ejecuta comandos, como /askx"
+  prefix_public: "&f  ? &7al principio pregunta para que todos lo vean"
+  prefix_chat: "&f  ~ &7al principio escribe en el chat normal"
+  how_to_off: "&7Para desactivarlo: &f/buddy chat off"
+  disabled: "&7Modo chat desactivado: el chat vuelve a ser de todos. Pregúntame con &f/ask&7."
+  reminder: "&8※ El modo chat está activado: escríbeme directamente en el chat. &7~&8 al principio va al chat normal, &7/buddy chat off&8 lo desactiva."
+  no_askx: "&cLos comandos con ! no están disponibles para ti."
+  no_askall: "&cNo puedes preguntar delante de todos."
+  hints_off: "&7Vale, no te lo vuelvo a sugerir. El modo chat se activa con &f/buddy chat&7."
+  hints_on: "&7El consejo sobre el modo chat vuelve a estar activado."
+  tip: "&8※ Puedes escribirme directamente en el chat, sin /ask."
+  tip_enable: "&7[Modo chat]"
+  tip_enable_hover: "&7Activar el modo chat: todo lo que escribas en el chat me llegará a mí"
+  tip_hide: "&8[No mostrar más]"
+  tip_hide_hover: "&7Dejar de sugerir el modo chat"
+
+# Preguntas delante de todos (/askall, ? en modo chat): todos los jugadores en línea leen la pregunta y la respuesta.
+public:
+  question: "&5✦ &d{player} &7pregunta a MCBuddy:&f {text}"
+  answer: "&5✦ &dMCBuddy &8»&r {text}"
+  failed: "&8✦ MCBuddy no pudo responder esta vez."
+  cooldown: "&7Podrás preguntar a todos otra vez en {seconds} {seconds|segundo|segundos}."
 
 # Botones bajo las respuestas. Solo puede pulsarlos el jugador que los recibió; dejan de funcionar al cabo de una hora.
 buttons:

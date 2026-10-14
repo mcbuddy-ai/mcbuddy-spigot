@@ -131,11 +131,12 @@ class Service(
     return Protocol.ChatRequest(
       mode = run.mode.wire,
       message = message,
+      visibility = if (run.public) "public" else "private",
       user_id = player?.uniqueId?.toString() ?: "console",
       locale = player?.locale,
       timezone = player?.let { features.zones.of(it.uniqueId) } ?: config.time.zone,
       player = player?.let { Protocol.PlayerInfo(it.name, it.uniqueId.toString(), it.isOp) },
-      server = Protocol.ServerInfo(server.name, ru.mcbuddy.spigot.tools.WorldTools.version(server.bukkitVersion), plugin.description.version),
+      server = Protocol.ServerInfo(features.serverId, server.name, ru.mcbuddy.spigot.tools.WorldTools.version(server.bukkitVersion), plugin.description.version),
       tools = tools.offered(isOperator(run.sender)),
     )
   }
@@ -183,7 +184,7 @@ class Service(
   @Serializable private data class Memories(val memories: List<Memory> = emptyList())
   @Serializable private data class Deleted(val deleted: Int = 0)
 
-  /** `/ask new`: the backend forgets the conversation but keeps the memories. */
+  /** `/buddy new`: the backend forgets the conversation but keeps the memories. */
   suspend fun resetSession(userId: String) = withContext(IO) { send("/api/v2/users/${path(userId)}/session", "DELETE") }
 
   suspend fun memories(userId: String): List<Memory> = withContext(IO) {

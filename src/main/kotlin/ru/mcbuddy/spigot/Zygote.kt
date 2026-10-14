@@ -38,17 +38,20 @@ class Zygote : JavaPlugin(), TabCompleter {
   private lateinit var features: Features
   private lateinit var menus: MenuListener
   private lateinit var clicks: Clicks
+  private lateinit var chat: ChatMode
   private val buttons = ButtonStore()
   private val locales = Locales(this)
 
   override fun onEnable() {
     saveDefaultConfig()
-    // Outlives /ask reload, so reminders already set keep their schedule.
+    // Outlives /buddy reload, so reminders already set keep their schedule.
     reminders = Reminders(this, locales) { configuration.tools.maxReminders }
     server.pluginManager.registerEvents(reminders, this)
     notes = Notes(this) { configuration.tools.maxNotes }
     goals = Goals(this, locales) { configuration.tools.maxGoals }
     val deaths = Deaths()
+    val settings = PlayerSettings(this)
+    chat = ChatMode(this, locales, settings) { handler }
     features = Features(
       plugin = this,
       locales = locales,
@@ -58,15 +61,19 @@ class Zygote : JavaPlugin(), TabCompleter {
       books = Books(),
       deaths = deaths,
       zones = TimeZones(this) { configuration.time.zone },
+      settings = settings,
+      chat = chat,
+      serverId = PlayerSettings.serverId(this),
+      config = { configuration },
       structureRadius = { configuration.tools.structureRadius },
       biomeRadius = { configuration.tools.biomeRadius },
       villagerRadius = { configuration.tools.villagerRadius },
     )
     menus = MenuListener(this)
-    listOf(goals, deaths, menus, locales).forEach { server.pluginManager.registerEvents(it, this) }
+    listOf(goals, deaths, menus, locales, chat).forEach { server.pluginManager.registerEvents(it, this) }
     goals.start()
     initializeComponents()
-    listOf("ask", "askx").map(::getCommand).forEach {
+    listOf("ask", "askx", "askall", "buddy").map(::getCommand).forEach {
       it?.setExecutor(this)
       it?.tabCompleter = this
     }
@@ -84,7 +91,7 @@ class Zygote : JavaPlugin(), TabCompleter {
     service = Service(this, configuration, client, tools, features, scope)
     executor = Executor(this, configuration, locales, animator)
     handler = Handler(this, configuration, locales, service, animator, executor, scope) { clicks }
-    clicks = Clicks(this, configuration, features, buttons) { player, question -> handler.handleAskCommand(player, question.split(" ").toTypedArray()) }
+    clicks = Clicks(this, configuration, features, buttons) { player, question -> handler.ask(player, question, Run.Mode.ASK) }
     memory = MemoryCommands(this, locales, service, scope)
   }
 
@@ -100,40 +107,66 @@ class Zygote : JavaPlugin(), TabCompleter {
   }
 
   override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
-    val ask = command.name.equals("ask", ignoreCase = true)
+    val text = args.joinToString(" ")
+    when (command.name.lowercase()) {
+      "ask" -> handler.ask(sender, text, Run.Mode.ASK, tip = sender is Player && text.isNotBlank() && chat.counts(sender))
+      "askall" -> handler.ask(sender, text, Run.Mode.ASK, public = true)
+      "askx" -> handler.ask(sender, text, Run.Mode.ASKX)
+      "buddy" -> buddy(sender, args)
+      else -> return false
+    }
+    return true
+  }
+
+  /** `/buddy`: everything around the questions. */
+  private fun buddy(sender: CommandSender, args: Array<out String>) {
+    val lang = locales.of(sender)
     val word = args.firstOrNull()?.lowercase()
-    return when (command.name.lowercase()) {
-      "ask", "askx" -> when {
-        args.size == 1 && word == "reload" && sender.hasPermission(RELOAD_PERMISSION) -> handleReloadCommand(sender)
-        args.size == 1 && word == "cancel" -> handler.cancel(sender)
-        ask && args.size == 1 && word == "new" -> memory.newSession(sender)
-        ask && args.size == 1 && word == "memory" -> memory.list(sender)
-        ask && word == "forget" && args.size <= 2 -> args.getOrNull(1)?.let { memory.forget(sender, it) }
-          ?: true.also { memory.usage(sender) }
-        // Buttons under answers run this; a typed id works only if it was shown to this player.
-        ask && word == "do" && args.size == 2 && sender is Player -> true.also { clicks.press(sender, args[1]) }
-        ask && word == "recipe" && sender is Player -> true.also {
-          if (args.size < 2) locales.of(sender).send(sender, "messages.recipe_usage") else clicks.recipe(sender, args.drop(1).joinToString("_"))
+    val player = sender as? Player
+    val asker = sender.hasPermission(Permissions.ASK)
+    when {
+      // Buttons under answers run this; a typed id works only if it was shown to this player.
+      word == "do" && args.size == 2 && player != null -> clicks.press(player, args[1])
+      word == "reload" && sender.hasPermission(Permissions.RELOAD) -> handleReloadCommand(sender)
+      word == "chat" || word == "hints" -> when {
+        player == null -> lang.send(sender, "messages.players_only")
+        !sender.hasPermission(Permissions.CHAT) -> lang.send(sender, "messages.no_permission")
+        else -> {
+          val settings = features.settings.of(player.uniqueId)
+          val current = if (word == "chat") settings.chat_mode else settings.hints
+          val wanted = when (args.getOrNull(1)?.lowercase()) {
+            "on" -> true
+            "off" -> false
+            null -> !current
+            else -> return lang.send(sender, "messages.buddy_usage")
+          }
+          if (word == "chat") chat.set(player, wanted) else chat.hints(player, wanted)
         }
-        ask && args.size == 1 && word == "enchants" && sender is Player -> true.also { clicks.enchants(sender) }
-        ask && args.size == 1 && word == "villagers" && sender is Player -> true.also { clicks.villagers(sender, null) }
-        ask -> handler.handleAskCommand(sender, args)
-        else -> handler.handleAskxCommand(sender, args)
       }
-      else -> false
+      !asker -> lang.send(sender, "messages.no_permission")
+      word == "cancel" && args.size == 1 -> handler.cancel(sender)
+      word == "new" && args.size == 1 -> memory.newSession(sender)
+      word == "memory" && args.size == 1 -> memory.list(sender)
+      word == "forget" && args.size <= 2 -> args.getOrNull(1)?.let { memory.forget(sender, it) } ?: memory.usage(sender)
+      word == "recipe" && player != null ->
+        if (args.size < 2) lang.send(sender, "messages.recipe_usage") else clicks.recipe(player, args.drop(1).joinToString("_"))
+      word == "enchants" && args.size == 1 && player != null -> clicks.enchants(player)
+      word == "villagers" && args.size == 1 && player != null -> clicks.villagers(player, null)
+      else -> lang.send(sender, "messages.buddy_usage")
     }
   }
 
   override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
-    val ask = command.name.equals("ask", ignoreCase = true)
+    if (!command.name.equals("buddy", ignoreCase = true)) return emptyList()
     val options = when {
       args.size == 1 -> buildList {
-        add("cancel")
-        if (ask) addAll(listOf("new", "memory", "forget", "recipe", "enchants", "villagers"))
-        if (sender.hasPermission(RELOAD_PERMISSION)) add("reload")
+        if (sender.hasPermission(Permissions.CHAT)) addAll(listOf("chat", "hints"))
+        if (sender.hasPermission(Permissions.ASK)) addAll(listOf("cancel", "new", "memory", "forget", "recipe", "enchants", "villagers"))
+        if (sender.hasPermission(Permissions.RELOAD)) add("reload")
       }
-      ask && args.size == 2 && args[0].equals("forget", ignoreCase = true) -> listOf("all")
-      ask && args.size == 2 && args[0].equals("recipe", ignoreCase = true) ->
+      args.size == 2 && args[0].lowercase() in setOf("chat", "hints") -> listOf("on", "off")
+      args.size == 2 && args[0].equals("forget", ignoreCase = true) -> listOf("all")
+      args.size == 2 && args[0].equals("recipe", ignoreCase = true) ->
         return Material.entries.asSequence().filter { it.isItem && !it.isAir && !it.isLegacy }.map { it.key.key }
           .filter { it.startsWith(args[1].lowercase()) }.take(50).toList()
       else -> return emptyList()
@@ -141,7 +174,7 @@ class Zygote : JavaPlugin(), TabCompleter {
     return options.filter { it.startsWith(args.last(), ignoreCase = true) }
   }
 
-  private fun handleReloadCommand(sender: CommandSender): Boolean {
+  private fun handleReloadCommand(sender: CommandSender) {
     runCatching {
       reloadConfig()
       initializeComponents()
@@ -151,10 +184,5 @@ class Zygote : JavaPlugin(), TabCompleter {
       locales.of(sender).send(sender, "messages.reload_failed", "error" to (it.message ?: it.javaClass.simpleName))
       logger.warning("Reload failed: $it")
     }
-    return true
-  }
-
-  private companion object {
-    const val RELOAD_PERMISSION = "mcbuddy.reload"
   }
 }

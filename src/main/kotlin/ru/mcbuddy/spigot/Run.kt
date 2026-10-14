@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 /** One question in flight: what the display shows and what cancelling stops. Touched from several threads. */
-class Run(val sender: CommandSender, val mode: Mode, val lang: Lang, verbSeconds: Long) {
+class Run(val sender: CommandSender, val mode: Mode, val lang: Lang, verbSeconds: Long, val public: Boolean = false) {
   enum class Mode(val wire: String) { ASK("ask"), ASKX("askx") }
 
   val startedAt = System.currentTimeMillis()
@@ -16,6 +16,8 @@ class Run(val sender: CommandSender, val mode: Mode, val lang: Lang, verbSeconds
   @Volatile var runId: String? = null
   @Volatile var call: Call? = null
   @Volatile var cancelled = false
+  /** Put the chat mode tip under the answer. */
+  @Volatile var tip = false
 
   /** Tokens streamed so far, estimated from the deltas. */
   private val estimated = AtomicLong()

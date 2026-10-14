@@ -30,10 +30,16 @@ sealed interface Button {
 
   /** Puts a book MCBuddy wrote into the player's inventory, once. */
   data class TakeBook(override val label: String, val book: String) : Button
+
+  /** Turns chat mode on, from the tip under an answer. */
+  data class ChatMode(override val label: String) : Button
+
+  /** Stops the chat mode tip for good. */
+  data class HideTips(override val label: String) : Button
 }
 
 /**
- * Buttons each player got, by short id. A click runs `/ask do <id>`, so a player can only press buttons that were
+ * Buttons each player got, by short id. A click runs `/buddy do <id>`, so a player can only press buttons that were
  * shown to them: ids belong to one player and run out after [ttlMillis].
  */
 class ButtonStore(private val ttlMillis: Long = 60 * 60_000L, private val perPlayer: Int = 60, private val newId: () -> String = ReminderBook::shortId) {

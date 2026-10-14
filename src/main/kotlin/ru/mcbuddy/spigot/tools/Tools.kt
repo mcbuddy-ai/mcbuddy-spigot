@@ -12,7 +12,7 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 import ru.mcbuddy.spigot.Lang
 
-/** What tools keep between calls, built once and shared by every run. Limits are read on use, so `/ask reload` applies them. */
+/** What tools keep between calls, built once and shared by every run. Limits are read on use, so `/buddy reload` applies them. */
 class Features(
   val plugin: Plugin,
   val locales: ru.mcbuddy.spigot.Locales,
@@ -22,6 +22,12 @@ class Features(
   val books: Books,
   val deaths: Deaths,
   val zones: TimeZones,
+  val settings: ru.mcbuddy.spigot.PlayerSettings,
+  val chat: ru.mcbuddy.spigot.ChatMode,
+  /** Names the server's shared thread of public questions on the backend. */
+  val serverId: String,
+  /** The settings now; `/buddy reload` replaces them. */
+  val config: () -> ru.mcbuddy.spigot.Config,
   val structureRadius: () -> Int,
   val biomeRadius: () -> Int,
   val villagerRadius: () -> Int,
@@ -75,7 +81,7 @@ class ToolRegistry(tools: List<ClientTool>, private val enabled: (String) -> Boo
 
   companion object {
     fun all(): List<ClientTool> = PlayerTools.all + LookTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + InspectTools.all + CareTools.all +
-      NotebookTools.all + ActionTools.all + InteractTools.all + GoalTools.all + OperatorTools.all
+      NotebookTools.all + ActionTools.all + InteractTools.all + GoalTools.all + BuddyTools.all + OperatorTools.all
   }
 }
 

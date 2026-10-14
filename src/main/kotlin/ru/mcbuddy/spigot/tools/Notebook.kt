@@ -22,7 +22,7 @@ data class Note(
   val createdAt: Long,
 )
 
-/** One player's notes, apart from Bukkit so tests can reach it. The cap is read on every add, so `/ask reload` applies it. */
+/** One player's notes, apart from Bukkit so tests can reach it. The cap is read on every add, so `/buddy reload` applies it. */
 class NoteBook(initial: List<Note>, private val max: () -> Int, private val newId: () -> String = ReminderBook::shortId) {
   private val notes = initial.toMutableList()
 

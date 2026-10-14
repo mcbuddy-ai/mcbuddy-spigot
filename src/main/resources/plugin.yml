@@ -1,6 +1,6 @@
 name: mcbuddy-spigot
 version: '${version}'
-description: 'An AI buddy in chat: /ask about the game, with answers grounded in your inventory, surroundings, and this server, in each player''s language.'
+description: 'An AI buddy in chat: ask about the game with /ask or right in chat mode, with answers grounded in your inventory, surroundings, and this server, in each player''s language.'
 main: ru.mcbuddy.spigot.Zygote
 api-version: '26.3'
 author: MairwunNx
@@ -11,21 +11,37 @@ plugin-name: McBuddy
 
 commands:
   ask:
-    description: Ask the MCBuddy AI assistant
-    usage: /<command> <question> | cancel | new | memory | forget <number|all> | recipe <item> | enchants | villagers
+    description: Ask MCBuddy a private question
+    usage: /<command> <question>
     permission: mcbuddy.ask
+  askall:
+    description: Ask MCBuddy a question everyone online sees, with the answer
+    usage: /<command> <question>
+    permission: mcbuddy.askall
   askx:
     description: Turn a request into Minecraft commands
     usage: /<command> <what to do>
     permission: mcbuddy.askx
+  buddy:
+    description: MCBuddy's chat mode, memory, windows, and settings
+    usage: /<command> chat|hints [on|off] | cancel | new | memory | forget <number|all> | recipe <item> | enchants | villagers | reload
 
 permissions:
   mcbuddy.ask:
-    description: Ask questions with /ask
+    description: Ask private questions with /ask, and use /buddy's memory, windows, and cancel
+    default: true
+  mcbuddy.askall:
+    description: Ask questions everyone sees with /askall, or ? in chat mode
+    default: true
+  mcbuddy.askall.nocooldown:
+    description: Ask everyone without waiting for askall.cooldown_seconds
+    default: op
+  mcbuddy.chat:
+    description: Use chat mode and its tip (/buddy chat, /buddy hints)
     default: true
   mcbuddy.askx:
-    description: Run commands with /askx
+    description: Run commands with /askx, or ! in chat mode
     default: op
   mcbuddy.reload:
-    description: Reload settings and languages with /ask reload
+    description: Reload settings and languages with /buddy reload
     default: op

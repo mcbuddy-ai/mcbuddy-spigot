@@ -14,11 +14,11 @@ class ProtocolTest {
   @Test fun `requests leave out what is unknown`() {
     val request = Protocol.ChatRequest(
       mode = "ask", message = "hi", user_id = "console",
-      server = Protocol.ServerInfo("Paper", "26.3", "2.0.0"), tools = listOf("get_world"),
+      server = Protocol.ServerInfo(software = "Paper", version = "26.3", plugin_version = "3.0.0"), tools = listOf("get_world"),
     )
     val text = Protocol.json.encodeToString(Protocol.ChatRequest.serializer(), request)
     assertEquals(
-      """{"mode":"ask","message":"hi","platform":"minecraft","user_id":"console","server":{"software":"Paper","version":"26.3","plugin_version":"2.0.0"},"tools":["get_world"]}""",
+      """{"mode":"ask","message":"hi","platform":"minecraft","visibility":"private","user_id":"console","server":{"software":"Paper","version":"26.3","plugin_version":"3.0.0"},"tools":["get_world"]}""",
       text,
     )
   }
