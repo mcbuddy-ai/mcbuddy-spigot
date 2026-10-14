@@ -64,7 +64,7 @@ jobs:
       - name: Build and test
         run: ./gradlew build -PreleaseVersion="$VERSION"
       - name: Publish the GitHub release
-        run: gh release create "v$VERSION" --target "$GITHUB_SHA" --title "MCBuddy Spigot $VERSION" --notes-file "$NOTES" "spigot/build/libs/mcbuddy-spigot-$VERSION.jar"
+        run: gh release create "v$VERSION" --target "$GITHUB_SHA" --title "Allay $VERSION" --notes-file "$NOTES" "spigot/build/libs/allay-spigot-$VERSION.jar"
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Publish to Modrinth

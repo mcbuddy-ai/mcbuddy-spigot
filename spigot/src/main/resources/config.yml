@@ -1,14 +1,14 @@
 ###############################################################################
-#                           MCBuddy configuration                             #
+#                            Allay configuration                              #
 ###############################################################################
-# /ask asks the AI buddy about the game in private, /askall in front of everyone,
-# /askx turns a request into commands. /buddy chat sends whatever a player writes
-# in chat to the buddy. This file holds settings only: every text players read
+# /ask asks Allay, an AI helper, about the game in private, /askall in front of
+# everyone, /askx turns a request into commands. /allay chat sends whatever a player
+# writes in chat to Allay. This file holds settings only: every text players read
 # lives in lang/<language>.yml, and each player reads their own language. Every
 # key here has a default, so you can delete the ones you don't change.
-# /buddy reload applies changes without a restart.
+# /allay reload applies changes without a restart.
 
-# The MCBuddy backend that answers questions.
+# The Allay backend that answers questions.
 server:
   url: "https://mcbuddy.ru"
 
@@ -75,18 +75,22 @@ ui:
   chat_status:
     enabled: false            # Also say “asking the assistant…” in chat
   # The author of the books the assistant writes when a player asks for detail.
-  book_author: "MCBuddy"
+  book_author: "Allay"
+  # Allay sounds like an allay. The game plays these quietly on its own, so a volume
+  # of 1.0 is as loud as the mob. Any of Bukkit's sound names works here.
   sounds:
     enabled: true
-    success_sound: "ENTITY_EXPERIENCE_ORB_PICKUP"   # The answer is in
-    success_volume: 0.5
-    success_pitch: 1.2
-    error_sound: "AMBIENT_CAVE"                     # Something went wrong
-    error_volume: 0.6
-    error_pitch: 0.7
-    thinking_sound: "BLOCK_NOTE_BLOCK_CHIME"        # The assistant starts working
-    thinking_volume: 0.3
+    success_sound: "ENTITY_ALLAY_ITEM_GIVEN"            # The answer is in: the allay chortles
+    success_volume: 1.0
+    success_pitch: 1.0
+    error_sound: "ENTITY_ALLAY_AMBIENT_WITHOUT_ITEM"    # Something went wrong: the allay yearns
+    error_volume: 1.0
+    error_pitch: 0.9
+    thinking_sound: "ENTITY_ALLAY_AMBIENT_WITH_ITEM"    # Allay starts working: the allay seeks
+    thinking_volume: 1.0
     thinking_pitch: 1.0
+    pitch_variation: 0.1      # Each sound's pitch moves up or down by up to this, so answers don't all sound the same
+    public_answer: true       # Everyone who reads an answer to /askall hears a quiet chortle too
 
 # Game tools: the assistant asks the plugin about the game when it needs to. Every
 # tool knows only the player who asked and the world around them; other players show
@@ -121,12 +125,12 @@ tools:
     add_buttons: true             # Buttons under the answer: next question, the way, a note, a recipe, enchantments, villagers
     write_book: true              # A long answer as a book when the player asks for detail; the book is free to take
     set_timezone: true            # The player's time zone, so the assistant knows their real time
-    # MCBuddy about itself
-    get_buddy_guide: true         # The commands, chat mode prefixes, and settings this player has, so the assistant can explain them
-    buddy_settings: true          # Chat mode and its tip on or off when the player asks in words
-    # Goals with a bar at the top of the screen, kept in plugins/mcbuddy-spigot/goals
+    # Allay about itself
+    get_allay_guide: true         # The commands, chat mode prefixes, and settings this player has, so the assistant can explain them
+    allay_settings: true          # Chat mode and its tip on or off when the player asks in words
+    # Goals with a bar at the top of the screen, kept in plugins/Allay/goals
     goals: true                   # Set, list, and cancel goals: “collect 16 diamonds”, “reach level 30”
-    # The player's notebook: notes with coordinates, kept in plugins/mcbuddy-spigot/notes
+    # The player's notebook: notes with coordinates, kept in plugins/Allay/notes
     add_note: true                # Write a note (by default where the player stands)
     find_notes: true              # Find notes, nearest first
     delete_note: true             # Delete a note
@@ -167,7 +171,7 @@ tools:
 # Questions everyone sees: /askall, or ? in chat mode. The question and the answer
 # go to every player online.
 askall:
-  # How long a player waits between two of them; mcbuddy.askall.nocooldown skips it.
+  # How long a player waits between two of them; allay.askall.nocooldown skips it.
   cooldown_seconds: 30
 
 # Players' real time. The assistant sees each player's date and time with every question.
@@ -177,8 +181,8 @@ time:
   zone: "Europe/Moscow"       # An IANA time zone, such as Europe/Berlin or America/New_York
 
 # Commands /askx may never run, whatever the request. Who may use the commands is up to
-# permissions: mcbuddy.ask, mcbuddy.askall, and mcbuddy.chat (everyone by default),
-# mcbuddy.askx, mcbuddy.askall.nocooldown, and mcbuddy.reload (operators).
+# permissions: allay.ask, allay.askall, and allay.chat (everyone by default),
+# allay.askx, allay.askall.nocooldown, and allay.reload (operators).
 blocked_commands:
   - "ban"
   - "config"

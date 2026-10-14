@@ -7,7 +7,7 @@ plugins {
 }
 
 allprojects {
-  group = "ru.mcbuddy"
+  group = "chat.allay"
   // The release workflow passes the version; every other build is a dev build.
   version = (findProperty("releaseVersion") as String?)?.takeIf { it.isNotBlank() } ?: "dev"
 

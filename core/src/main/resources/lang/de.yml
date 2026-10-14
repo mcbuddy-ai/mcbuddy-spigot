@@ -1,4 +1,4 @@
-# MCBuddy-Texte auf Deutsch. Jeder Spieler liest die Datei seiner Sprache; fehlt hier ein
+# Allay-Texte auf Deutsch. Jeder Spieler liest die Datei seiner Sprache; fehlt hier ein
 # Schlüssel, nimmt das Plugin ihn aus locales.default und dann aus dem Englischen. Ein leerer
 # Text ("") schaltet eine Nachricht ab. Farben sind &-Codes (&a, &7, &f…). Platzhalter sehen
 # aus wie {name}, Mehrzahl wie {count|Stapel|Stapel}: Die Zahl in {count} wählt die Form.
@@ -16,17 +16,17 @@ status:
     - "Frage den Bibliothekar"
     - "Schaue auf die Karte"
     - "Verlege Redstone"
-    - "Setze Verstärker"
-    - "Lege Kohle nach"
+    - "Summe eine Melodie"
+    - "Kreise um den Notenblock"
     - "Schärfe die Spitzhacke"
     - "Grabe auf Y −59"
-    - "Stelle Fackeln auf"
+    - "Suche etwas Glänzendes"
     - "Durchwühle Truhen"
-    - "Werfe ein Enderauge"
-    - "Entzünde das Portal"
+    - "Flattere über die Truhen"
+    - "Bringe dir den passenden Gegenstand"
     - "Schleiche am Wärter vorbei"
     - "Streite mit einem Creeper"
-    - "Schere Schafe"
+    - "Tanze zur Jukebox"
   askx_verbs:
     - "Richte einen Befehlsblock ein"
     - "Wähle den Selektor @s"
@@ -84,8 +84,8 @@ tools:
   add_buttons: "Bereite Knöpfe vor"
   write_book: "Schreibe ein Buch: „{title}“"
   set_timezone: "Merke mir deine Zeitzone: {zone}"
-  get_buddy_guide: "Überlege, was ich kann"
-  buddy_settings: "Ändere deine Einstellungen"
+  get_allay_guide: "Überlege, was ich kann"
+  allay_settings: "Ändere deine Einstellungen"
   give_item: "Gebe dir {item}"
   teleport: "Teleportiere"
   set_gamemode: "Ändere den Spielmodus: {mode}"
@@ -171,7 +171,7 @@ summary:
   effects_cleared: "{count} {count|Effekt|Effekte} entfernt"
   time: "Zeit {ticks}"
   weather: "{weather}"
-  # Werkzeuge, die auf dem MCBuddy-Server laufen.
+  # Werkzeuge, die auf dem Allay-Server laufen.
   server:
     sources: "{count} {count|Quelle|Quellen}"
     search_failed: "Suche hat nicht geklappt"
@@ -184,10 +184,10 @@ summary:
     no_such_memory: "diesen Eintrag gibt es nicht"
 
 messages:
-  usage: "&7Verwendung: &f/ask <Frage>\n&7Beispiel: &f/ask wie stelle ich eine Diamantspitzhacke her?\n&7Vor allen: &f/askall <Frage>&7, Chatmodus und mehr: &f/buddy"
+  usage: "&7Verwendung: &f/ask <Frage>\n&7Beispiel: &f/ask wie stelle ich eine Diamantspitzhacke her?\n&7Vor allen: &f/askall <Frage>&7, Chatmodus und mehr: &f/allay"
   askx_usage: "&7Verwendung: &f/askx <was ich tun soll>\n&7Beispiel: &f/askx gib mir ein Diamantschwert mit Schärfe 5"
   askall_usage: "&7Verwendung: &f/askall <Frage>&7 – alle Spieler online sehen Frage und Antwort"
-  buddy_usage: "&6MCBuddy\n&f/buddy chat &7[on|off] – Chatmodus\n&f/buddy hints &7[on|off] – der Tipp zum Chatmodus\n&f/buddy cancel &7– Antwort stoppen\n&f/buddy new &7– Gespräch neu anfangen\n&f/buddy memory &7– was ich über dich weiß\n&f/buddy forget &7<Nummer|all> – vergessen\n&f/buddy recipe &7<Item>, &f/buddy enchants&7, &f/buddy villagers &7– die Fenster"
+  allay_usage: "&6Allay\n&f/allay chat &7[on|off] – Chatmodus\n&f/allay hints &7[on|off] – der Tipp zum Chatmodus\n&f/allay cancel &7– Antwort stoppen\n&f/allay new &7– Gespräch neu anfangen\n&f/allay memory &7– was ich über dich weiß\n&f/allay forget &7<Nummer|all> – vergessen\n&f/allay recipe &7<Item>, &f/allay enchants&7, &f/allay villagers &7– die Fenster"
   no_permission: "&cDafür hast du keine Rechte."
   players_only: "&cDas geht nur für Spieler."
   thinking: "&eFrage den KI-Assistenten, einen Moment…"
@@ -202,30 +202,30 @@ messages:
   command_error: "&cFehler bei /{command}"
   no_commands: "&eKeine Befehle zum Ausführen"
   blocked_command: "&cDieser Befehl ist für /askx aus Sicherheitsgründen gesperrt."
-  recipe_usage: "&7Verwendung: &f/buddy recipe <Gegenstand>"
+  recipe_usage: "&7Verwendung: &f/allay recipe <Gegenstand>"
   unknown_item: "&cDiesen Gegenstand gibt es nicht: {item}"
   no_recipe: "&7Für diesen Gegenstand gibt es kein Rezept: Du baust ihn ab, findest ihn oder ertauschst ihn."
   hold_item: "&7Nimm den Gegenstand in die Hand, den du verzaubern willst."
   no_enchants: "&7Diesen Gegenstand kann man nicht verzaubern."
   no_villagers: "&7Hier sind keine Dorfbewohner in der Nähe."
-  reloaded: "&aEinstellungen und Sprachen von MCBuddy neu geladen."
+  reloaded: "&aEinstellungen und Sprachen von Allay neu geladen."
   reload_failed: "&cNeu laden hat nicht geklappt: {error}"
 
 # Gespräch und Gedächtnis. Der Assistent merkt sich die letzten Fragen einen Tag lang und
 # Wichtiges über den Spieler (seine Basis, seine Ziele), bis der Spieler ihn vergessen lässt.
 memory:
-  session_cleared: "&aWir fangen neu an. Was ich über dich weiß, bleibt: &f/buddy memory"
+  session_cleared: "&aWir fangen neu an. Was ich über dich weiß, bleibt: &f/allay memory"
   header: "&6Das weiß ich über dich:"
   line: "&e{n}. &f{text}"
-  footer: "&7Vergessen: &f/buddy forget <Nummer|all>"
+  footer: "&7Vergessen: &f/allay forget <Nummer|all>"
   empty: "&7Ich weiß noch nichts über dich. Sag „merk dir, dass…“, dann merke ich es mir."
   forgot: "&aVergessen: &f{text}"
   forgot_all: "&aIch habe alles vergessen, was ich über dich wusste ({count})."
-  forget_usage: "&7Verwendung: &f/buddy forget <Nummer|all>&7. Die Nummern stehen in &f/buddy memory"
-  not_found: "&cEinen Eintrag Nummer {n} gibt es nicht. Die Liste: &f/buddy memory"
-  unsupported: "&cDieser MCBuddy-Server kann sich noch nichts merken."
+  forget_usage: "&7Verwendung: &f/allay forget <Nummer|all>&7. Die Nummern stehen in &f/allay memory"
+  not_found: "&cEinen Eintrag Nummer {n} gibt es nicht. Die Liste: &f/allay memory"
+  unsupported: "&cDieser Allay-Server kann sich noch nichts merken."
 
-# Chatmodus: Was ein Spieler in den Chat schreibt, geht an MCBuddy. ! führt Befehle aus, ? fragt vor allen,
+# Chatmodus: Was ein Spieler in den Chat schreibt, geht an Allay. ! führt Befehle aus, ? fragt vor allen,
 # ~ schreibt in den normalen Chat. Der Tipp dazu erscheint unter dem zweiten /ask pro Besuch.
 chat_mode:
   echo: "&8› &7{text}"
@@ -233,12 +233,12 @@ chat_mode:
   prefix_askx: "&f  ! &7am Anfang führt Befehle aus, wie /askx"
   prefix_public: "&f  ? &7am Anfang fragt so, dass alle es sehen"
   prefix_chat: "&f  ~ &7am Anfang schreibt in den normalen Chat"
-  how_to_off: "&7Ausschalten: &f/buddy chat off"
+  how_to_off: "&7Ausschalten: &f/allay chat off"
   disabled: "&7Der Chatmodus ist aus: Der Chat gehört wieder allen. Frag mich mit &f/ask&7."
-  reminder: "&8※ Der Chatmodus ist an: Schreib mir direkt in den Chat. &7~&8 am Anfang geht in den normalen Chat, &7/buddy chat off&8 schaltet ihn aus."
+  reminder: "&8※ Der Chatmodus ist an: Schreib mir direkt in den Chat. &7~&8 am Anfang geht in den normalen Chat, &7/allay chat off&8 schaltet ihn aus."
   no_askx: "&cBefehle mit ! stehen dir nicht zur Verfügung."
   no_askall: "&cDu darfst nicht vor allen fragen."
-  hints_off: "&7Alles klar, ich schlage es nicht mehr vor. Den Chatmodus schaltest du mit &f/buddy chat&7 ein."
+  hints_off: "&7Alles klar, ich schlage es nicht mehr vor. Den Chatmodus schaltest du mit &f/allay chat&7 ein."
   hints_on: "&7Der Tipp zum Chatmodus ist wieder an."
   tip: "&8※ Du kannst mir direkt in den Chat schreiben, ohne /ask."
   tip_enable: "&7[Chatmodus]"
@@ -248,9 +248,9 @@ chat_mode:
 
 # Fragen vor allen (/askall, ? im Chatmodus): Alle Spieler online lesen Frage und Antwort.
 public:
-  question: "&5✦ &d{player} &7fragt MCBuddy:&f {text}"
-  answer: "&5✦ &dMCBuddy &8»&r {text}"
-  failed: "&8✦ MCBuddy konnte diesmal nicht antworten."
+  question: "&3✦ &b{player} &7fragt Allay:&f {text}"
+  answer: "&3✦ &bAllay &8»&r {text}"
+  failed: "&8✦ Allay konnte diesmal nicht antworten."
   cooldown: "&7Du kannst in {seconds} {seconds|Sekunde|Sekunden} wieder alle fragen."
 
 # Knöpfe unter Antworten. Nur wer den Knopf bekommen hat, kann ihn drücken; nach einer Stunde geht er nicht mehr.
@@ -323,8 +323,8 @@ menus:
     left: "&7Noch übrig: {left}"
     out: "&cAusverkauft, bis er nachfüllt"
   settings:
-    title: "MCBuddy"
-    header: "&6MCBuddy {version}"
+    title: "Allay"
+    header: "&6Allay {version}"
     header_ask: "&7Privat fragen: &f/ask <Frage>"
     header_askall: "&7Vor allen fragen: &f/askall <Frage>"
     header_more: "&7Unsicher? Frag mich, was ich kann."
@@ -382,7 +382,7 @@ errors:
     "503": "&cDer Dienst ist nicht erreichbar. Versuch es später noch mal."
     "504": "&cDer Server hat zu lange gebraucht. Versuch es später noch mal."
   timeout: "&cDas hat zu lange gedauert: Der KI-Server ist ausgelastet. Versuch es später noch mal."
-  network: "&cDer MCBuddy-Server ist nicht erreichbar. Prüf deine Verbindung."
+  network: "&cDer Allay-Server ist nicht erreichbar. Prüf deine Verbindung."
   default: "&cEtwas Unerwartetes ist schiefgelaufen. Versuch es später noch mal."
   other: "&cEtwas ist schiefgelaufen: {message}"
 

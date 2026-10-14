@@ -1,47 +1,46 @@
-name: mcbuddy-spigot
+name: Allay
 version: '${version}'
-description: 'An AI buddy in chat: ask about the game with /ask or right in chat mode, with answers grounded in your inventory, surroundings, and this server, in each player''s language.'
-main: ru.mcbuddy.spigot.Zygote
+description: 'An AI helper in chat, named after the friendly mob: ask about the game with /ask or right in chat mode, with answers grounded in your inventory, surroundings, and this server, in each player''s language.'
+main: chat.allay.spigot.Zygote
 api-version: '26.3'
 author: MairwunNx
-website: https://mcbuddy.ru
-prefix: mcbuddy
+website: https://github.com/allay-ai/minecraft
+prefix: Allay
 load: STARTUP
-plugin-name: McBuddy
 
 commands:
   ask:
-    description: Ask MCBuddy a private question
+    description: Ask Allay a private question
     usage: /<command> <question>
-    permission: mcbuddy.ask
+    permission: allay.ask
   askall:
-    description: Ask MCBuddy a question everyone online sees, with the answer
+    description: Ask Allay a question everyone online sees, with the answer
     usage: /<command> <question>
-    permission: mcbuddy.askall
+    permission: allay.askall
   askx:
     description: Turn a request into Minecraft commands
     usage: /<command> <what to do>
-    permission: mcbuddy.askx
-  buddy:
-    description: MCBuddy's chat mode, memory, windows, and settings
+    permission: allay.askx
+  allay:
+    description: Allay's chat mode, memory, windows, and settings
     usage: /<command> chat|hints [on|off] | cancel | new | memory | forget <number|all> | recipe <item> | enchants | villagers | reload
 
 permissions:
-  mcbuddy.ask:
-    description: Ask private questions with /ask, and use /buddy's memory, windows, and cancel
+  allay.ask:
+    description: Ask private questions with /ask, and use /allay's memory, windows, and cancel
     default: true
-  mcbuddy.askall:
+  allay.askall:
     description: Ask questions everyone sees with /askall, or ? in chat mode
     default: true
-  mcbuddy.askall.nocooldown:
+  allay.askall.nocooldown:
     description: Ask everyone without waiting for askall.cooldown_seconds
     default: op
-  mcbuddy.chat:
-    description: Use chat mode and its tip (/buddy chat, /buddy hints)
+  allay.chat:
+    description: Use chat mode and its tip (/allay chat, /allay hints)
     default: true
-  mcbuddy.askx:
+  allay.askx:
     description: Run commands with /askx, or ! in chat mode
     default: op
-  mcbuddy.reload:
-    description: Reload settings and languages with /buddy reload
+  allay.reload:
+    description: Reload settings and languages with /allay reload
     default: op

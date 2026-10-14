@@ -23,7 +23,7 @@ jobs:
         run: ./gradlew build -PreleaseVersion="dev-${GITHUB_SHA::7}"
       - uses: actions/upload-artifact@v7
         with:
-          name: mcbuddy-spigot
+          name: allay-spigot
           path: spigot/build/libs/*.jar
       - uses: actions/upload-artifact@v7
         if: failure()

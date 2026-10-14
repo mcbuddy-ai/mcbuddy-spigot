@@ -29,10 +29,10 @@ tasks {
   }
 
   shadowJar {
-    archiveBaseName = "mcbuddy-spigot"
+    archiveBaseName = "allay-spigot"
     archiveClassifier = ""
     // Relocated so other plugins that ship their own Kotlin, OkHttp, MaxMind reader, or SnakeYAML can't clash with ours.
-    listOf("kotlin", "kotlinx", "okhttp3", "okio", "com.maxmind", "org.yaml.snakeyaml").forEach { relocate(it, "ru.mcbuddy.spigot.libs.$it") }
+    listOf("kotlin", "kotlinx", "okhttp3", "okio", "com.maxmind", "org.yaml.snakeyaml").forEach { relocate(it, "chat.allay.libs.$it") }
     mergeServiceFiles()
     exclude("META-INF/*.kotlin_module", "META-INF/versions/*/module-info.class", "module-info.class")
     dependencies { exclude(dependency("org.jetbrains:annotations")) }
@@ -57,14 +57,14 @@ tasks {
 
 // The release workflow writes the notes to a file; a local upload falls back to the GitHub release.
 val changelogText = (findProperty("changelogFile") as String?)?.let { rootProject.file(it).readText() }
-  ?: "https://github.com/mcbuddy-ai/mcbuddy-spigot/releases/tag/v${project.version}"
+  ?: "https://github.com/allay-ai/minecraft/releases/tag/v${project.version}"
 
 // `./gradlew modrinth` with MODRINTH_TOKEN set; the release workflow runs it when asked to.
 modrinth {
   token = providers.environmentVariable("MODRINTH_TOKEN")
-  projectId = "mcbuddy"
+  projectId = "allay-ai"
   versionNumber = project.version.toString()
-  versionName = "MCBuddy ${project.version}"
+  versionName = "Allay AI ${project.version}"
   versionType = "release"
   uploadFile.set(tasks.shadowJar)
   gameVersions.addAll("26.3")
@@ -81,7 +81,7 @@ tasks.modrinth {
 hangarPublish {
   publications.register("plugin") {
     version = project.version.toString()
-    id = "MCBuddy"
+    id = "AllayAI"
     channel = "Release"
     apiKey = providers.environmentVariable("HANGAR_TOKEN")
     changelog = changelogText
