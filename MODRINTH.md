@@ -27,7 +27,7 @@
 
 Coming from MCBuddy? Allay is its new name from 4.0.0 on. Swap the jar: Allay moves `plugins/mcbuddy-spigot/` into `plugins/Allay/` by itself, `/buddy` becomes `/allay`, and the permissions become `allay.*`.
 
-Allay runs on Spigot, Paper 26.3, and their forks, on Java 25. It talks to the Allay backend, `https://mcbuddy.ru` by default (`server.url`).
+Allay runs on Spigot, Paper 26.3, and their forks, on Java 25. It talks to the Allay backend, `https://allay.chat` by default (`server.url`).
 
 ## How a player gets their language
 

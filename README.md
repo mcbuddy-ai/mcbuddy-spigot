@@ -34,7 +34,7 @@ Join at `minecraft.mairwunnx.com`. The site has the live map, player stats, and 
 
 - Spigot or Paper 26.3, or a fork of them, like Purpur
 - Java 25
-- An Allay backend: `https://mcbuddy.ru` by default, or your own [Allay Server](https://github.com/allay-ai/server)
+- An Allay backend: `https://allay.chat` by default, or your own [Allay Server](https://github.com/allay-ai/server)
 
 ## Install
 
@@ -48,7 +48,7 @@ Join at `minecraft.mairwunnx.com`. The site has the live map, player stats, and 
 Allay is MCBuddy under a new name, from 4.0.0 on. Swap `mcbuddy-spigot-*.jar` for `allay-spigot-*.jar` and start the server; don't run both.
 
 - **The data moves by itself.** On its first start Allay moves `plugins/mcbuddy-spigot/` into `plugins/Allay/`: settings, languages, notes, goals, time zones, players' settings, and the server's id, so the shared thread of public questions carries on. It logs each file. If both folders already hold data, it moves nothing and says so.
-- **Texts follow the new name** where you left them as they were: the book author, the default sounds, and the lines of `lang/` you never changed. Lines you changed stay yours, with MCBuddy and `/buddy` renamed.
+- **Texts follow the new name** where you left them as they were: the backend's address (mcbuddy.ru is gone; it's allay.chat now), the book author, the default sounds, and the lines of `lang/` you never changed. Lines you changed stay yours, with MCBuddy and `/buddy` renamed.
 - **`/buddy` is `/allay` now**, with the same subcommands and window, and the permissions are `allay.*` instead of `mcbuddy.*`, with the same defaults. Update your permission plugin.
 
 ## How a player gets their language

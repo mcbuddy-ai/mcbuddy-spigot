@@ -53,7 +53,7 @@ class YamlTest {
     val operator = yaml.getConfigurationSection("tools.operator")
     val switches = yaml.getConfigurationSection("tools.enabled")
     return listOf(
-      yaml.getString("server.url", "https://mcbuddy.ru"), yaml.getInt("http.call_timeout", 300).toLong(),
+      yaml.getString("server.url", "https://allay.chat"), yaml.getInt("http.call_timeout", 300).toLong(),
       yaml.getConfigurationSection("http.custom_headers").let { it?.getKeys(false)?.associateWith(it::getString) }.orEmpty().filterKeys { !it.equals("X-Plugin-Version", ignoreCase = true) },
       "Allay-Spigot/test (Minecraft Plugin)", yaml.getString("ui.action_bar.spinner", "·✢✳✶✻✽"), yaml.getInt("ui.action_bar.frame_millis", 120).toLong().coerceAtLeast(50),
       yaml.getString("ui.particles.type"), yaml.getInt("ui.particles.count", 3), yaml.getDouble("ui.particles.height_offset", 2.0), yaml.getString("ui.book_author", "Allay"),

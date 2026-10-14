@@ -9,7 +9,7 @@ import chat.allay.core.tools.TimeZones
  */
 class Config(private val config: YamlConfig, private val pluginVersion: String) {
   val server = Server() ; inner class Server {
-    val url = config.string("server.url", "https://mcbuddy.ru")
+    val url = config.string("server.url", "https://allay.chat")
   }
 
   val http = Http() ; inner class Http {

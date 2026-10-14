@@ -10,7 +10,7 @@
 
 # The Allay backend that answers questions.
 server:
-  url: "https://mcbuddy.ru"
+  url: "https://allay.chat"
 
 locales:
   # Players nothing else matches, and the console, get this language.

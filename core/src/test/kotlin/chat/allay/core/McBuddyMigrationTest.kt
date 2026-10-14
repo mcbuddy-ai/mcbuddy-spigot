@@ -94,8 +94,8 @@ class McBuddyMigrationTest {
     assertTrue("thinking_sound: \"ENTITY_ALLAY_AMBIENT_WITH_ITEM\"" in config && "thinking_volume: 0.8" in config)
     assertTrue("get_allay_guide: false" in config && "allay_settings: true" in config)
     assertTrue("# /allay reload applies changes; Allay reads this file." in config)
-    // The backend stays where it was until the owner points it elsewhere.
-    assertTrue("url: \"https://mcbuddy.ru\"" in config)
+    // mcbuddy.ru is gone: the default backend moves to allay.chat.
+    assertTrue("url: \"https://allay.chat\"" in config && "mcbuddy.ru" !in config, config)
 
     // English was untouched: it goes, and Allay writes its own. Russian keeps only the admin's line, renamed.
     assertFalse(File(new, "lang/en.yml").exists())

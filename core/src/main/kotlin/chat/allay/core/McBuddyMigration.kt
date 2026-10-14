@@ -13,8 +13,8 @@ import java.util.logging.Logger
  * fails halfway, what already moved goes back and the old folder stays as it was. When both folders hold data, it
  * changes nothing and warns: an admin merges them by hand.
  *
- * After the move, texts that still say what MCBuddy shipped become Allay's: the default book author, the default
- * sounds, the language files' untouched lines. What the admin wrote stays, with the old name and command replaced.
+ * After the move, texts that still say what MCBuddy shipped become Allay's: the backend's address, the default book
+ * author, the default sounds, the language files' untouched lines. What the admin wrote stays, with the old name and command replaced.
  */
 class McBuddyMigration(
   private val old: File,
@@ -98,6 +98,8 @@ class McBuddyMigration(
       result = Regex(pattern, RegexOption.MULTILINE).replace(result, replacement)
     }
     replace("""^(\s*book_author:\s*)"MCBuddy"""", "$1\"Allay\"")
+    // mcbuddy.ru is gone; Allay's own backend answers at allay.chat.
+    replace("""^(\s*url:\s*)"?https?://(www\.)?mcbuddy\.ru/?"?\s*$""", "$1\"https://allay.chat\"")
     for ((name, sound) in SOUNDS) {
       if (!Regex("""^\s*${name}_sound:\s*"${sound.oldSound}"""", RegexOption.MULTILINE).containsMatchIn(result)) continue
       replace("""^(\s*${name}_sound:\s*)"${sound.oldSound}"""", "$1\"${sound.newSound}\"")
