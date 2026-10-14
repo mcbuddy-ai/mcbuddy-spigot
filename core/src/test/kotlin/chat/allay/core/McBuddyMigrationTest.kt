@@ -21,7 +21,7 @@ class McBuddyMigrationTest {
     plugins.deleteRecursively()
   }
 
-  private fun shipped(path: String) = javaClass.getResourceAsStream("/mcbuddy-3.1.0/$path")!!.reader(Charsets.UTF_8).readText()
+  private fun shipped(path: String, version: String = "3.1.0") = javaClass.getResourceAsStream("/mcbuddy/$version/$path")!!.reader(Charsets.UTF_8).readText()
 
   private val uuid = "00000000-0000-0000-0000-000000000001"
   private val notes = """[{"id":"ab2c","text":"Fletcher sells arrows","x":1,"y":64,"z":2,"world":"world","dimension":"overworld","createdAt":1}]"""
@@ -35,7 +35,8 @@ class McBuddyMigrationTest {
     File(old, "geoip").mkdirs()
     File(old, "geoip/country.mmdb").writeText("db")
     File(old, "lang").mkdirs()
-    File(old, "lang/en.yml").writeText(shipped("lang/en.yml"))
+    // English as 2.4 saved it on a server that has run since then: still nothing of the admin's own.
+    File(old, "lang/en.yml").writeText(shipped("lang/en.yml", "2.4.0"))
     File(old, "lang/ru.yml").writeText(shipped("lang/ru.yml").replace("answer: \"&5✦ &dMCBuddy &8»&r {text}\"", "answer: \"&6MCBuddy говорит:&r {text}\""))
     File(old, "lang/it.yml").writeText("public:\n  answer: \"MCBuddy dice: {text}\"\n")
     File(old, "config.yml").writeText(

@@ -65,16 +65,21 @@ class McBuddyMigration(
     if ("lang" in moved) File(new, "lang").listFiles { file -> file.extension == "yml" }.orEmpty().forEach(::language)
   }
 
-  /** A language file: keys still as 3.1.0 shipped them go, so Allay's own texts show; what the admin changed stays. */
+  /**
+   * A language file: lines still as any MCBuddy release shipped them go, so Allay's own texts show; what the admin
+   * changed stays. A server keeps the file the first version with `lang/` saved, so 2.4's texts count as shipped too.
+   */
   private fun language(file: File) {
-    val shipped = javaClass.getResourceAsStream("/mcbuddy-3.1.0/lang/${file.name}")?.reader(Charsets.UTF_8)?.use { YamlConfig(YamlConfig.parse(it)).flatten() }
-    if (shipped == null) {
+    val releases = SHIPPED.mapNotNull { version ->
+      javaClass.getResourceAsStream("/mcbuddy/$version/lang/${file.name}")?.reader(Charsets.UTF_8)?.use { YamlConfig(YamlConfig.parse(it)).flatten() }
+    }
+    if (releases.isEmpty()) {
       // A language MCBuddy didn't ship is all the admin's own.
       file.writeText(brand(file.readText()))
       log.info("Renamed MCBuddy to Allay in ${new.name}/lang/${file.name}")
       return
     }
-    val changed = YamlConfig.read(file).flatten().filter { (key, value) -> shipped[key] != value }
+    val changed = YamlConfig.read(file).flatten().filter { (key, value) -> releases.none { it[key] == value } }
       .map { (key, value) -> (RENAMED_KEYS[key] ?: key) to if (value is List<*>) value.map { brand(it.toString()) } else brand(value.toString()) }
     if (changed.isEmpty()) {
       file.delete()
@@ -128,6 +133,9 @@ class McBuddyMigration(
     val DATA = listOf("notes", "goals", "timezones.json", "players.json", "server-id")
 
     const val MARKER = "moved-from-mcbuddy.txt"
+
+    /** MCBuddy releases with `lang/`; their texts are in `core/src/main/resources/mcbuddy/<version>/`. */
+    private val SHIPPED = listOf("2.4.0", "3.0.0", "3.1.0")
 
     private val SOUNDS = mapOf(
       "success" to Sound("ENTITY_EXPERIENCE_ORB_PICKUP", "0.5", "1.2", "ENTITY_ALLAY_ITEM_GIVEN", "1.0", "1.0"),
