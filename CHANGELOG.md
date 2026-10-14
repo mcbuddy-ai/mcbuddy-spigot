@@ -15,6 +15,7 @@ The “Release” workflow takes the notes for a version from its section here, 
 - Tool switches in `config.yml` follow the new names; switches for the old ones are ignored.
 - 📦 **One jar per release**, `mcbuddy-spigot-X.Y.Z.jar`, with everything inside; there is no `-all` jar any more. Releases are made by hand from the “Release” workflow.
 - Needs MCBuddy Server 2.4: the backend serves only the new tool names.
+- README in English with a Russian copy, and the MIT license.
 
 ## 2.3.0
 

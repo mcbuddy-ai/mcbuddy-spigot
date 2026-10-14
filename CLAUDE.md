@@ -1,11 +1,11 @@
 # MCBuddy Spigot: notes for AI agents
 
-The Minecraft plugin of MCBuddy. `/ask` asks the AI buddy a question, `/askx` turns a request into commands. The plugin streams the answer from mcbuddy-server over protocol v2, runs the game tools the agent asks for, and shows a live Claude Code style status while it works. README.MD explains it for humans; read it first.
+The Minecraft plugin of MCBuddy. `/ask` asks the AI buddy a question, `/askx` turns a request into commands. The plugin streams the answer from mcbuddy-server over protocol v2, runs the game tools the agent asks for, and shows a live Claude Code style status while it works. README.md explains it for players and server owners, README.RU.md is its Russian copy, MODRINTH.md the Modrinth page; read README.md first.
 
 ## Talking to the owner
 
 - Reply in Russian, address the owner as «вы». Quotes «ёлочки», an em dash with spaces « — ».
-- Code, comments, commit messages, and `config.yml` are in English. Player-facing texts live in `src/main/resources/lang/<code>.yml` (en, ru, es, pt, de); a new text goes into every one of them, and `LangTest` checks that each has every English key. README.MD is Russian, README.EN.md and README.CN.md follow it.
+- Code, comments, commit messages, and `config.yml` are in English. Player-facing texts live in `src/main/resources/lang/<code>.yml` (en, ru, es, pt, de); a new text goes into every one of them, and `LangTest` checks that each has every English key. README.md is English; README.RU.md follows Russian typography. Change both READMEs and MODRINTH.md together.
 
 ## How it fits together
 
@@ -39,7 +39,7 @@ The contract with the backend is `docs/protocol-v2.md` in mcbuddy-ai/mcbuddy-ser
 ## Building and releasing
 
 - `./gradlew build` runs the tests and builds `build/libs/mcbuddy-spigot-<version>.jar`, shaded; Java 25. Nothing in the repo holds the version: local builds are `dev`, CI builds on `master` and pull requests are `dev-<sha>`.
-- Releases are made by hand, only when the owner asks. Add a “## X.Y.Z” section to CHANGELOG.md, push, then run `gh workflow run release.yml -R mcbuddy-ai/mcbuddy-spigot -f version=X.Y.Z` (its `changelog` field overrides the section; one of the two must be there). It builds with `-PreleaseVersion`, tags `vX.Y.Z`, and attaches `mcbuddy-spigot-X.Y.Z.jar` to a GitHub release. Watch it with `gh run watch`. Never delete or re-tag a published release.
+- Releases are made by hand, only when the owner asks. Add a “## X.Y.Z” section to CHANGELOG.md, push, then run `gh workflow run release.yml -R mcbuddy-ai/mcbuddy-spigot -f version=X.Y.Z` (its `changelog` field overrides the section; one of the two must be there; `-f modrinth=true -f hangar=true` also publish there once those projects exist). It builds with `-PreleaseVersion`, tags `vX.Y.Z`, and attaches `mcbuddy-spigot-X.Y.Z.jar` to a GitHub release. Watch it with `gh run watch`. Never delete or re-tag a published release.
 
 ## Installing on Moonlands
 
@@ -48,3 +48,8 @@ The owner's server, Moonlands, runs this plugin. When the owner asks to put a ch
 ## Commits
 
 Short one-line imperative English messages, one logical change per commit: “Show tool results as ⎿ lines”.
+
+## Modrinth and Hangar
+
+`build.gradle.kts` is ready for both, as in Mo’Joins: `./gradlew modrinth` uploads to the Modrinth project `mcbuddy` and syncs MODRINTH.md as its description; `./gradlew publishPluginPublicationToHangar` uploads to `MairwunNx/MCBuddy`. Both read the version from `-PreleaseVersion` and the notes from `-PchangelogFile`, and need `--no-configuration-cache`. The projects don't exist yet: create them only when the owner asks (see “Publishing the owner's projects” in `~/c/personal/minecraft/CLAUDE.md`). Tokens are the `MODRINTH_TOKEN` and `HANGAR_TOKEN` secrets; never put them in the repo. MODRINTH.md is for server owners: no build, stack, or related projects, and no Moonlands banner.
+
