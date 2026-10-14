@@ -116,6 +116,19 @@ class McBuddyMigrationTest {
     assertEquals(before, contents(old) to contents(new))
   }
 
+  @Test fun `settings already in Allay's folder stay, and the data still moves`() {
+    mcbuddy()
+    // A server that ships config.yml with its image puts it here before the plugin starts.
+    new.mkdirs()
+    File(new, "config.yml").writeText("server:\n  url: \"http://allay:3000\"\n")
+    assertEquals(McBuddyMigration.Result.MOVED, McBuddyMigration(old, new, log).run())
+    assertEquals("server:\n  url: \"http://allay:3000\"\n", File(new, "config.yml").readText())
+    assertTrue(File(old, "config.yml").isFile, "MCBuddy's config stays behind")
+    assertEquals(notes, File(new, "notes/$uuid.json").readText())
+    assertEquals("7d1e0f9a-0000-4000-8000-000000000042", File(new, "server-id").readText())
+    assertFalse(File(new, "lang/en.yml").exists())
+  }
+
   @Test fun `a failure halfway puts everything back`() {
     mcbuddy()
     val before = contents(old)

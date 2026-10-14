@@ -10,8 +10,9 @@ import java.util.logging.Logger
 /**
  * Moves MCBuddy's data into Allay's folder: `plugins/mcbuddy-spigot/` into `plugins/Allay/`. It runs before anything
  * reads the data, moves rather than copies, logs each file, and writes a marker so it never runs twice. When a move
- * fails halfway, what already moved goes back and the old folder stays as it was. When both folders hold data, it
- * changes nothing and warns: an admin merges them by hand.
+ * fails halfway, what already moved goes back and the old folder stays as it was. When both folders hold players'
+ * data, it changes nothing and warns: an admin merges them by hand. Settings already in Allay's folder (a server that
+ * ships its `config.yml` with the image puts it there before the plugin starts) win, and MCBuddy's stay behind.
  *
  * After the move, texts that still say what MCBuddy shipped become Allay's: the backend's address, the default book
  * author, the default sounds, the language files' untouched lines. What the admin wrote stays, with the old name and command replaced.
@@ -28,7 +29,7 @@ class McBuddyMigration(
     if (File(new, MARKER).exists()) return Result.ALREADY
     val present = ITEMS.filter { File(old, it).exists() }
     if (present.isEmpty()) return Result.NOTHING
-    val own = ITEMS.filter { File(new, it).exists() }
+    val own = DATA.filter { File(new, it).exists() }
     if (own.isNotEmpty()) {
       log.warning("Both ${old.name}/ and ${new.name}/ hold data (${own.joinToString()}); moving nothing. Merge them by hand and delete ${old.name}/.")
       return Result.BOTH
@@ -37,6 +38,10 @@ class McBuddyMigration(
     val moved = mutableListOf<String>()
     try {
       for (name in present) {
+        if (File(new, name).exists()) {
+          log.info("Kept ${new.name}/$name that was already there; MCBuddy's stays in ${old.name}/")
+          continue
+        }
         move(File(old, name).toPath(), File(new, name).toPath())
         moved += name
         log.info("Moved ${old.name}/$name to ${new.name}/$name")
@@ -49,14 +54,15 @@ class McBuddyMigration(
       log.severe("Couldn't move ${old.name}/ to ${new.name}/: $error. The old folder is as it was; MCBuddy's data waits there.")
       return Result.FAILED
     }
-    runCatching { renameTexts() }.onFailure { log.warning("Moved the data, but couldn't update its texts to Allay: $it") }
+    runCatching { renameTexts(moved) }.onFailure { log.warning("Moved the data, but couldn't update its texts to Allay: $it") }
     File(new, MARKER).writeText("Allay moved this server's data here from ${old.name}/. Delete this file to have it check again.\n")
     return Result.MOVED
   }
 
-  private fun renameTexts() {
-    File(new, "config.yml").takeIf { it.isFile }?.let { file -> file.writeText(config(file.readText())) }
-    File(new, "lang").listFiles { file -> file.extension == "yml" }.orEmpty().forEach(::language)
+  /** Only what came over from MCBuddy: settings that were already here are the admin's. */
+  private fun renameTexts(moved: List<String>) {
+    if ("config.yml" in moved) File(new, "config.yml").takeIf { it.isFile }?.let { file -> file.writeText(config(file.readText())) }
+    if ("lang" in moved) File(new, "lang").listFiles { file -> file.extension == "yml" }.orEmpty().forEach(::language)
   }
 
   /** A language file: keys still as 3.1.0 shipped them go, so Allay's own texts show; what the admin changed stays. */
@@ -117,6 +123,9 @@ class McBuddyMigration(
   companion object {
     /** Everything MCBuddy kept in its folder. */
     val ITEMS = listOf("config.yml", "lang", "notes", "goals", "timezones.json", "players.json", "server-id", "geoip")
+
+    /** What players and the server built up; settings, languages, and the GeoIP database aren't. */
+    val DATA = listOf("notes", "goals", "timezones.json", "players.json", "server-id")
 
     const val MARKER = "moved-from-mcbuddy.txt"
 
