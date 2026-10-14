@@ -5,7 +5,7 @@ import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.entity.Villager
 import org.bukkit.plugin.Plugin
-import ru.mcbuddy.spigot.Config
+import ru.mcbuddy.spigot.Lang
 import ru.mcbuddy.spigot.menus.Menu.Companion.lore
 import ru.mcbuddy.spigot.tools.ActionTools
 import ru.mcbuddy.spigot.tools.Facts
@@ -15,9 +15,9 @@ import ru.mcbuddy.spigot.tools.Villagers
 class VillagerMenu(
   player: Player,
   private val plugin: Plugin,
-  private val texts: Config.Menus,
+  private val lang: Lang,
   private val found: List<Villagers.Found>,
-) : Menu(player, 54, texts.villagersTitle) {
+) : Menu(player, 54, lang.text("menus.villagers.title")) {
   private var page = 0
 
   override fun draw() {
@@ -25,30 +25,30 @@ class VillagerMenu(
     found.drop(page * ROWS).take(ROWS).forEachIndexed { row, villager ->
       val start = row * 9
       val profession = Villagers.profession(villager.trader)
-      val name = Villagers.PROFESSIONS_RU[profession] ?: profession
+      val name = lang.text("professions.$profession").takeUnless { it == "professions.$profession" } ?: profession
       val dx = villager.trader.location.x - player.location.x
       val dz = villager.trader.location.z - player.location.z
       val lore = listOfNotNull(
-        (villager.trader as? Villager)?.let { texts.villagerLevel.replace("{level}", it.villagerLevel.toString()) },
-        texts.villagerWhere.replace("{distance}", Math.round(villager.distance).toString()).replace("{direction}", Facts.DIRECTIONS_RU[Facts.direction(dx, dz)] ?: ""),
-        texts.villagerPath,
+        (villager.trader as? Villager)?.let { lang.text("menus.villagers.level", "level" to it.villagerLevel) },
+        lang.text("menus.villagers.where", "distance" to Math.round(villager.distance), "direction" to lang.text("directions.${Facts.direction(dx, dz)}")),
+        lang.text("menus.villagers.path"),
       )
       set(start, icon(Villagers.icon(profession), "&e$name", lore))
       villager.trades.take(8).forEachIndexed { index, offer ->
         val left = offer.maxUses - offer.uses
-        val prices = Villagers.prices(offer).joinToString(" + ", transform = Villagers::priceRu)
+        val prices = Villagers.prices(offer).joinToString(" + ") { Villagers.price(lang, it) }
         val tradeLore = listOf(
-          texts.tradePrice.replace("{price}", prices),
-          if (left > 0) texts.tradeLeft.replace("{left}", left.toString()) else texts.tradeOut,
+          lang.text("menus.villagers.price", "price" to prices),
+          if (left > 0) lang.text("menus.villagers.left", "left" to left) else lang.text("menus.villagers.out"),
         )
         set(start + 1 + index, offer.result.clone().lore(null, tradeLore))
       }
     }
     if (found.size > ROWS) {
-      set(PREVIOUS, icon(Material.SPECTRAL_ARROW, texts.previous))
-      set(NEXT, icon(Material.SPECTRAL_ARROW, texts.next))
+      set(PREVIOUS, icon(Material.SPECTRAL_ARROW, lang.text("menus.previous")))
+      set(NEXT, icon(Material.SPECTRAL_ARROW, lang.text("menus.next")))
     }
-    set(CLOSE, icon(Material.BARRIER, texts.close))
+    set(CLOSE, icon(Material.BARRIER, lang.text("menus.close")))
   }
 
   override fun click(slot: Int) {

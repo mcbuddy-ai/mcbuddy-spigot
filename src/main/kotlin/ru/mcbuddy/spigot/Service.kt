@@ -114,8 +114,15 @@ class Service(
     when (status.state) {
       "started" -> if (run.announced.add(status.call_id)) listener.toolStarted(status.call_id, status.name, status.args)
       // The plugin reports its own tools when it posts their results; only server tools finish here.
-      "finished", "failed" -> if (status.kind == "server") listener.toolFinished(status.call_id, status.summary, status.state == "failed")
+      "finished", "failed" -> if (status.kind == "server") listener.toolFinished(status.call_id, serverSummary(run.lang, status), status.state == "failed")
     }
+  }
+
+  /** A server tool's summary in the reader's language when the backend sent a key the language file knows, else its English text. */
+  private fun serverSummary(lang: Lang, status: Protocol.ToolStatus): String? {
+    val key = status.summary_key?.let { "summary.server.$it" }?.takeIf(lang::has) ?: return status.summary
+    val values = status.summary_values.orEmpty().mapNotNull { (name, value) -> (value as? kotlinx.serialization.json.JsonPrimitive)?.content?.let { name to it } }
+    return lang.text(key, *values.toTypedArray())
   }
 
   private fun request(run: Run, message: String): Protocol.ChatRequest {

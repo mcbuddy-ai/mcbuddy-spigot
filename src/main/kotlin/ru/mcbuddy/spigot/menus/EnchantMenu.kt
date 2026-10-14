@@ -8,7 +8,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import org.bukkit.inventory.meta.Repairable
-import ru.mcbuddy.spigot.Config
+import ru.mcbuddy.spigot.Lang
 import ru.mcbuddy.spigot.menus.Menu.Companion.lore
 import ru.mcbuddy.spigot.tools.Mechanics
 
@@ -16,7 +16,7 @@ import ru.mcbuddy.spigot.tools.Mechanics
  * Enchantments for the item in hand. The player picks the ones they want, and the window shows the cheapest order
  * to combine the books on an anvil, step by step, from [Mechanics.anvilPlan].
  */
-class EnchantMenu(player: Player, private val texts: Config.Menus, private val item: ItemStack) : Menu(player, 54, texts.enchantTitle) {
+class EnchantMenu(player: Player, private val lang: Lang, private val item: ItemStack) : Menu(player, 54, lang.text("menus.enchant.title")) {
   private val options: List<Enchantment> = applicable(item)
   private val selected = linkedSetOf<Enchantment>()
   private var plan: Plan? = null
@@ -30,30 +30,30 @@ class EnchantMenu(player: Player, private val texts: Config.Menus, private val i
     clear()
     val plan = plan
     if (plan == null) drawChoice() else drawPlan(plan)
-    set(CLOSE, icon(Material.BARRIER, texts.close))
+    set(CLOSE, icon(Material.BARRIER, lang.text("menus.close")))
   }
 
   private fun drawChoice() {
-    set(ITEM, item.clone().lore(null, listOf(texts.enchantPenalty.replace("{penalty}", penalty.toString()))))
+    set(ITEM, item.clone().lore(null, listOf(lang.text("menus.enchant.penalty", "penalty" to penalty))))
     options.take(36).forEachIndexed { index, enchantment ->
       val has = item.getEnchantmentLevel(enchantment)
       val conflict = conflicts(enchantment)
       val status = when {
-        has >= enchantment.maxLevel -> texts.enchantHas
-        enchantment in selected -> texts.enchantSelected
-        conflict -> texts.enchantConflict
-        else -> texts.enchantPick
+        has >= enchantment.maxLevel -> lang.text("menus.enchant.has")
+        enchantment in selected -> lang.text("menus.enchant.selected")
+        conflict -> lang.text("menus.enchant.conflict")
+        else -> lang.text("menus.enchant.pick")
       }
       val lore = listOfNotNull(
         status,
-        texts.enchantTreasure.takeIf { enchantment.isTreasure && !enchantment.isCursed },
-        texts.enchantCurse.takeIf { enchantment.isCursed },
-        texts.enchantPrice.replace("{cost}", Mechanics.bookWeight(enchantment.key.key).toString()),
+        lang.text("menus.enchant.treasure").takeIf { enchantment.isTreasure && !enchantment.isCursed },
+        lang.text("menus.enchant.curse").takeIf { enchantment.isCursed },
+        lang.text("menus.enchant.price", "cost" to Mechanics.bookWeight(enchantment.key.key)),
       )
       // Picked and possible ones shine; the rest go dull, so the choice reads at a glance.
       set(FIRST + index, book(listOf(enchantment), shine = enchantment in selected || (!conflict && has < enchantment.maxLevel)).lore(null, lore))
     }
-    set(PLAN, icon(Material.ANVIL, texts.planButton, listOf(texts.planHint)))
+    set(PLAN, icon(Material.ANVIL, lang.text("menus.enchant.plan"), listOf(lang.text("menus.enchant.plan_hint"))))
   }
 
   private fun drawPlan(plan: Plan) {
@@ -62,20 +62,20 @@ class EnchantMenu(player: Player, private val texts: Config.Menus, private val i
       val n = page * ROWS + row + 1
       val start = row * 9
       set(start, piece(step.left, plan))
-      set(start + 1, icon(Material.LIGHT_GRAY_STAINED_GLASS_PANE, texts.planPlus))
+      set(start + 1, icon(Material.LIGHT_GRAY_STAINED_GLASS_PANE, lang.text("menus.enchant.plus")))
       set(start + 2, piece(step.right, plan))
-      set(start + 3, icon(Material.LIGHT_GRAY_STAINED_GLASS_PANE, texts.planResult))
+      set(start + 3, icon(Material.LIGHT_GRAY_STAINED_GLASS_PANE, lang.text("menus.enchant.result")))
       set(start + 4, piece(step.left + step.right, plan))
-      val lore = listOfNotNull(texts.planTooExpensive.takeIf { step.cost >= Mechanics.TOO_EXPENSIVE })
-      set(start + 6, icon(Material.EXPERIENCE_BOTTLE, texts.planStep.replace("{n}", "$n").replace("{cost}", "${step.cost}"), lore, amount = step.cost.coerceAtLeast(1)))
+      val lore = listOfNotNull(lang.text("menus.enchant.too_expensive").takeIf { step.cost >= Mechanics.TOO_EXPENSIVE })
+      set(start + 6, icon(Material.EXPERIENCE_BOTTLE, lang.text("menus.enchant.step", "n" to n, "cost" to step.cost), lore, amount = step.cost.coerceAtLeast(1)))
     }
-    set(BACK, icon(Material.ARROW, texts.back))
+    set(BACK, icon(Material.ARROW, lang.text("menus.back")))
     if (steps.size > ROWS) {
-      set(PREVIOUS, icon(Material.SPECTRAL_ARROW, texts.previous))
-      set(NEXT, icon(Material.SPECTRAL_ARROW, texts.next))
+      set(PREVIOUS, icon(Material.SPECTRAL_ARROW, lang.text("menus.previous")))
+      set(NEXT, icon(Material.SPECTRAL_ARROW, lang.text("menus.next")))
     }
-    val lore = listOfNotNull(texts.planTooExpensive.takeIf { plan.result.tooExpensive })
-    set(PLAN, icon(Material.ANVIL, texts.planTotal.replace("{total}", "${plan.result.total}"), lore))
+    val lore = listOfNotNull(lang.text("menus.enchant.too_expensive").takeIf { plan.result.tooExpensive })
+    set(PLAN, icon(Material.ANVIL, lang.text("menus.enchant.total", "total" to plan.result.total), lore))
   }
 
   /** What a set of pieces looks like: the item with the books' enchantments on it, or one book with all of them. */
@@ -84,7 +84,7 @@ class EnchantMenu(player: Player, private val texts: Config.Menus, private val i
     if (0 !in pieces) return book(enchantments, shine = true)
     return item.clone().apply {
       enchantments.forEach { addUnsafeEnchantment(it, it.maxLevel) }
-    }.lore(null, listOf(texts.planItem))
+    }.lore(null, listOf(lang.text("menus.enchant.item")))
   }
 
   override fun click(slot: Int) {
@@ -98,7 +98,7 @@ class EnchantMenu(player: Player, private val texts: Config.Menus, private val i
       slot == PLAN -> {
         if (selected.isEmpty()) {
           player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BASS, 0.6f, 0.8f)
-          player.sendMessage(ru.mcbuddy.spigot.Minecraft.formatMessage(texts.planEmpty))
+          player.sendMessage(ru.mcbuddy.spigot.Minecraft.formatMessage(lang.text("menus.enchant.plan_empty")))
           return
         }
         val books = selected.toList()

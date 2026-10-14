@@ -5,7 +5,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 class StatusTest {
-  private val format = StatusFormat("&6{spinner} &6{verb}… &7({elapsed} · ↑ {input} · ↓ {output})", "Пишу ответ")
+  private val lang = Texts(mapOf("ru" to mapOf(
+    "status.line" to "&6{spinner} &6{verb}… &7({seconds}с · ↑ {input} · ↓ {output} {tokens|токен|токена|токенов})",
+    "status.answering" to "Пишу ответ",
+    "status.verbs" to listOf("Думаю"),
+  )), "ru").lang("ru")
+  private val format = StatusFormat(lang)
 
   @Test fun `the spinner goes there and back without repeating the ends`() {
     val spinner = Spinner("·✢✳✶✻✽")
@@ -19,13 +24,8 @@ class StatusTest {
     assertEquals("&6· &6Колдую… &7(0с · ↑ 0 · ↓ 1 токен)", format.line("·", "Колдую", Phase.THINKING, 0, 0, 1))
   }
 
-  @Test fun `old configs with tokens still work`() {
-    val old = StatusFormat("{verb} ↓ {tokens}", "Пишу ответ")
-    assertEquals("Думаю ↓ 3 токена", old.line("✻", "Думаю", Phase.THINKING, 1, 50, 3))
-  }
-
   @Test fun `output takes the larger of the estimate and the reported count`() {
-    val run = Run(FakeSender, Run.Mode.ASK, listOf("Думаю"), 3)
+    val run = Run(FakeSender, Run.Mode.ASK, lang, 3)
     run.addText("12345678")
     assertEquals(2, run.output)
     run.usage(900, 40)
@@ -41,8 +41,12 @@ class StatusTest {
     assertEquals("12k", StatusFormat.compact(12_345))
   }
 
-  @Test fun `russian plurals`() {
-    assertEquals(listOf("токен", "токена", "токенов", "токенов", "токен", "токена"), listOf(1L, 3, 5, 11, 21, 104).map(Plurals::tokens))
+  @Test fun `plurals follow each language's rule`() {
+    val ru = listOf("токен", "токена", "токенов")
+    assertEquals(listOf("токен", "токена", "токенов", "токенов", "токен", "токена", "токенов"), listOf(1L, 3, 5, 11, 21, 104, 112).map { Plurals.pick("ru", it, ru) })
+    assertEquals(listOf("token", "tokens", "tokens"), listOf(1L, 0, 2).map { Plurals.pick("en", it, listOf("token", "tokens")) })
+    // Portuguese takes the singular for zero too.
+    assertEquals(listOf("baú", "baú", "baús"), listOf(0L, 1, 2).map { Plurals.pick("pt", it, listOf("baú", "baús")) })
   }
 
   @Test fun `verbs change over time and cycle through all of them`() {
@@ -50,6 +54,6 @@ class StatusTest {
     assertEquals(verbs.at(0), verbs.at(2_999))
     assertNotEquals(verbs.at(0), verbs.at(3_000))
     assertEquals(setOf("a", "b", "c"), (0 until 3).map { verbs.at(it * 3_000L) }.toSet())
-    assertEquals("Думаю", Verbs(emptyList(), 3_000, 1).at(0))
+    assertEquals("…", Verbs(emptyList(), 3_000, 1).at(0))
   }
 }

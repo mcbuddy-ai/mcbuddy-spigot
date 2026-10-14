@@ -20,6 +20,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
   implementation("com.squareup.okhttp3:okhttp:5.5.0")
+  implementation("com.maxmind.db:maxmind-db:4.2.0")
 
   testImplementation("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
   testImplementation(kotlin("test"))
@@ -39,8 +40,8 @@ tasks {
 
   shadowJar {
     archiveClassifier = ""
-    // Relocated so other plugins that ship their own Kotlin or OkHttp can't clash with ours.
-    listOf("kotlin", "kotlinx", "okhttp3", "okio").forEach { relocate(it, "ru.mcbuddy.spigot.libs.$it") }
+    // Relocated so other plugins that ship their own Kotlin, OkHttp, or MaxMind reader can't clash with ours.
+    listOf("kotlin", "kotlinx", "okhttp3", "okio", "com.maxmind").forEach { relocate(it, "ru.mcbuddy.spigot.libs.$it") }
     mergeServiceFiles()
     exclude("META-INF/*.kotlin_module", "META-INF/versions/*/module-info.class", "module-info.class")
     dependencies { exclude(dependency("org.jetbrains:annotations")) }

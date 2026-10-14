@@ -43,6 +43,9 @@ object Protocol {
     val state: String,
     val args: JsonObject? = null,
     val summary: String? = null,
+    /** Since 2.4: the summary as a key and values, so the plugin can say it in the reader's language. */
+    val summary_key: String? = null,
+    val summary_values: JsonObject? = null,
   )
 
   @Serializable data class Commands(val is_sequence: Boolean = false, val commands: List<String> = emptyList())

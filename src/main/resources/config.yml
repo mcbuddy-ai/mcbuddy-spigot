@@ -1,398 +1,185 @@
-# =============================================================================
-# Конфигурация MCBuddy Spigot Plugin
-# 💬 Интеллектуальный AI-ассистент для Minecraft сервера
-# =============================================================================
+###############################################################################
+#                           MCBuddy configuration                             #
+###############################################################################
+# /ask asks the AI buddy about the game, /askx turns a request into commands.
+# This file holds settings only: every text players read lives in
+# lang/<language>.yml, and each player reads their own language. Every key here
+# has a default, so you can delete the ones you don't change. /ask reload applies
+# changes without a restart.
 
-# Настройки подключения к серверу MCBuddy
-# URL бэкенд-сервера, который обрабатывает запросы к AI-ассистенту
+# The MCBuddy backend that answers questions.
 server:
   url: "https://mcbuddy.ru"
 
-# Параметры HTTP-клиента для взаимодействия с сервером
-# Настройка таймаутов и других параметров для оптимальной производительности
+locales:
+  # Players nothing else matches, and the console, get this language.
+  default: en
+  # Where a player's language comes from, tried in order:
+  #   ip     — the country of their IP address, through the lists below;
+  #   client — the language set in their game, when a lang/ file matches it.
+  sources: [ ip, client ]
+  # Language → the ISO 3166 country codes that get it. Add a lang/it.yml and an
+  # “it: [ IT, SM, VA ]” line to add Italian. Players behind a proxy or relay show
+  # up with its address, so they get the relay's country.
+  countries:
+    ru: [ RU, BY, KZ, KG, TJ, UZ, AM, AZ, MD, GE, TM ]
+    es: [ ES, MX, AR, CO, CL, PE, VE, EC, GT, CU, BO, DO, HN, PY, SV, NI, CR, PA, UY, PR, GQ ]
+    pt: [ BR, PT, AO, MZ, CV, GW, ST, TL ]
+    de: [ DE, AT, CH, LI, LU ]
+
+geoip:
+  # The country database: DB-IP's free “IP to Country Lite”, CC BY 4.0, about 4 MB.
+  # The plugin downloads it into geoip/ and refreshes it once it's older than
+  # refresh_days. Lookups happen on your server; no address leaves it.
+  enabled: true
+  url: "https://download.db-ip.com/free/dbip-country-lite-{year}-{month}.mmdb.gz"
+  refresh_days: 30
+
+# The HTTP client that talks to the backend. Times are in seconds.
 http:
-  # Основные таймауты (в секундах)
-  call_timeout: 300        # Общий таймаут для всего запроса (5 минут для очередей)
-  connect_timeout: 10      # Время ожидания установки соединения
-  read_timeout: 300        # Время ожидания чтения ответа от сервера (5 минут)
-  write_timeout: 10        # Время ожидания отправки данных на сервер
-  tool_timeout: 10         # Сколько секунд инструмент может работать на сервере, прежде чем ассистент получит ошибку
+  call_timeout: 300         # The whole question, from asking to the last word of the answer
+  connect_timeout: 10
+  read_timeout: 300
+  write_timeout: 10
+  tool_timeout: 10          # How long a game tool may run before the assistant gets an error
+  max_idle_connections: 5
+  keep_alive_duration: 300
+  max_requests_per_host: 5
+  follow_redirects: true
+  retry_on_connection_failure: true
+  logging: false            # Log each request's method, URL, and status (never the body)
+  compression_enabled: true
+  # Extra headers for every request, such as your own OpenRouter key:
+  custom_headers: {}
+  #  "X-OpenRouter-Token": "sk-or-v1-…"
 
-  # Настройки соединений и производительности
-  max_idle_connections: 5  # Максимальное количество idle соединений в пуле
-  keep_alive_duration: 300 # Время жизни idle соединения (в секундах)
-  max_requests_per_host: 5 # Максимальное количество одновременных запросов к одному хосту
-
-  # Настройки редиректов и повторных попыток
-  follow_redirects: true   # Следовать по HTTP редиректам (301, 302, etc.)
-  retry_on_connection_failure: true # Повторять запрос при сбое соединения
-
-  # Настройки логирования
-  logging: false # Включить логирование запросов и ответов (без body, только код и url)
-
-  # Настройки сжатия и заголовков
-  compression_enabled: true # Включить сжатие gzip/deflate для запросов/ответов
-  user_agent: "MCBuddy-Spigot/2.3.0 (Minecraft Plugin)" # User-Agent заголовок
-
-  # Дополнительные заголовки для всех запросов
-  custom_headers:
-    "X-Plugin-Version": "2.3.0"
-    "X-Platform": "Spigot"
-    # "X-OpenRouter-Token": "sk-or-v1-1234567890"
-
-# Настройки пользовательского интерфейса и взаимодействия
 ui:
-  # Живой статус в Action Bar (над хотбаром), как у Claude Code:
-  # «✻ Обдумываю… (12с · ↑ 2.4k · ↓ 340 токенов)» — спиннер, меняющийся глагол, время,
-  # сколько токенов модель прочитала (↑) и сколько написала (↓)
+  # The live status in the action bar while the assistant works, like Claude Code:
+  # a spinner, a changing verb, seconds, and tokens read and written. Its text and
+  # verbs live in lang/ under status.
   action_bar:
-    enabled: true                              # Показывать статус в action bar
-    # Плейсхолдеры: {spinner}, {verb}, {elapsed}, {input}, {output}
-    format: "&6{spinner} &6{verb}… &7({elapsed} · ↑ {input} · ↓ {output})"
-    answering: "Пишу ответ"                    # Глагол, пока ассистент пишет ответ
-    spinner: "·✢✳✶✻✽"                          # Кадры спиннера; он проходит их туда и обратно
-    frame_millis: 120                          # Длительность одного кадра спиннера (в мс)
-    verb_seconds: 3                            # Как часто меняется глагол (в секундах)
-    verbs:                                     # Глаголы для /ask
-      - "Листаю книгу рецептов"
-      - "Переплавляю мысли в печи"
-      - "Зачаровываю ответ"
-      - "Варю зелье мудрости"
-      - "Советуюсь с библиотекарем"
-      - "Сверяюсь с картой"
-      - "Тяну редстоун"
-      - "Ставлю повторители"
-      - "Подкидываю угля в печь"
-      - "Точу кирку"
-      - "Копаю на Y −59"
-      - "Ставлю факелы"
-      - "Перебираю сундуки"
-      - "Кидаю око Края"
-      - "Разжигаю портал"
-      - "Крадусь мимо Хранителя"
-      - "Спорю с крипером"
-      - "Стригу овец"
-    askx_verbs:                                # Глаголы для /askx
-      - "Настраиваю командный блок"
-      - "Подбираю селектор @s"
-      - "Сверяю синтаксис"
-      - "Кручу компаратор"
-
-  # Строки в чате, когда ассистент пользуется инструментами:
-  # «⏺ Заглядываю в инвентарь» и под ней «⎿ 12 стаков»
+    enabled: true
+    spinner: "·✢✳✶✻✽"         # Spinner frames; it runs through them and back
+    frame_millis: 120         # How long one frame shows
+    verb_seconds: 3           # How often the verb changes
+  # A chat line for each tool the assistant uses, with its result under it.
   tool_lines:
     enabled: true
-    started: "&7⏺ {label}"
-    finished: "&8  ⎿ {summary}"
-    failed: "&c  ⎿ {summary}"
-    # Свои подписи для инструментов; {аргумент} подставляется из вызова
-    labels: {}
-    #  get_inventory: "Роюсь в карманах"
-    #  search_web: "Гуглю «{query}»"
-
   particles:
-    enabled: true                              # Показывать частицы вокруг головы игрока
-    type: "ENCHANT"                            # Тип частиц (ENCHANTMENT_TABLE, VILLAGER_HAPPY, etc.)
-    count: 3                                   # Количество частиц за раз
-    height_offset: 2.0                         # Высота над головой игрока
-    animation_interval: 250                    # Интервал между появлением частиц (в мс)
-
+    enabled: true             # Particles over the player's head while the assistant works
+    type: "ENCHANT"
+    count: 3
+    height_offset: 2.0
+    animation_interval: 250   # Milliseconds between bursts
   chat_status:
-    enabled: false                             # Показывать статус в чате (thinking сообщения)
-
-  # Кнопки под ответом: ассистент сам решает, какие нужны — следующий вопрос, путь к точке, рецепт и т. п.
-  # Кнопку может нажать только тот, кому она пришла; через час она перестаёт работать
-  buttons:
-    format: "&a[{label}]"                      # Как выглядит кнопка; {label} — надпись от ассистента
-    read_book: "Открыть книгу"                 # Надписи кнопок под длинным ответом в книге
-    take_book: "Взять книгу"
-    hover:                                     # Подсказки при наведении
-      ask: "&7Спросить: &f{question}"
-      point: "&7Показать путь к &f{x} {y} {z}"
-      note: "&7Записать в блокнот: &f{text} &7({x} {y} {z})"
-      recipe: "&7Открыть рецепт"
-      enchants: "&7Открыть чары для предмета в руке"
-      villagers: "&7Открыть жителей рядом"
-      read_book: "&7Открыть книгу «{title}»"
-      take_book: "&7Положить книгу «{title}» в инвентарь"
-
-  # Автор книг, которые пишет ассистент, когда игрок просит расписать подробно
+    enabled: false            # Also say “asking the assistant…” in chat
+  # The author of the books the assistant writes when a player asks for detail.
   book_author: "MCBuddy"
-
-  # Звуковые эффекты
   sounds:
-    enabled: true                              # Включить звуки
-
-    # Звук при получении успешного ответа
-    success_sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    enabled: true
+    success_sound: "ENTITY_EXPERIENCE_ORB_PICKUP"   # The answer is in
     success_volume: 0.5
     success_pitch: 1.2
-
-    # Звук при ошибке
-    error_sound: "AMBIENT_CAVE"                # Пещерный страшный звук
+    error_sound: "AMBIENT_CAVE"                     # Something went wrong
     error_volume: 0.6
     error_pitch: 0.7
-
-    # Звук при начале обработки запроса
-    thinking_sound: "BLOCK_NOTE_BLOCK_CHIME"
+    thinking_sound: "BLOCK_NOTE_BLOCK_CHIME"        # The assistant starts working
     thinking_volume: 0.3
     thinking_pitch: 1.0
 
-# Настройка текстовых сообщений для игроков
-# Все сообщения поддерживают Minecraft цветовые коды (&a, &c, &f и т.д.)
-messages:
-  # Общие сообщения команды /ask
-  thinking: "&eОбращаюсь к AI-ассистенту, подождите немного..."
-  usage: "&7Использование: &f/ask <вопрос>\n&7Пример: &f/ask как скрафтить алмазную кирку?\n&7Остановить: &f/ask cancel&7, начать заново: &f/ask new&7, память: &f/ask memory"
-  error: "&cНе удалось получить ответ от AI-ассистента."
-
-  # Сообщения команды /askx
-  askx_thinking: "&eАнализирую ваш запрос и генерирую команды..."
-  askx_usage: "&7Использование: &f/askx <описание действия>\n&7Пример: &f/askx дай мне алмазный меч с остротой 5"
-  askx_error: "&cНе удалось выполнить команды. Попробуйте переформулировать запрос или обратитесь к администратору."
-
-  # Сообщения выполнения команд
-  commands_executing: "&aВыполняю {count} команд{sequence}..."
-  command_executed: "&aВыполнено: /{command}"
-  no_commands_to_execute: "&eНет команд для выполнения"
-  blocked_command: "&cЭта команда заблокирована для выполнения через /askx из соображений безопасности."
-  command_failed: "&cОшибка: /{command}"
-  command_execution_error: "&cОшибка выполнения: /{command}"
-
-  # Сообщения команды /ask cancel
-  cancelled: "&7Остановил."
-  nothing_to_cancel: "&7Сейчас я ничего не делаю."
-
-  # Напоминание, которое ассистент поставил игроку; {text} — о чём напомнить
-  reminder: "&e⏰ Напоминание: &f{text}"
-
-  # Разговор и память. Ассистент помнит последние вопросы сутки, а важное об игроке
-  # (где база, какие цели) — пока игрок не попросит забыть
-  session_cleared: "&aНачинаем разговор заново. Что я о тебе помню, осталось: &f/ask memory"
-  memory_header: "&6Что я о тебе помню:"
-  memory_line: "&e{n}. &f{text}"
-  memory_footer: "&7Забыть: &f/ask forget <номер|all>"
-  memory_empty: "&7Я пока ничего о тебе не запомнил. Скажи «запомни, что…», и запомню."
-  forgot: "&aЗабыл: &f{text}"
-  forgot_all: "&aЗабыл всё, что помнил о тебе ({count})."
-  forget_usage: "&7Использование: &f/ask forget <номер|all>&7. Номера — в &f/ask memory"
-  forget_not_found: "&cНет записи с номером {n}. Список: &f/ask memory"
-  memory_unsupported: "&cСервер MCBuddy пока не умеет хранить память."
-
-  # Цели с полосой сверху экрана; {title} — название цели
-  goal_done: "&a✔ Цель выполнена: &f{title}"
-
-  # Кнопки под ответами и окна
-  button_expired: "&7Эта кнопка уже не работает. Спроси ещё раз."
-  button_question: "&7› {question}"           # Вопрос, который задала кнопка, перед ответом на него
-  path_shown: "&7Показываю путь: &f{distance} &7блоков на {direction}."
-  path_other_world: "&7Эта точка в другом измерении."
-  note_saved: "&aЗаписал в блокнот: &f{text}"
-  book_taken: "&aКнига у тебя в инвентаре."
-  book_gone: "&7Этой книги уже нет. Попроси расписать ещё раз."
-  no_recipe: "&7У этого предмета нет рецепта: его добывают, находят или выменивают."
-  unknown_item: "&cНет такого предмета: {item}"
-  recipe_usage: "&7Использование: &f/ask recipe <предмет>"
-  hold_item: "&7Возьми в руку предмет, который хочешь зачаровать."
-  no_enchants: "&7На этот предмет нельзя наложить чары."
-  no_villagers: "&7Рядом нет жителей."
-
-  # Сообщения команды /reload
-  reload_success: "&aКонфигурация MCBuddy успешно перезагружена!"
-  reload_error: "&cОшибка при перезагрузке конфигурации: {error}"
-
-# Настройки сообщений об ошибках
-error_messages:
-  # API ошибки (коды от сервера)
-  api_errors:
-    # Пользовательские ошибки (400-499)
-    EMPTY_QUESTION: "&cВопрос не может быть пустым"
-    QUESTION_TOO_LONG: "&cВопрос слишком длинный (максимум 1000 символов)"
-    EMPTY_ACTION: "&cОписание действия не может быть пустым"
-    ACTION_TOO_LONG: "&cОписание действия слишком длинное (максимум 500 символов)"
-    TOO_MANY_COMMANDS: "&cСлишком много команд для выполнения (максимум 12)"
-    AI_ERROR: "&cAI не смог обработать ваш запрос. Попробуйте переформулировать."
-    BAD_REQUEST: "&cНекорректный запрос. Попробуйте еще раз."
-    METHOD_NOT_SUPPORTED: "&cМетод не поддерживается"
-    
-    # Серверные ошибки (500+)
-    AI_REQUEST_FAILED: "&cAI-сервис временно недоступен. Попробуйте позже."
-    NO_AI_RESPONSE: "&cAI не ответил на запрос. Попробуйте позже."
-    NETWORK_ERROR: "&cПроблемы с сетью. Проверьте подключение к интернету."
-    REDIS_ERROR: "&cПроблемы с базой данных. Попробуйте позже."
-    QUEUE_ERROR: "&cСервер перегружен. Попробуйте через несколько минут."
-    PROCESSING_ERROR: "&cОшибка обработки запроса. Попробуйте позже."
-    PARSE_ERROR: "&cОшибка обработки ответа AI. Попробуйте позже."
-    INVALID_FORMAT: "&cНекорректный формат ответа AI. Попробуйте позже."
-  
-  # HTTP статус коды
-  http_errors:
-    400: "&cНекорректный запрос. Попробуйте переформулировать."
-    401: "&cОшибка авторизации. Обратитесь к администратору."
-    403: "&cДоступ запрещен."
-    404: "&cСервис не найден. Обратитесь к администратору."
-    429: "&cПревышен лимит запросов. Подождите немного и попробуйте снова."
-    500: "&cВнутренняя ошибка сервера. Попробуйте позже."
-    502: "&cСервер временно недоступен. Попробуйте позже."
-    503: "&cСервис временно недоступен. Попробуйте позже."
-    504: "&cТаймаут запроса. Сервер перегружен, попробуйте позже."
-  
-  # Исключения и системные ошибки
-  system_errors:
-    timeout: "&cЗапрос занял слишком много времени. AI-сервер перегружен, попробуйте позже."
-    network: "&cПроблемы с подключением к серверу. Проверьте интернет-соединение."
-    default: "&cПроизошла неожиданная ошибка. Попробуйте позже."
-
-# Инструменты: ассистент сам спрашивает плагин об игре, когда ему это нужно.
-# Все инструменты знают только о том игроке, который спросил, и о мире вокруг него;
-# другие игроки видны лишь как число рядом. Выключенный инструмент ассистент не получит.
+# Game tools: the assistant asks the plugin about the game when it needs to. Every
+# tool knows only the player who asked and the world around them; other players show
+# up only as a count. A switched-off tool is never offered to the assistant.
 tools:
   enabled:
-    get_player_status: true   # Здоровье, голод, опыт, координаты, биом, эффекты, предмет в руке
-    get_inventory: true       # Инвентарь, броня, вторая рука и, по запросу, эндер-сундук
-    get_surroundings: true    # Блоки и существа вокруг (руды, сундуки, спавнеры, мобы)
-    get_target: true          # Блок или существо в перекрестье
-    get_world: true           # Время, день, луна, погода, сложность, важные правила игры
-    get_statistics: true      # Наигранное время, смерти, убийства, расстояния
-    get_advancements: true    # Полученные и ближайшие достижения
-    get_recipes: true         # Рецепты именно этого сервера
-    locate_structure: true    # Ближайшая деревня, крепость и т. п. (поиск нагружает сервер)
-    get_server: true          # Версия сервера, сложность, число игроков онлайн
-    get_locations: true       # Точка возрождения, спавн мира и место последней смерти
-    get_villager_trades: true # Сделки жителя или странствующего торговца в перекрестье
-    get_container: true       # Содержимое сундука, бочки или шалкера в перекрестье, по запросу — каждый предмет с чарами
-    scan_nearby_containers: true # Контейнеры вокруг и где лежит нужный предмет (видит сквозь стены — выключите, если у игроков есть приваты)
-    get_block_info: true      # Прочность блока, чем копать, что выпадет, стадия роста
-    get_item_durability: true # Износ инструментов и брони, что пора чинить
-    get_xp_info: true         # Опыт: уровень, очки, сколько до нужного уровня
-    get_food_options: true    # Еда в инвентаре: сытость, насыщение, побочные эффекты
-    get_map_info: true        # Карта в руке: масштаб, центр, внутри ли игрок
-    get_enchant_options: true # Стол зачарований: сколько полок работает, какой уровень доступен
-    get_mob_info: true        # Моб в перекрестье: здоровье, броня, сколько ударов нужно
-    get_light_spawn_check: true # Где вокруг темно и могут появиться враждебные мобы
-    get_brewing_items: true   # Всё для зельеварения в инвентаре и варочные стойки рядом
-    scan_farm: true           # Ферма вокруг: посевы по стадиям, грядки, животные, спавнеры
-    locate_biome: true        # Ближайший биом нужного типа (поиск нагружает сервер)
-    get_death_info: true      # Место последней смерти, что выпало и сколько вещи ещё пролежат
-    find_villagers: true      # Жители вокруг и их сделки, можно искать конкретный товар
-    get_anvil_plan: true      # Самый дешёвый порядок книг на наковальне для предмета в руке
-    inspect_item: true        # Один предмет целиком: урон и скорость, зелья, отделка, книги, что в шалкере или мешке
-    # Как ответ доходит до игрока
-    add_buttons: true         # Кнопки под ответом: следующий вопрос, путь, заметка, рецепт, чары, жители
-    write_book: true          # Длинный ответ книгой, когда игрок просит расписать подробно; книгу можно взять бесплатно
-    set_timezone: true        # Часовой пояс игрока, чтобы ассистент знал его реальное время
-    # Цели с полосой сверху экрана: «собрать 16 алмазов», «дойти до 30 уровня»; хранятся в plugins/mcbuddy-spigot/goals
-    set_goal: true            # Поставить цель
-    get_goals: true           # Показать цели и прогресс
-    cancel_goal: true         # Снять цель
-    # Блокнот игрока: заметки с координатами, хранятся в plugins/mcbuddy-spigot/notes
-    add_note: true            # Записать заметку (по умолчанию — там, где стоит игрок)
-    find_notes: true          # Найти заметки, ближайшие первыми
-    delete_note: true         # Удалить заметку
-    # Безобидные действия: ничего не выдают и не меняют мир
-    point_to: true            # Направить компас игрока на точку и показать путь частицами до 30 секунд (видит только он)
-    sort_inventory: true      # Сложить стаки и упорядочить инвентарь (хотбар не трогается)
-    set_reminder: true        # Напомнить игроку о чём-то через 1–120 минут
-    get_reminders: true       # Показать напоминания игрока, ближайшие первыми
-    cancel_reminder: true     # Отменить одно напоминание или все
-    ping_me: true             # Звук и частицы над игроком, видно и слышно всем рядом
-  # Инструменты, которые меняют игру для спросившего: выдают предметы, телепортируют и т. п.
-  # Ассистент получает их, только если игрок — оператор; плагин проверяет это ещё раз перед запуском.
-  # Обычный игрок не уговорит ассистента выдать ему меч.
+    get_player_status: true       # Health, food, XP, coordinates, biome, effects, the item in hand
+    get_inventory: true           # Inventory, armor, offhand, and on request the ender chest; what bundles and shulker boxes hold
+    get_surroundings: true        # Blocks and creatures around: ores, chests, spawners, mobs
+    look_at: true                 # Whatever is under the crosshair: a block and its drops, a container's contents, an enchanting table, a mob and the hits to kill it, a villager's trades
+    get_world: true               # Time, day, moon, weather, difficulty, the game rules that matter
+    get_statistics: true          # Play time, deaths, kills, distances
+    get_advancements: true        # Advancements done and to go
+    get_recipes: true             # This server's recipes
+    locate_structure: true        # The nearest village, stronghold, and so on (the search loads the server)
+    locate_biome: true            # The nearest biome of a kind (the search loads the server)
+    get_server: true              # Server version and players online
+    get_locations: true           # Respawn point, world spawn, and the last death
+    get_death_info: true          # Where the player died, what dropped, and how long it will lie there
+    find_villagers: true          # Villagers around and their trades; can look for one item
+    scan_nearby_containers: true  # Containers around and what's in them (sees through walls: turn it off if players have claims)
+    find_item: true               # Where an item is: inventory, ender chest, containers around, inside shulker boxes and bundles (sees through walls too)
+    inspect_item: true            # One item in full: damage and speed, potions, trims, books, maps, what a shulker box or bundle holds
+    get_item_durability: true     # Wear on tools and armor, what needs repair
+    get_xp_info: true             # Level, points, how far to a level
+    get_food_options: true        # Food in the inventory: hunger, saturation, side effects
+    get_anvil_plan: true          # The cheapest order of books on the anvil for the item in hand
+    get_light_spawn_check: true   # Dark spots around where hostile mobs can spawn
+    get_brewing_items: true       # Everything for brewing in the inventory and brewing stands nearby
+    scan_farm: true               # The farm around: crops by stage, farmland, animals, spawners
+    # How the answer reaches the player
+    add_buttons: true             # Buttons under the answer: next question, the way, a note, a recipe, enchantments, villagers
+    write_book: true              # A long answer as a book when the player asks for detail; the book is free to take
+    set_timezone: true            # The player's time zone, so the assistant knows their real time
+    # Goals with a bar at the top of the screen, kept in plugins/mcbuddy-spigot/goals
+    goals: true                   # Set, list, and cancel goals: “collect 16 diamonds”, “reach level 30”
+    # The player's notebook: notes with coordinates, kept in plugins/mcbuddy-spigot/notes
+    add_note: true                # Write a note (by default where the player stands)
+    find_notes: true              # Find notes, nearest first
+    delete_note: true             # Delete a note
+    # Harmless actions: they give nothing and change nothing in the world
+    point_to: true                # Point the compass at a spot and draw a trail for up to 30 seconds (only the player sees it)
+    sort_inventory: true          # Merge stacks and sort the inventory (the hotbar stays)
+    reminders: true               # Remind the player in 1–120 minutes; list and cancel reminders
+    ping_me: true                 # A sound and particles over the player, seen and heard by everyone nearby
+  # Tools that change the game for the asker: items, teleports, and the like. The
+  # assistant gets them only when the player is an operator, and the plugin checks
+  # again before running one. A regular player can't talk it into a sword.
   operator:
-    enabled: true             # Выключите, чтобы ассистент ничего не менял даже для операторов
-    give_item: true           # Выдать предмет (до 576 штук, с зачарованиями)
-    teleport: true            # Телепортировать к точке или к игроку онлайн
-    set_gamemode: true        # Сменить режим игры
-    heal: true                # Восстановить здоровье и сытость, потушить огонь
-    apply_effect: true        # Наложить эффект (до часа, уровень до 10) или снять все
-    set_time: true            # Сменить время суток в мире игрока
-    set_weather: true         # Сменить погоду в мире игрока
-  # Напоминания живут в памяти сервера: рестарт или выход игрока их сбрасывают
+    enabled: true             # false: the assistant changes nothing, even for operators
+    give_item: true           # Give an item (up to 576, with enchantments)
+    teleport: true            # Teleport to a spot or to a player online
+    set_gamemode: true
+    heal: true                # Restore health and food, put out fire
+    apply_effect: true        # Apply an effect (up to an hour, level up to 10) or clear them all
+    set_time: true
+    set_weather: true
+  # Reminders live in memory: a restart or the player leaving drops them.
   reminders:
-    max_pending: 10           # Сколько напоминаний может ждать у одного игрока
+    max_pending: 10           # Reminders one player can have waiting
   notes:
-    max_per_player: 200       # Сколько заметок может быть в блокноте одного игрока
+    max_per_player: 200       # Notes in one player's notebook
   goals:
-    max_per_player: 5         # Сколько целей может быть у одного игрока сразу
-  # Радиус поиска биомов в блоках (64–6400); поиск идёт в основном потоке, как у /locate biome
+    max_per_player: 5         # Goals one player can have at once
+  # The biome search radius in blocks (64–6400); it runs on the main thread, like /locate biome.
   locate_biome_radius: 2048
-  # Радиус, в котором ищутся жители, в блоках (8–64)
+  # How far to look for villagers, in blocks (8–64).
   villager_radius: 32
-  # Радиус поиска структур в чанках; поиск идёт в основном потоке, поэтому не делайте его большим
+  # The structure search radius in chunks; it runs on the main thread, so keep it small.
   locate_structure_radius: 64
 
-# Время игроков. Ассистент видит реальные дату и время игрока в каждом вопросе.
-# Игра не сообщает, где игрок, поэтому у всех сначала этот пояс; игрок может назвать свой, и ассистент запомнит
+# Players' real time. The assistant sees each player's date and time with every question.
+# The game doesn't say where a player is, so everyone starts in this zone; a player can
+# name theirs and the assistant remembers it.
 time:
-  zone: "Europe/Moscow"       # Часовой пояс по умолчанию (IANA), например Europe/Moscow или Asia/Yekaterinburg
+  zone: "Europe/Moscow"       # An IANA time zone, such as Europe/Berlin or America/New_York
 
-# Окна: рецепты, чары и жители. Названия предметов игра показывает сама на языке игрока
-menus:
-  back: "&eНазад"
-  close: "&cЗакрыть"
-  previous: "&eНазад по списку"
-  next: "&eДальше по списку"
-  recipe:
-    title: "Рецепт"
-    page: "&7Рецепт {n} из {total}"
-    open: "&7Нажми — рецепт этого предмета"
-    none: "&8Не крафтится: добывается, выпадает или выменивается"
-    makes: "&7Получится: {count} шт."
-    cooking: "&7{seconds} с, {xp} опыта"
-    options: "&7Подойдёт любой из вариантов"
-  enchant:
-    title: "Чары"
-    plan_title: "Порядок на наковальне"
-    pick: "&7Нажми, чтобы выбрать"
-    selected: "&a✔ Выбрано"
-    has: "&aУже есть на предмете"
-    conflict: "&cНе сочетается с выбранными или с чарами предмета"
-    treasure: "&7Сокровище: только из сундуков, у жителей и на рыбалке"
-    curse: "&cПроклятие"
-    price: "&7Уровень с книги стоит {cost} ур."
-    penalty: "&7Штраф за прошлые работы: {penalty} ур."
-    plan: "&aПоказать порядок"
-    plan_hint: "&7Выбери чары и нажми"
-    plan_empty: "&7Сначала выбери хотя бы одни чары"
-    step: "&eШаг {n}: {cost} ур."
-    too_expensive: "&cСлишком дорого: наковальня берёт до 39 уровней"
-    total: "&7Всего: {total} ур."
-    item: "&7Твой предмет"
-    plus: "&7+"
-    result: "&7="
-  villagers:
-    title: "Жители рядом"
-    where: "&7{distance} блоков на {direction}"
-    level: "&7Уровень {level}"
-    path: "&7Нажми — показать путь"
-    price: "&7Цена: &f{price}"
-    left: "&7Осталось сделок: {left}"
-    out: "&cРаспродано до пополнения"
-
-# Настройки разрешений для команд плагина
-# При default_permission: true команды доступны всем игрокам по умолчанию
-permissions:
-  default_permission: true  # Разрешить использование команд всем игрокам
-
-# Список команд, запрещенных для выполнения через /askx
-# Эти команды могут нарушить работу сервера или безопасность
-# Отсортированы в алфавитном порядке для удобства поиска
+# Commands /askx may never run, whatever the request. Who may use the commands is up to
+# permissions: mcbuddy.ask (everyone by default), mcbuddy.askx and mcbuddy.reload (operators).
 blocked_commands:
-  - "ban"           # Блокировка игроков
-  - "config"        # Изменение конфигурации
-  - "configure"     # Настройка сервера
-  - "deop"          # Снятие прав оператора
-  - "kick"          # Исключение игроков
-  - "op"            # Выдача прав оператора
-  - "pardon"        # Разблокировка игроков
-  - "pl"            # Список плагинов
-  - "plugin"        # Управление плагинами
-  - "plugins"       # Список плагинов
-  - "reload"        # Перезагрузка плагинов/сервера
-  - "restart"       # Перезапуск сервера
-  - "save-all"      # Принудительное сохранение мира
-  - "save-off"      # Отключение автосохранения
-  - "save-on"       # Включение автосохранения
-  - "stop"          # Остановка сервера
-  - "whitelist"     # Управление белым списком
+  - "ban"
+  - "config"
+  - "configure"
+  - "deop"
+  - "kick"
+  - "op"
+  - "pardon"
+  - "pl"
+  - "plugin"
+  - "plugins"
+  - "reload"
+  - "restart"
+  - "save-all"
+  - "save-off"
+  - "save-on"
+  - "stop"
+  - "whitelist"

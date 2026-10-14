@@ -6,11 +6,11 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 /** One question in flight: what the display shows and what cancelling stops. Touched from several threads. */
-class Run(val sender: CommandSender, val mode: Mode, verbs: List<String>, verbSeconds: Long) {
+class Run(val sender: CommandSender, val mode: Mode, val lang: Lang, verbSeconds: Long) {
   enum class Mode(val wire: String) { ASK("ask"), ASKX("askx") }
 
   val startedAt = System.currentTimeMillis()
-  val verbs = Verbs(verbs, verbSeconds * 1000, startedAt.toInt())
+  val verbs = Verbs(lang.list(if (mode == Mode.ASK) "status.verbs" else "status.askx_verbs"), verbSeconds * 1000, startedAt.toInt())
 
   @Volatile var phase = Phase.THINKING
   @Volatile var runId: String? = null

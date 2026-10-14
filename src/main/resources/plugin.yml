@@ -1,6 +1,6 @@
 name: mcbuddy-spigot
 version: '${version}'
-description: '💬 Spigot-плагин для интеграции MCBuddy — добавляет команду /ask для вопросов к AI-ассистенту прямо в чате Minecraft сервера! 🎮'
+description: 'An AI buddy in chat: /ask about the game, with answers grounded in your inventory, surroundings, and this server, in each player''s language.'
 main: ru.mcbuddy.spigot.Zygote
 api-version: '26.3'
 author: MairwunNx
@@ -11,21 +11,21 @@ plugin-name: McBuddy
 
 commands:
   ask:
-    description: Задать вопрос AI-ассистенту MCBuddy
-    usage: /<command> <вопрос> | cancel | new | memory | forget <номер|all> | recipe <предмет> | enchants | villagers
+    description: Ask the MCBuddy AI assistant
+    usage: /<command> <question> | cancel | new | memory | forget <number|all> | recipe <item> | enchants | villagers
     permission: mcbuddy.ask
   askx:
-    description: Выполнить команды Minecraft через AI-ассистента
-    usage: /<command> <описание действия>
+    description: Turn a request into Minecraft commands
+    usage: /<command> <what to do>
     permission: mcbuddy.askx
 
 permissions:
   mcbuddy.ask:
-    description: Задавать вопросы через /ask
+    description: Ask questions with /ask
     default: true
   mcbuddy.askx:
-    description: Выполнять команды через /askx
+    description: Run commands with /askx
     default: op
   mcbuddy.reload:
-    description: Перезагружать конфигурацию через /ask reload
+    description: Reload settings and languages with /ask reload
     default: op

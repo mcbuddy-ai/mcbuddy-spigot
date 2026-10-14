@@ -11,7 +11,6 @@ import org.bukkit.command.TabCompleter
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import ru.mcbuddy.spigot.Minecraft.formatMessage
 import ru.mcbuddy.spigot.menus.MenuListener
 import ru.mcbuddy.spigot.tools.Books
 import ru.mcbuddy.spigot.tools.ButtonStore
@@ -40,17 +39,19 @@ class Zygote : JavaPlugin(), TabCompleter {
   private lateinit var menus: MenuListener
   private lateinit var clicks: Clicks
   private val buttons = ButtonStore()
+  private val locales = Locales(this)
 
   override fun onEnable() {
     saveDefaultConfig()
     // Outlives /ask reload, so reminders already set keep their schedule.
-    reminders = Reminders(this, { configuration.tools.maxReminders }) { configuration.messages.reminderMessage }
+    reminders = Reminders(this, locales) { configuration.tools.maxReminders }
     server.pluginManager.registerEvents(reminders, this)
     notes = Notes(this) { configuration.tools.maxNotes }
-    goals = Goals(this, { configuration.tools.maxGoals }) { configuration.messages.goalDoneMessage }
+    goals = Goals(this, locales) { configuration.tools.maxGoals }
     val deaths = Deaths()
     features = Features(
       plugin = this,
+      locales = locales,
       reminders = reminders,
       notes = notes,
       goals = goals,
@@ -62,28 +63,29 @@ class Zygote : JavaPlugin(), TabCompleter {
       villagerRadius = { configuration.tools.villagerRadius },
     )
     menus = MenuListener(this)
-    listOf(goals, deaths, menus).forEach { server.pluginManager.registerEvents(it, this) }
+    listOf(goals, deaths, menus, locales).forEach { server.pluginManager.registerEvents(it, this) }
     goals.start()
     initializeComponents()
     listOf("ask", "askx").map(::getCommand).forEach {
       it?.setExecutor(this)
       it?.tabCompleter = this
     }
-    logger.info("✅ MCBuddy Spigot Plugin initialized")
+    logger.info("MCBuddy ${description.version} is on")
   }
 
   private fun initializeComponents() {
     configuration = Config(this)
+    locales.load(configuration)
     client = HttpClient(this, configuration).client
     if (::handler.isInitialized) handler.cancelAll()
     if (::animator.isInitialized) animator.stopAllAnimations()
     animator = Animator(this, configuration)
     val tools = ToolRegistry(ToolRegistry.all(), configuration.tools::enabled)
     service = Service(this, configuration, client, tools, features, scope)
-    executor = Executor(this, configuration, animator)
-    handler = Handler(this, configuration, service, animator, executor, scope) { clicks }
+    executor = Executor(this, configuration, locales, animator)
+    handler = Handler(this, configuration, locales, service, animator, executor, scope) { clicks }
     clicks = Clicks(this, configuration, features, buttons) { player, question -> handler.handleAskCommand(player, question.split(" ").toTypedArray()) }
-    memory = MemoryCommands(this, configuration, service, scope)
+    memory = MemoryCommands(this, locales, service, scope)
   }
 
   override fun onDisable() {
@@ -91,10 +93,10 @@ class Zygote : JavaPlugin(), TabCompleter {
     if (::reminders.isInitialized) reminders.cancelAll()
     if (::goals.isInitialized) goals.stop()
     if (::menus.isInitialized) menus.stop()
-    animator.stopAllAnimations()
+    if (::animator.isInitialized) animator.stopAllAnimations()
+    locales.stop()
     scope.cancel()
-    client.dispatcher.executorService.shutdown()
-    logger.info("✅ MCBuddy Spigot Plugin disabled")
+    if (::client.isInitialized) client.dispatcher.executorService.shutdown()
   }
 
   override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -107,11 +109,11 @@ class Zygote : JavaPlugin(), TabCompleter {
         ask && args.size == 1 && word == "new" -> memory.newSession(sender)
         ask && args.size == 1 && word == "memory" -> memory.list(sender)
         ask && word == "forget" && args.size <= 2 -> args.getOrNull(1)?.let { memory.forget(sender, it) }
-          ?: true.also { sender.sendMessage(formatMessage(configuration.messages.forgetUsageMessage)) }
+          ?: true.also { memory.usage(sender) }
         // Buttons under answers run this; a typed id works only if it was shown to this player.
         ask && word == "do" && args.size == 2 && sender is Player -> true.also { clicks.press(sender, args[1]) }
         ask && word == "recipe" && sender is Player -> true.also {
-          if (args.size < 2) sender.sendMessage(formatMessage(configuration.messages.recipeUsageMessage)) else clicks.recipe(sender, args.drop(1).joinToString("_"))
+          if (args.size < 2) locales.of(sender).send(sender, "messages.recipe_usage") else clicks.recipe(sender, args.drop(1).joinToString("_"))
         }
         ask && args.size == 1 && word == "enchants" && sender is Player -> true.also { clicks.enchants(sender) }
         ask && args.size == 1 && word == "villagers" && sender is Player -> true.also { clicks.villagers(sender, null) }
@@ -140,19 +142,15 @@ class Zygote : JavaPlugin(), TabCompleter {
   }
 
   private fun handleReloadCommand(sender: CommandSender): Boolean {
-    logger.info("🔄 Handling reload command")
-
     runCatching {
       reloadConfig()
       initializeComponents()
-      sender.sendMessage(formatMessage(configuration.messages.reloadSuccessMessage))
-      logger.info("✅ Configuration reloaded by ${sender.name}")
+      locales.of(sender).send(sender, "messages.reloaded")
+      logger.info("Settings and languages reloaded by ${sender.name}")
     }.onFailure {
-      val errorMessage = configuration.messages.reloadErrorMessage.replace("{error}", it.message ?: "неизвестная ошибка")
-      sender.sendMessage(formatMessage(errorMessage))
-      logger.warning("❌ Error while reloading configuration: ${it.message}")
+      locales.of(sender).send(sender, "messages.reload_failed", "error" to (it.message ?: it.javaClass.simpleName))
+      logger.warning("Reload failed: $it")
     }
-
     return true
   }
 

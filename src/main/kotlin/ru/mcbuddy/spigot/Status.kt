@@ -16,21 +16,19 @@ class Spinner(frames: String) {
   val size get() = sequence.size
 }
 
-/** Builds the status line from a template; every piece of text stays configurable. */
-class StatusFormat(private val template: String, private val answeringVerb: String) {
+/** Builds the status line from the reader's language; `status.line` holds the template. */
+class StatusFormat(private val lang: Lang) {
   /** [input] is what the model has read so far, [output] what it has written, both in tokens. */
-  fun line(spinner: String, verb: String, phase: Phase, elapsedSeconds: Long, input: Long, output: Long): String {
+  fun line(spinner: String, verb: String, phase: Phase, elapsedSeconds: Long, input: Long, output: Long): String = lang.text(
+    "status.line",
+    "spinner" to spinner,
+    "verb" to if (phase == Phase.ANSWERING) lang.text("status.answering") else verb,
+    "seconds" to elapsedSeconds,
+    "input" to compact(input),
+    "output" to compact(output),
     // "1.2k" reads as many, whatever the exact number ends with.
-    val written = "${compact(output)} ${if (output >= 1_000) "токенов" else Plurals.tokens(output)}"
-    return template
-      .replace("{spinner}", spinner)
-      .replace("{verb}", if (phase == Phase.ANSWERING) answeringVerb else verb)
-      .replace("{elapsed}", "${elapsedSeconds}с")
-      .replace("{input}", compact(input))
-      .replace("{output}", written)
-      // Configs from 2.0 still say {tokens}.
-      .replace("{tokens}", written)
-  }
+    "tokens" to if (output >= 1_000) 1_000 else output,
+  )
 
   companion object {
     fun compact(n: Long): String = when {
@@ -46,24 +44,8 @@ class Verbs(private val verbs: List<String>, private val intervalMillis: Long, s
   private val order = verbs.indices.shuffled(kotlin.random.Random(seed))
 
   fun at(elapsedMillis: Long): String {
-    if (verbs.isEmpty()) return "Думаю"
+    if (verbs.isEmpty()) return "…"
     val step = (elapsedMillis / intervalMillis.coerceAtLeast(500)).toInt()
     return verbs[order[step % order.size]]
   }
-}
-
-object Plurals {
-  /** Russian plural: 1 предмет, 2 предмета, 5 предметов. */
-  fun ru(n: Long, one: String, few: String, many: String): String {
-    val mod100 = n % 100
-    val mod10 = n % 10
-    return when {
-      mod100 in 11..14 -> many
-      mod10 == 1L -> one
-      mod10 in 2..4 -> few
-      else -> many
-    }
-  }
-
-  fun tokens(n: Long) = ru(n, "токен", "токена", "токенов")
 }

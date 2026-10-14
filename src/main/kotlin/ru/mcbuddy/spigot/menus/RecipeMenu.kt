@@ -15,14 +15,14 @@ import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.inventory.SmithingTransformRecipe
 import org.bukkit.inventory.SmokingRecipe
 import org.bukkit.inventory.StonecuttingRecipe
-import ru.mcbuddy.spigot.Config
+import ru.mcbuddy.spigot.Lang
 import ru.mcbuddy.spigot.menus.Menu.Companion.lore
 
 /**
  * This server's recipes as the crafting screen draws them. Clicking an ingredient opens its recipe in the same
  * window, and “Back” walks the way back. Ingredients that accept several items (any planks) cycle once a second.
  */
-class RecipeMenu(player: Player, private val texts: Config.Menus, first: Material) : Menu(player, 54, texts.recipeTitle) {
+class RecipeMenu(player: Player, private val lang: Lang, first: Material) : Menu(player, 54, lang.text("menus.recipe.title")) {
   private val history = ArrayDeque<Material>()
   private var item = first
   private var recipes = recipesFor(first)
@@ -54,14 +54,14 @@ class RecipeMenu(player: Player, private val texts: Config.Menus, first: Materia
     }
     set(STATION, station(recipe))
     val result = recipe.result.clone()
-    set(RESULT, result.lore(null, if (result.amount > 1) listOf(texts.recipeMakes.replace("{count}", result.amount.toString())) else emptyList()))
-    if (history.isNotEmpty()) set(BACK, icon(Material.ARROW, texts.back))
+    set(RESULT, result.lore(null, if (result.amount > 1) listOf(lang.text("menus.recipe.makes", "count" to result.amount)) else emptyList()))
+    if (history.isNotEmpty()) set(BACK, icon(Material.ARROW, lang.text("menus.back")))
     if (recipes.size > 1) {
-      set(PREVIOUS, icon(Material.SPECTRAL_ARROW, texts.previous))
-      set(PAGE, icon(Material.PAPER, texts.recipePage.replace("{n}", "${page + 1}").replace("{total}", "${recipes.size}")))
-      set(NEXT, icon(Material.SPECTRAL_ARROW, texts.next))
+      set(PREVIOUS, icon(Material.SPECTRAL_ARROW, lang.text("menus.previous")))
+      set(PAGE, icon(Material.PAPER, lang.text("menus.recipe.page", "n" to page + 1, "total" to recipes.size)))
+      set(NEXT, icon(Material.SPECTRAL_ARROW, lang.text("menus.next")))
     }
-    set(CLOSE, icon(Material.BARRIER, texts.close))
+    set(CLOSE, icon(Material.BARRIER, lang.text("menus.close")))
     paint()
   }
 
@@ -69,8 +69,8 @@ class RecipeMenu(player: Player, private val texts: Config.Menus, first: Materia
   private fun paint() {
     for ((slot, options) in slots) {
       val shown = options[tick % options.size].clone()
-      val hint = if (craftable(shown.type)) texts.recipeOpen else texts.recipeNone
-      set(slot, shown.lore(null, listOfNotNull(hint, texts.recipeOptions.takeIf { options.size > 1 })))
+      val hint = if (craftable(shown.type)) lang.text("menus.recipe.open") else lang.text("menus.recipe.none")
+      set(slot, shown.lore(null, listOfNotNull(hint, lang.text("menus.recipe.options").takeIf { options.size > 1 })))
     }
   }
 
@@ -114,7 +114,7 @@ class RecipeMenu(player: Player, private val texts: Config.Menus, first: Materia
       else -> Material.CRAFTING_TABLE
     }
     val lore = if (recipe is CookingRecipe<*>) {
-      listOf(texts.recipeCooking.replace("{seconds}", trim(recipe.cookingTime / 20.0)).replace("{xp}", trim(recipe.experience.toDouble())))
+      listOf(lang.text("menus.recipe.cooking", "seconds" to trim(recipe.cookingTime / 20.0), "xp" to trim(recipe.experience.toDouble())))
     } else emptyList()
     return icon(material, lore = lore)
   }

@@ -2,7 +2,6 @@ package ru.mcbuddy.spigot
 
 import net.md_5.bungee.api.ChatMessageType.ACTION_BAR
 import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
@@ -18,13 +17,11 @@ class Animator(private val plugin: JavaPlugin, private val config: Config) {
   private val activeAnimations = mutableMapOf<Player, BukkitRunnable>()
   private val ui = config.ui
   private val spinner = Spinner(ui.spinnerFrames)
-  private val format = StatusFormat(ui.statusFormat, ui.answeringVerb)
-  private val labels = ToolLabels(ui.toolLabels)
 
   /** The current action bar text for a run. */
   fun statusLine(run: Run): String {
     val elapsed = run.elapsedMillis
-    return format.line(
+    return StatusFormat(run.lang).line(
       spinner = spinner.frame(elapsed / ui.frameMillis),
       verb = run.verbs.at(elapsed),
       phase = run.phase,
@@ -65,14 +62,14 @@ class Animator(private val plugin: JavaPlugin, private val config: Config) {
     activeAnimations[player] = animation
   }
 
-  fun toolStarted(sender: CommandSender, name: String, args: JsonObject?) {
-    if (ui.toolLines) sender.sendMessage(formatMessage(ui.toolStartFormat.replace("{label}", labels.label(name, args))))
+  fun toolStarted(run: Run, name: String, args: JsonObject?) {
+    if (ui.toolLines) run.lang.send(run.sender, "tool_lines.started", "label" to ToolLabels.label(run.lang, name, args))
   }
 
-  fun toolFinished(sender: CommandSender, summary: String?, failed: Boolean) {
+  /** A failed tool shows its reason only where the language's `tool_lines.failed` asks for `{reason}`: the reasons are written for the model. */
+  fun toolFinished(run: Run, summary: String?, failed: Boolean) {
     if (!ui.toolLines || summary.isNullOrBlank()) return
-    val template = if (failed) ui.toolFailedFormat else ui.toolDoneFormat
-    sender.sendMessage(formatMessage(template.replace("{summary}", summary)))
+    if (failed) run.lang.send(run.sender, "tool_lines.failed", "reason" to summary) else run.lang.send(run.sender, "tool_lines.finished", "summary" to summary)
   }
 
   fun stopPlayerAnimation(player: Player) {

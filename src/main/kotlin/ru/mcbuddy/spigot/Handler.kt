@@ -14,13 +14,13 @@ import java.util.concurrent.ConcurrentHashMap
 class Handler(
   private val plugin: JavaPlugin,
   private val configuration: Config,
+  private val locales: Locales,
   private val service: Service,
   private val animator: Animator,
   private val executor: Executor,
   private val scope: CoroutineScope,
   private val clicks: () -> Clicks,
 ) {
-  private val errorHandler = ErrorHandler(configuration)
   private val runs = ConcurrentHashMap<String, Run>()
 
   fun handleAskCommand(sender: CommandSender, args: Array<out String>) = handle(sender, args, Run.Mode.ASK)
@@ -31,12 +31,12 @@ class Handler(
   fun cancel(sender: CommandSender): Boolean {
     val run = runs.remove(key(sender))
     if (run == null) {
-      sender.sendMessage(formatMessage(configuration.messages.nothingToCancelMessage))
+      locales.of(sender).send(sender, "messages.nothing_to_cancel")
       return true
     }
     run.cancel()
     (sender as? Player)?.let(animator::stopPlayerAnimation)
-    sender.sendMessage(formatMessage(configuration.messages.cancelledMessage))
+    locales.of(sender).send(sender, "messages.cancelled")
     return true
   }
 
@@ -46,28 +46,27 @@ class Handler(
   }
 
   private fun handle(sender: CommandSender, args: Array<out String>, mode: Run.Mode): Boolean {
-    val messages = configuration.messages
+    val lang = locales.of(sender)
     if (args.isEmpty()) {
-      sender.sendMessage(formatMessage(if (mode == Run.Mode.ASK) messages.usageMessage else messages.askxUsageMessage))
+      lang.send(sender, if (mode == Run.Mode.ASK) "messages.usage" else "messages.askx_usage")
       return true
     }
     plugin.logger.info("🔄 Handling ${mode.wire} command")
 
     val message = args.joinToString(" ")
     if (configuration.ui.chatStatusEnabled) {
-      sender.sendMessage(formatMessage(if (mode == Run.Mode.ASK) messages.thinkingMessage else messages.askxThinkingMessage))
+      lang.send(sender, if (mode == Run.Mode.ASK) "messages.thinking" else "messages.askx_thinking")
     }
 
     // A new question replaces the one still running.
     runs.remove(key(sender))?.cancel()
-    val ui = configuration.ui
-    val run = Run(sender, mode, if (mode == Run.Mode.ASK) ui.verbs else ui.askxVerbs, ui.verbSeconds)
+    val run = Run(sender, mode, lang, configuration.ui.verbSeconds)
     runs[key(sender)] = run
     animator.start(run)
 
     val listener = object : Service.Listener {
-      override fun toolStarted(callId: String, name: String, args: JsonObject?) = onMain { animator.toolStarted(sender, name, args) }
-      override fun toolFinished(callId: String, summary: String?, failed: Boolean) = onMain { animator.toolFinished(sender, summary, failed) }
+      override fun toolStarted(callId: String, name: String, args: JsonObject?) = onMain { animator.toolStarted(run, name, args) }
+      override fun toolFinished(callId: String, summary: String?, failed: Boolean) = onMain { animator.toolFinished(run, summary, failed) }
     }
 
     scope.launch {
@@ -82,11 +81,7 @@ class Handler(
             animator.stopPlayerAnimation(it)
             animator.playErrorSound(it)
           }
-          val errorMessage = when (e) {
-            is ApiErrorException -> errorHandler.getUserErrorMessage(e.apiError)
-            else -> errorHandler.getUserErrorMessage(e)
-          }
-          sender.sendMessage(formatMessage(errorMessage))
+          sender.sendMessage(formatMessage(ErrorHandler.message(lang, e)))
         }
       } finally {
         runs.remove(key(sender), run)
@@ -111,17 +106,14 @@ class Handler(
     val commands = outcome.commands?.commands.orEmpty().map { it.trim().removePrefix("/") }.filter { it.isNotEmpty() }
     if (commands.isEmpty()) {
       player?.let(animator::playErrorSound)
-      sender.sendMessage(formatMessage(outcome.answer.ifBlank { configuration.messages.noCommandsToExecuteMessage }))
+      if (outcome.answer.isNotBlank()) sender.sendMessage(formatMessage(outcome.answer)) else run.lang.send(sender, "messages.no_commands")
       plugin.logger.info("❌ No commands to execute")
       return
     }
     player?.let(animator::playSuccessSound)
     if (outcome.answer.isNotBlank()) sender.sendMessage(formatMessage(outcome.answer))
     val sequential = outcome.commands?.is_sequence == true
-    val message = configuration.messages.commandsExecutingMessage
-      .replace("{count}", commands.size.toString())
-      .replace("{sequence}", if (sequential) " последовательно" else " параллельно")
-    sender.sendMessage(formatMessage(message))
+    run.lang.send(sender, if (sequential) "messages.commands_in_order" else "messages.commands_at_once", "count" to commands.size)
     if (sequential) executor.executeCommandsSequentially(commands, sender) else executor.executeCommandsParallel(commands, sender)
     plugin.logger.info("✅ Askx command handled")
   }
