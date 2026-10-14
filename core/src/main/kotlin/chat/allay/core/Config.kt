@@ -12,6 +12,20 @@ class Config(private val config: YamlConfig, private val pluginVersion: String) 
     val url = config.string("server.url", "https://allay.chat")
   }
 
+  /** Who pays for the model: the backend's key with a subscription (hosted), or the server's own key (byok). */
+  val provider = Provider() ; inner class Provider {
+    /** Anything but `byok` is hosted, so a typo never sends a key nobody meant to send. */
+    val mode = if (config.string("provider.mode", HOSTED).trim().equals(BYOK, ignoreCase = true)) BYOK else HOSTED
+    val byok get() = mode == BYOK
+    val baseUrl = config.string("provider.byok.base_url", "https://openrouter.ai/api/v1").trim().trimEnd('/')
+    val apiKey = config.string("provider.byok.api_key", "").trim()
+    val model = config.string("provider.byok.model", "").trim()
+    /** Empty: runs get no web search. */
+    val searchModel = config.string("provider.byok.search_model", "").trim()
+    /** A key from before 4.1, sent as is through `http.custom_headers`; the backend reads it as BYOK on OpenRouter. */
+    val legacyKey: String? get() = http.customHeaders.entries.firstOrNull { it.key.equals("X-OpenRouter-Token", ignoreCase = true) }?.value?.trim()?.takeIf { it.isNotEmpty() }
+  }
+
   val http = Http() ; inner class Http {
     val callTimeout = config.int("http.call_timeout", 300).toLong()
     val connectTimeout = config.int("http.connect_timeout", 10).toLong()
@@ -116,8 +130,11 @@ class Config(private val config: YamlConfig, private val pluginVersion: String) 
     refreshDays = config.int("geoip.refresh_days", 30),
   )
 
-  private companion object {
-    val DEFAULT_COUNTRIES = mapOf(
+  companion object {
+    const val HOSTED = "hosted"
+    const val BYOK = "byok"
+
+    private val DEFAULT_COUNTRIES = mapOf(
       "ru" to listOf("RU", "BY", "KZ", "KG", "TJ", "UZ", "AM", "AZ", "MD", "GE", "TM"),
       "es" to listOf("ES", "MX", "AR", "CO", "CL", "PE", "VE", "EC", "GT", "CU", "BO", "DO", "HN", "PY", "SV", "NI", "CR", "PA", "UY", "PR", "GQ"),
       "pt" to listOf("BR", "PT", "AO", "MZ", "CV", "GW", "ST", "TL"),

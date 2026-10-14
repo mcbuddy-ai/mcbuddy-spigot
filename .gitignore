@@ -121,3 +121,6 @@ runs/
 # Kotlin compiler caches
 .kotlin/
 release-notes.md
+
+# The server's Allay license, should a test server run from here
+license.key
