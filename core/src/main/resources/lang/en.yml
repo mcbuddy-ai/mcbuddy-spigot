@@ -184,6 +184,8 @@ summary:
     no_such_memory: "no such memory"
 
 messages:
+  # Every answer Allay writes, private or not, starts with its name, as public answers do.
+  answer: "&3✦ &bAllay &8»&r {text}"
   usage: "&7Usage: &f/ask <question>\n&7Example: &f/ask how do I craft a diamond pickaxe?\n&7In front of everyone: &f/askall <question>&7, chat mode and more: &f/allay"
   askx_usage: "&7Usage: &f/askx <what to do>\n&7Example: &f/askx give me a diamond sword with sharpness 5"
   askall_usage: "&7Usage: &f/askall <question>&7 – everyone online sees the question and the answer"

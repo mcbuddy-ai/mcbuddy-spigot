@@ -2,6 +2,10 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 5.0.1
+
+- ✦ **Every answer carries Allay's name.** Private answers and `/askx` notes now start with “✦ Allay »”, as answers everyone sees already did, so they stand out in a busy chat.
+
 ## 5.0.0
 
 Your server now chooses who pays for the AI model: its own key, or Allay's subscription paid in Telegram Stars. Needs Allay Server 5.0 for both; an older backend answers as before.

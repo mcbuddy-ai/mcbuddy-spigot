@@ -129,7 +129,7 @@ class Handler(
         broadcast("public.answer", sender.name, outcome.answer, colored = true)
         everyoneBut(sender).forEach(animator::playPublicAnswerSound)
       } else {
-        sender.sendMessage(formatMessage(outcome.answer))
+        sender.sendMessage(labeled(run, outcome.answer))
       }
       // Buttons belong to the asker, even under an answer everyone reads.
       player?.let { clicks().show(it, run.buttons.toList()) }
@@ -141,12 +141,12 @@ class Handler(
     val commands = outcome.commands?.commands.orEmpty().map { it.trim().removePrefix("/") }.filter { it.isNotEmpty() }
     if (commands.isEmpty()) {
       player?.let(animator::playErrorSound)
-      if (outcome.answer.isNotBlank()) sender.sendMessage(formatMessage(outcome.answer)) else run.lang.send(sender, "messages.no_commands")
+      if (outcome.answer.isNotBlank()) sender.sendMessage(labeled(run, outcome.answer)) else run.lang.send(sender, "messages.no_commands")
       plugin.logger.info("❌ No commands to execute")
       return
     }
     player?.let(animator::playSuccessSound)
-    if (outcome.answer.isNotBlank()) sender.sendMessage(formatMessage(outcome.answer))
+    if (outcome.answer.isNotBlank()) sender.sendMessage(labeled(run, outcome.answer))
     val sequential = outcome.commands?.is_sequence == true
     run.lang.send(sender, if (sequential) "messages.commands_in_order" else "messages.commands_at_once", "count" to commands.size)
     if (sequential) executor.executeCommandsSequentially(commands, sender) else executor.executeCommandsParallel(commands, sender)
@@ -164,6 +164,10 @@ class Handler(
       reader.sendMessage(if (colored) formatMessage(template.replace(Minecraft.SLOT, text)) else Minecraft.withText(template, text))
     }
   }
+
+  /** Allay's answer under its name, as public answers have it. The answer is Allay's own text, so its colors stay. */
+  private fun labeled(run: Run, answer: String) =
+    formatMessage(run.lang.text("messages.answer", "text" to Minecraft.SLOT).replace(Minecraft.SLOT, answer))
 
   private fun everyoneBut(sender: CommandSender) = plugin.server.onlinePlayers.filter { it != sender }
 
