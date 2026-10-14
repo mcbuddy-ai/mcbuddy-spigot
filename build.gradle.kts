@@ -1,108 +1,20 @@
-import io.papermc.hangarpublishplugin.model.Platforms
-
 plugins {
-  kotlin("jvm") version "2.4.21"
-  kotlin("plugin.serialization") version "2.4.21"
-  id("com.gradleup.shadow") version "9.6.1"
-  id("com.modrinth.minotaur") version "2.10.0"
-  id("io.papermc.hangar-publish-plugin") version "0.1.4"
+  kotlin("jvm") version "2.4.21" apply false
+  kotlin("plugin.serialization") version "2.4.21" apply false
+  id("com.gradleup.shadow") version "9.6.1" apply false
+  id("com.modrinth.minotaur") version "2.10.0" apply false
+  id("io.papermc.hangar-publish-plugin") version "0.1.4" apply false
 }
 
-group = "ru.mcbuddy"
-// The release workflow passes the version; every other build is a dev build.
-version = (findProperty("releaseVersion") as String?)?.takeIf { it.isNotBlank() } ?: "dev"
+allprojects {
+  group = "ru.mcbuddy"
+  // The release workflow passes the version; every other build is a dev build.
+  version = (findProperty("releaseVersion") as String?)?.takeIf { it.isNotBlank() } ?: "dev"
 
-repositories {
-  mavenCentral()
-  maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
-    name = "spigotmc-repo"
-  }
-}
-
-dependencies {
-  compileOnly("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-  implementation("com.squareup.okhttp3:okhttp:5.5.0")
-  implementation("com.maxmind.db:maxmind-db:4.2.0")
-
-  testImplementation("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
-  testImplementation(kotlin("test"))
-  testImplementation(platform("org.junit:junit-bom:6.1.3"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-kotlin {
-  jvmToolchain(25)
-}
-
-tasks {
-  test {
-    useJUnitPlatform()
-  }
-
-  shadowJar {
-    archiveClassifier = ""
-    // Relocated so other plugins that ship their own Kotlin, OkHttp, or MaxMind reader can't clash with ours.
-    listOf("kotlin", "kotlinx", "okhttp3", "okio", "com.maxmind").forEach { relocate(it, "ru.mcbuddy.spigot.libs.$it") }
-    mergeServiceFiles()
-    exclude("META-INF/*.kotlin_module", "META-INF/versions/*/module-info.class", "module-info.class")
-    dependencies { exclude(dependency("org.jetbrains:annotations")) }
-  }
-
-  // One jar with everything inside; a jar without Kotlin wouldn't load anyway.
-  jar { enabled = false }
-
-  assemble {
-    dependsOn(shadowJar)
-  }
-
-  processResources {
-    val props = mapOf("version" to version)
-    inputs.properties(props)
-    filteringCharset = "UTF-8"
-    filesMatching("plugin.yml") {
-      expand(props)
-    }
-  }
-}
-
-// The release workflow writes the notes to a file; a local upload falls back to the GitHub release.
-val changelogText = (findProperty("changelogFile") as String?)?.let { file(it).readText() }
-  ?: "https://github.com/mcbuddy-ai/mcbuddy-spigot/releases/tag/v${project.version}"
-
-// `./gradlew modrinth` with MODRINTH_TOKEN set; the release workflow runs it when asked to.
-modrinth {
-  token = providers.environmentVariable("MODRINTH_TOKEN")
-  projectId = "mcbuddy"
-  versionNumber = project.version.toString()
-  versionName = "MCBuddy ${project.version}"
-  versionType = "release"
-  uploadFile.set(tasks.shadowJar)
-  gameVersions.addAll("26.3")
-  loaders.addAll("spigot", "paper", "purpur")
-  changelog = changelogText
-  syncBodyFrom = file("MODRINTH.md").readText()
-}
-
-tasks.modrinth {
-  dependsOn(tasks.modrinthSyncBody)
-}
-
-// `./gradlew publishPluginPublicationToHangar` with HANGAR_TOKEN set; the release workflow runs it when asked to.
-hangarPublish {
-  publications.register("plugin") {
-    version = project.version.toString()
-    id = "MCBuddy"
-    channel = "Release"
-    apiKey = providers.environmentVariable("HANGAR_TOKEN")
-    changelog = changelogText
-    platforms {
-      register(Platforms.PAPER) {
-        jar = tasks.shadowJar.flatMap { it.archiveFile }
-        platformVersions = listOf("26.3")
-      }
+  repositories {
+    mavenCentral()
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
+      name = "spigotmc-repo"
     }
   }
 }

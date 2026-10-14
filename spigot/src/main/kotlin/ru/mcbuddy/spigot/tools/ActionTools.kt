@@ -1,0 +1,144 @@
+package ru.mcbuddy.spigot.tools
+
+import ru.mcbuddy.core.*
+import ru.mcbuddy.core.tools.*
+
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.bukkit.Location
+import org.bukkit.Particle
+import org.bukkit.Sound
+import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
+import java.time.Instant
+
+/** Harmless things any player may ask for: nothing here creates items or changes the world. */
+object ActionTools {
+  private fun tool(name: String, body: (ToolContext, Player, JsonObject) -> ToolOutput) = object : Tool {
+    override val name = name
+    override fun run(context: ToolContext, args: JsonObject) = body(context, context.requirePlayer(), args)
+  }
+
+  private val pointTo = tool("point_to") { context, player, args ->
+    val x = args.double("x") ?: throw ToolError("x is required")
+    val z = args.double("z") ?: throw ToolError("z is required")
+    val world = player.world
+    // Nether coordinates in the overworld point somewhere else entirely, so a mismatch is an error, not a guess.
+    args.string("dimension")?.let(Dimensions::parse)?.let { wanted ->
+      if (wanted != Dimensions.id(world)) throw ToolError("the player is in ${Dimensions.id(world)}, not $wanted; convert the coordinates first (the nether is 1:8) or give a spot in their dimension")
+    }
+    val y = (args.double("y") ?: player.location.y).coerceIn(world.minHeight.toDouble(), world.maxHeight - 1.0)
+    val limit = world.worldBorder.size / 2 + 1
+    val center = world.worldBorder.center
+    if (Math.abs(x - center.x) > limit || Math.abs(z - center.z) > limit) throw ToolError("the point is outside the world border")
+    val target = Location(world, x, y, z)
+    // Compasses point at this only in the overworld; elsewhere the trail still shows the way.
+    player.compassTarget = target
+    val seconds = args.int("seconds")?.also { if (it !in 1..30) throw ToolError("seconds must be 1–30") } ?: 2
+    trail(context.plugin, player, target, seconds)
+    val dx = x - player.location.x
+    val dz = z - player.location.z
+    val distance = Math.round(Math.hypot(dx, dz))
+    val direction = Facts.direction(dx, dz)
+    val result = buildJsonObject {
+      put("distance", distance)
+      put("direction", direction)
+      put("compass", world.environment == org.bukkit.World.Environment.NORMAL)
+    }
+    ToolOutput(result, context.lang.text("summary.distance", "blocks" to distance, "direction" to context.lang.text("directions.$direction")))
+  }
+
+  /** A short line of particles from the player toward the target; only this player sees it. */
+  fun trail(plugin: org.bukkit.plugin.Plugin, player: Player, target: Location, seconds: Int) {
+    // Two pulses a second, so the line follows the player as they turn and walk.
+    repeat(seconds * 2) { pulse ->
+      plugin.server.scheduler.runTaskLater(plugin, Runnable {
+        if (!player.isOnline || player.world != target.world) return@Runnable
+        val from = player.eyeLocation.subtract(0.0, 0.4, 0.0)
+        val way = target.toVector().subtract(from.toVector())
+        if (way.lengthSquared() < 1) return@Runnable
+        val step = way.normalize().multiply(0.5)
+        val point = from.clone()
+        repeat(24) {
+          point.add(step)
+          player.spawnParticle(Particle.END_ROD, point, 1, 0.0, 0.0, 0.0, 0.0)
+        }
+      }, pulse * 10L)
+    }
+  }
+
+  private val sortInventory = tool("sort_inventory") { context, player, _ ->
+    val inventory = player.inventory
+    // Slots 9–35: the hotbar is muscle memory, armor and offhand live elsewhere.
+    val main = (9..35).map { inventory.getItem(it)?.takeUnless { item -> item.type.isAir } }
+    val sorted = Sorter.sort(
+      items = main,
+      amount = ItemStack::getAmount,
+      maxStack = ItemStack::getMaxStackSize,
+      similar = ItemStack::isSimilar,
+      order = compareBy<ItemStack> { it.type.key.key }.thenByDescending { it.amount },
+      withAmount = { item, amount -> item.clone().apply { this.amount = amount } },
+    ) ?: throw ToolError("the inventory has overstacked items and can't be sorted safely")
+    sorted.slots.forEachIndexed { index, item -> inventory.setItem(9 + index, item) }
+    val merged = sorted.merged.toLong()
+    ToolOutput(buildJsonObject { put("merged_stacks", merged) }, if (merged > 0) context.lang.text("summary.sorted_merged", "stacks" to merged) else context.lang.text("summary.sorted"))
+  }
+
+  /** Reminders in one tool: `action` add, list, or cancel. */
+  private val reminders = tool("reminders") { context, player, args ->
+    val lang = context.lang
+    when (val action = args.string("action")?.lowercase() ?: "list") {
+      "add" -> {
+        val minutes = args.int("minutes") ?: throw ToolError("minutes is required to add a reminder")
+        if (minutes !in 1..120) throw ToolError("minutes must be 1–120")
+        val text = args.string("text")?.take(100) ?: throw ToolError("text is required to add a reminder")
+        val reminder = context.reminders.add(player, minutes, text)
+        ToolOutput(buildJsonObject { put("id", reminder.id); put("minutes", minutes); put("text", text) }, lang.text("summary.reminder_set", "minutes" to minutes))
+      }
+      "list" -> {
+        val list = context.reminders.of(player).list()
+        val now = System.currentTimeMillis()
+        val result = buildJsonObject {
+          put("reminders", buildJsonArray {
+            list.forEach { reminder ->
+              add(buildJsonObject {
+                put("id", reminder.id)
+                put("text", reminder.text)
+                put("minutes_left", ((reminder.dueAt - now).coerceAtLeast(0) + 59_999) / 60_000)
+                put("due_at", Instant.ofEpochMilli(reminder.dueAt).toString())
+              })
+            }
+          })
+        }
+        ToolOutput(result, if (list.isEmpty()) lang.text("summary.reminders_none") else lang.text("summary.reminders", "count" to list.size))
+      }
+      "cancel" -> {
+        val book = context.reminders.of(player)
+        val all = args.bool("all") == true
+        val cancelled = if (all) book.cancelAll() else book.cancel(args.string("id") ?: throw ToolError("id is required to cancel a reminder, or all: true"))
+        if (cancelled == 0 && !all) throw ToolError("there is no reminder with this id")
+        ToolOutput(buildJsonObject { put("cancelled", cancelled) }, lang.text("summary.reminders_cancelled", "count" to cancelled))
+      }
+      else -> throw ToolError("action must be add, list, or cancel, not $action")
+    }
+  }
+
+  private val ping = tool("ping_me") { context, player, _ ->
+    // Heard and seen by everyone nearby: the point is to find the player in a crowd or a dark cave.
+    val above = player.location.add(0.0, 2.3, 0.0)
+    repeat(3) { pulse ->
+      context.plugin.server.scheduler.runTaskLater(context.plugin, Runnable {
+        if (!player.isOnline) return@Runnable
+        val spot = player.location.add(0.0, 2.3, 0.0)
+        player.world.spawnParticle(Particle.NOTE, spot, 6, 0.4, 0.3, 0.4, 1.0)
+        player.world.spawnParticle(Particle.END_ROD, spot, 12, 0.2, 0.6, 0.2, 0.02)
+        player.world.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.2f + pulse * 0.3f)
+      }, pulse * 8L)
+    }
+    ToolOutput(buildJsonObject { put("pinged", true); put("y", above.blockY) }, context.lang.text("summary.ping"))
+  }
+
+  val all = listOf(pointTo, sortInventory, reminders, ping)
+}

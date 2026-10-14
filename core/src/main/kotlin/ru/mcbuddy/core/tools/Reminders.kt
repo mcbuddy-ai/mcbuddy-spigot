@@ -1,0 +1,44 @@
+package ru.mcbuddy.core.tools
+
+/** One player's pending reminders, apart from Bukkit so tests can reach it. The cap is read on every add, so `/buddy reload` applies it. */
+class ReminderBook(private val max: () -> Int, private val newId: () -> String = ::shortId) {
+  class Reminder(val id: String, val text: String, val dueAt: Long, val cancel: () -> Unit)
+
+  private val reminders = mutableListOf<Reminder>()
+
+  @Synchronized fun add(text: String, dueAt: Long, schedule: (String) -> () -> Unit): Reminder {
+    val cap = max()
+    if (reminders.size >= cap) throw ToolError("this player already has $cap reminders pending; cancel one first")
+    val id = generateSequence(newId).first { candidate -> reminders.none { it.id == candidate } }
+    return Reminder(id, text, dueAt, schedule(id)).also { reminders += it }
+  }
+
+  /** Soonest first. */
+  @Synchronized fun list(): List<Reminder> = reminders.sortedBy { it.dueAt }
+
+  /** Drops a reminder that just fired, without cancelling its timer. */
+  @Synchronized fun fired(id: String) {
+    reminders.removeIf { it.id == id }
+  }
+
+  @Synchronized fun cancel(id: String): Int {
+    val reminder = reminders.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: return 0
+    reminders.remove(reminder)
+    reminder.cancel()
+    return 1
+  }
+
+  @Synchronized fun cancelAll(): Int {
+    val count = reminders.size
+    reminders.forEach { it.cancel() }
+    reminders.clear()
+    return count
+  }
+
+  companion object {
+    private const val ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
+
+    /** Four characters without look-alikes (l, 1, o, 0, i): easy to read back from chat. */
+    fun shortId() = (1..4).map { ALPHABET.random() }.joinToString("")
+  }
+}
