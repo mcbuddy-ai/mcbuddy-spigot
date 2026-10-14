@@ -2,6 +2,21 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 4.0.0
+
+MCBuddy is now **Allay**, after the friendly mob that brings players what they need. Needs Allay Server 4.0 for the renamed tools; MCBuddy Server 3.0 still answers, but the assistant then knows the old names.
+
+What an admin does: swap `mcbuddy-spigot-*.jar` for `allay-spigot-*.jar` (don't keep both) and update the permissions in your permission plugin.
+
+- 📦 **The data folder moves by itself.** On the first start Allay moves `plugins/mcbuddy-spigot/` into `plugins/Allay/`: `config.yml`, `lang/`, `notes/`, `goals/`, `timezones.json`, `players.json`, `server-id`, and `geoip/`, logging each file. The server's id stays, so the shared thread of public questions carries on. If a move fails, everything goes back and the old folder stays as it was; if both folders already hold data, nothing moves and the log says so.
+- ✏️ **Texts take the new name where you didn't change them.** The default book author becomes “Allay”, default sounds become the new ones, and lines in `lang/` you never touched give way to Allay's texts. Lines you changed stay, with MCBuddy and `/buddy` renamed.
+- ⚠️ **`/buddy` is `/allay`**, with the same subcommands and settings window; there's no `/buddy` alias. **Permissions are `allay.*`** instead of `mcbuddy.*`: `allay.ask`, `allay.askall`, `allay.askall.nocooldown`, `allay.chat`, `allay.askx`, `allay.reload`, with the same defaults.
+- 🪽 **Allay sounds like an allay.** A curious hum while it works (`ENTITY_ALLAY_AMBIENT_WITH_ITEM`), a happy chortle with the answer (`ENTITY_ALLAY_ITEM_GIVEN`), and a soft sigh on errors (`ENTITY_ALLAY_AMBIENT_WITHOUT_ITEM`). Each pitch moves a little (`ui.sounds.pitch_variation`), and players who read a public answer hear a quiet chortle too (`ui.sounds.public_answer`).
+- 💬 Texts in all five languages say Allay; public lines read “✦ Allay »” in the allay's blue, and some status verbs are the mob's own: humming a tune, circling the note block, looking for something shiny.
+- 🧰 The tools `get_buddy_guide` and `buddy_settings` are `get_allay_guide` and `allay_settings`; their switches in `config.yml` move along with the data.
+- 🧱 **Two modules.** `core` holds everything that doesn't touch a game platform; `spigot` is the plugin for Spigot, Paper, and their forks. The jar is `allay-spigot-X.Y.Z.jar`, and the libraries inside are relocated under `chat.allay.libs`.
+- The User-Agent is `Allay-Spigot/<version>`.
+
 ## 3.1.0
 
 - ⚙️ **`/buddy` opens a settings window**, built like the recipe window: switches for chat mode and its tip with a green or red pane under each, your time zone and the time there, what MCBuddy remembers, starting over (shift-click, so a stray click can't wipe the conversation), and the recipe, enchanting, and villager windows. Like the other windows, it only shows pictures.

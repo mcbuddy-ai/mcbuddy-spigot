@@ -1,13 +1,13 @@
-# MCBuddy
+# Allay
 
-💬 **MCBuddy** puts an AI buddy into your server's chat. A player types `/ask`, or just writes in chat mode, and gets an answer grounded in their real game: their inventory, what they're looking at, the chests around them, this server's recipes and rules. The assistant talks like a friend who knows Minecraft inside out, and each player reads the plugin in their own language.
+💬 **Allay** puts an AI helper into your server's chat, named after the friendly mob that brings players what they need. A player types `/ask`, or just writes in chat mode, and gets an answer grounded in their real game: their inventory, what they're looking at, the chests around them, this server's recipes and rules. The assistant talks like a friend who knows Minecraft inside out, and each player reads the plugin in their own language.
 
-[Русская версия](https://github.com/mcbuddy-ai/mcbuddy-spigot/blob/master/README.RU.md)
+[Русская версия](https://github.com/allay-ai/minecraft/blob/master/README.RU.md)
 
 ## What you get
 
 - 💬 **`/ask` about anything in the game.** “What should I do next?”, “which sword is better?”, “where did I put my redstone?”, “how many hits for this creeper?”. The assistant looks things up in the game while it answers instead of guessing.
-- 🗨️ **Chat mode.** When friends talk on Discord and the game chat is free, `/buddy chat` sends everything a player writes to the assistant. `!` in front runs commands, `?` asks in front of everyone, `~` writes to the ordinary chat. After a second `/ask`, a quiet tip offers it, with a button to switch it on and one to hide the tip.
+- 🗨️ **Chat mode.** When friends talk on Discord and the game chat is free, `/allay chat` sends everything a player writes to the assistant. `!` in front runs commands, `?` asks in front of everyone, `~` writes to the ordinary chat. After a second `/ask`, a quiet tip offers it, with a button to switch it on and one to hide the tip.
 - 📣 **Questions everyone sees.** `/askall` shows the question and the answer to every player online. Public questions share one thread per server, so a friend can follow up on someone else's question.
 - 📖 **It explains itself.** Ask “what can you do?” or “how do I turn off chat mode?”: the assistant reads the commands and settings this player really has, and switches chat mode when asked in words.
 - 🧩 **It knows the server's plugins.** Questions about graves, claims, or AFK get answers for the plugin and version that really run.
@@ -18,14 +18,15 @@
 - 📒 **A notebook, goals, and reminders.** “Remember there's an arrow trader here”, “set a goal to collect 16 diamonds” (a boss bar at the top), “remind me in 5 minutes”.
 - 🪟 **Buttons and windows.** Answers end with buttons: a follow-up question, the way to a spot, a recipe, enchantments, the villagers around. The recipe, enchanting, and villager windows show pictures only, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled; the plugin picks one by the player's country, then by their game's language. The assistant answers in the language of the question.
+- 🪽 **It sounds like an allay.** A curious hum while it works, a happy chortle with the answer, a soft sigh when something fails, each a little different from the last.
 - ✻ **A live status like Claude Code:** a spinner and a changing verb in the action bar, and a chat line for each tool the assistant uses.
 - 🔒 **Private and safe.** Tools know only the player who asked; other players show up only as a count. Tools that give items or change the world are offered to operators only, and the plugin checks again before running one. Every tool can be switched off.
 
 ## Try it live
 
-MCBuddy runs on Moonlands, my hard survival server with friends. Come in and ask it something.
+Allay runs on Moonlands, my hard survival server with friends. Come in and ask it something.
 
-[![Play on Moonlands: pure vanilla, hard mobs, AI, claims. minecraft.mairwunnx.com](https://raw.githubusercontent.com/mcbuddy-ai/mcbuddy-spigot/master/media/og-adv-image.png)](https://minecraft.mairwunnx.com)
+[![Play on Moonlands: pure vanilla, hard mobs, AI, claims. minecraft.mairwunnx.com](https://raw.githubusercontent.com/allay-ai/minecraft/master/media/og-adv-image.png)](https://minecraft.mairwunnx.com)
 
 Join at `minecraft.mairwunnx.com`. The site has the live map, player stats, and the hall of fame.
 
@@ -33,14 +34,22 @@ Join at `minecraft.mairwunnx.com`. The site has the live map, player stats, and 
 
 - Spigot or Paper 26.3, or a fork of them, like Purpur
 - Java 25
-- An MCBuddy backend: `https://mcbuddy.ru` by default, or your own [MCBuddy Server](https://github.com/mcbuddy-ai/mcbuddy-server)
+- An Allay backend: `https://mcbuddy.ru` by default, or your own [Allay Server](https://github.com/allay-ai/server)
 
 ## Install
 
-1. Download `mcbuddy-spigot-X.Y.Z.jar` from [Releases](https://github.com/mcbuddy-ai/mcbuddy-spigot/releases).
+1. Download `allay-spigot-X.Y.Z.jar` from [Releases](https://github.com/allay-ai/minecraft/releases).
 2. Put it in your server's `plugins/` folder and restart the server.
-3. Edit `plugins/mcbuddy-spigot/config.yml` and the texts in `plugins/mcbuddy-spigot/lang/` if you like.
-4. Run `/buddy reload`, then try `/ask how do I craft a beacon?`.
+3. Edit `plugins/Allay/config.yml` and the texts in `plugins/Allay/lang/` if you like.
+4. Run `/allay reload`, then try `/ask how do I craft a beacon?`.
+
+## Coming from MCBuddy
+
+Allay is MCBuddy under a new name, from 4.0.0 on. Swap `mcbuddy-spigot-*.jar` for `allay-spigot-*.jar` and start the server; don't run both.
+
+- **The data moves by itself.** On its first start Allay moves `plugins/mcbuddy-spigot/` into `plugins/Allay/`: settings, languages, notes, goals, time zones, players' settings, and the server's id, so the shared thread of public questions carries on. It logs each file. If both folders already hold data, it moves nothing and says so.
+- **Texts follow the new name** where you left them as they were: the book author, the default sounds, and the lines of `lang/` you never changed. Lines you changed stay yours, with MCBuddy and `/buddy` renamed.
+- **`/buddy` is `/allay` now**, with the same subcommands and window, and the permissions are `allay.*` instead of `mcbuddy.*`, with the same defaults. Update your permission plugin.
 
 ## How a player gets their language
 
@@ -51,9 +60,9 @@ The plugin tries the sources in `locales.sources`, in order:
 
 When nothing matches, the player gets `locales.default`, English out of the box. The console reads the default too.
 
-The country lookup needs no account and sends no address anywhere. On the first start, the plugin downloads DB-IP's free country database (4 MB) into `plugins/mcbuddy-spigot/geoip/` and refreshes it every 30 days. Players who connect through a proxy or a relay show up with its address, so they get the relay's country.
+The country lookup needs no account and sends no address anywhere. On the first start, the plugin downloads DB-IP's free country database (4 MB) into `plugins/Allay/geoip/` and refreshes it every 30 days. Players who connect through a proxy or a relay show up with its address, so they get the relay's country.
 
-Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lines, buttons, windows, errors. A key missing from a file comes from the default language, then from English; an empty string turns a message off. To add a language, copy `lang/en.yml` to, say, `lang/it.yml`, translate it, add `it: [ IT, SM, VA ]` to `locales.countries`, and run `/buddy reload`.
+Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lines, buttons, windows, errors. A key missing from a file comes from the default language, then from English; an empty string turns a message off. To add a language, copy `lang/en.yml` to, say, `lang/it.yml`, translate it, add `it: [ IT, SM, VA ]` to `locales.countries`, and run `/allay reload`.
 
 ## Commands and permissions
 
@@ -62,14 +71,14 @@ Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lin
 | `/ask <question>` | Asks the assistant; only you see the answer |
 | `/askall <question>` | Asks in front of everyone: every player online sees the question and the answer |
 | `/askx <what to do>` | Turns a request into commands and runs them as you, minus `blocked_commands` |
-| `/buddy` | Opens the settings window: chat mode and its tip, your time zone, memory, starting over, and the recipe, enchanting, and villager windows |
-| `/buddy chat [on\|off]` | Chat mode: what you write in chat goes to the assistant |
-| `/buddy hints [on\|off]` | The tip about chat mode under answers |
-| `/buddy cancel` | Stops the question it's working on |
-| `/buddy new` | Starts the conversation over; what it remembers about you stays |
-| `/buddy memory`, `/buddy forget <number\|all>` | Shows and erases what it remembers about you |
-| `/buddy recipe <item>`, `/buddy enchants`, `/buddy villagers` | Opens the recipe, enchanting, or villager window |
-| `/buddy reload` | Reloads the settings and the languages |
+| `/allay` | Opens the settings window: chat mode and its tip, your time zone, memory, starting over, and the recipe, enchanting, and villager windows |
+| `/allay chat [on\|off]` | Chat mode: what you write in chat goes to the assistant |
+| `/allay hints [on\|off]` | The tip about chat mode under answers |
+| `/allay cancel` | Stops the question it's working on |
+| `/allay new` | Starts the conversation over; what it remembers about you stays |
+| `/allay memory`, `/allay forget <number\|all>` | Shows and erases what it remembers about you |
+| `/allay recipe <item>`, `/allay enchants`, `/allay villagers` | Opens the recipe, enchanting, or villager window |
+| `/allay reload` | Reloads the settings and the languages |
 
 In chat mode, a line goes by its first character, with or without a space after it:
 
@@ -84,12 +93,12 @@ Chat mode stays on between visits; the plugin reminds you when you join. `player
 
 | Permission | Who has it | What it allows |
 |---|---|---|
-| `mcbuddy.ask` | everyone | `/ask` and `/buddy`'s memory, windows, and cancel |
-| `mcbuddy.askall` | everyone | `/askall` and `?` in chat mode |
-| `mcbuddy.chat` | everyone | Chat mode and its tip |
-| `mcbuddy.askx` | operators | `/askx` and `!` in chat mode |
-| `mcbuddy.askall.nocooldown` | operators | Asking everyone without the cooldown |
-| `mcbuddy.reload` | operators | `/buddy reload` |
+| `allay.ask` | everyone | `/ask` and `/allay`'s memory, windows, and cancel |
+| `allay.askall` | everyone | `/askall` and `?` in chat mode |
+| `allay.chat` | everyone | Chat mode and its tip |
+| `allay.askx` | operators | `/askx` and `!` in chat mode |
+| `allay.askall.nocooldown` | operators | Asking everyone without the cooldown |
+| `allay.reload` | operators | `/allay reload` |
 
 ## Settings
 
@@ -97,7 +106,7 @@ Chat mode stays on between visits; the plugin reminds you when you join. `player
 
 | Key | What it sets |
 |---|---|
-| `server.url` | The MCBuddy backend |
+| `server.url` | The Allay backend |
 | `locales.*`, `geoip.*` | Where a player's language comes from, and the country database |
 | `tools.enabled.<tool>` | Switches a tool off. `scan_nearby_containers` and `find_item` see through walls: turn them off if players have claims |
 | `tools.operator.*` | Tools that give items, teleport, heal, or change time and weather; operators only |
@@ -113,19 +122,21 @@ A `config.yml` from 2.3 or 2.4 still loads; a 2.3 config's texts are skipped, si
 
 ## How it works
 
-The plugin opens a stream to the MCBuddy backend and shows the live status. When the assistant needs something from the game, the backend sends a tool call; the plugin runs it on the server thread and posts the result back. The protocol is in [docs/protocol-v2.md](https://github.com/mcbuddy-ai/mcbuddy-server/blob/master/docs/protocol-v2.md) of MCBuddy Server.
+The plugin opens a stream to the Allay backend and shows the live status. When the assistant needs something from the game, the backend sends a tool call; the plugin runs it on the server thread and posts the result back. The protocol is in [docs/protocol-v2.md](https://github.com/allay-ai/server/blob/master/docs/protocol-v2.md) of Allay Server.
 
 ## Build
 
 You need JDK 25; Gradle downloads it when it's missing.
 
 ```shell
-git clone https://github.com/mcbuddy-ai/mcbuddy-spigot
-cd mcbuddy-spigot
+git clone https://github.com/allay-ai/minecraft
+cd minecraft
 ./gradlew build
 ```
 
-The jar lands in `build/libs/`, with every dependency inside. Releases come from the “Release” workflow on GitHub, which takes the version as input.
+The jar lands in `spigot/build/libs/`, with every dependency inside.
+
+The plugin is two modules. `core` holds everything that doesn't touch a game platform: the backend client, languages, settings, the tool registry, items as the assistant reads them, formulas, notes, goals, and the rest. `spigot` is the adapter for Spigot, Paper, and their forks: commands, events, windows, and the tools that read the world through Bukkit. Another platform would be another adapter next to it. Releases come from the “Release” workflow on GitHub, which takes the version as input.
 
 ## Stack
 
@@ -134,6 +145,7 @@ The jar lands in `build/libs/`, with every dependency inside. Releases come from
 - kotlinx-coroutines and kotlinx-serialization
 - OkHttp for the backend's Server-Sent Events
 - MaxMind DB reader for the country database
+- SnakeYAML, so `core` reads YAML without Bukkit
 
 ## AI involvement
 
@@ -141,7 +153,7 @@ AI wrote parts of the documentation and some of the code at first. Since 2.0 the
 
 ## Related projects
 
-[MCBuddy Server](https://github.com/mcbuddy-ai/mcbuddy-server)—🛠️⚡ the backend for MCBuddy: an agent on Bun and Mastra that answers through OpenRouter, calls the plugin's tools, searches the web, and remembers each player.
+[Allay Server](https://github.com/allay-ai/server)—🛠️⚡ the backend for Allay: an agent on Bun and Mastra that answers through OpenRouter, calls the plugin's tools, searches the web, and remembers each player.
 
 ## From the same author
 
@@ -153,7 +165,7 @@ AI wrote parts of the documentation and some of the code at first. Since 2.0 the
 
 ## License
 
-MIT, see [LICENSE](https://github.com/mcbuddy-ai/mcbuddy-spigot/blob/master/LICENSE).
+MIT, see [LICENSE](https://github.com/allay-ai/minecraft/blob/master/LICENSE).
 
 ## Credits
 

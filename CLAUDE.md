@@ -1,6 +1,6 @@
-# MCBuddy Spigot: notes for AI agents
+# Allay for Minecraft: notes for AI agents
 
-The Minecraft plugin of MCBuddy. `/ask` asks the AI buddy a question, `/askall` asks in front of everyone, `/askx` turns a request into commands, and chat mode (`/buddy chat`) sends whatever a player writes in chat to the buddy. The plugin streams the answer from mcbuddy-server over protocol v2, runs the game tools the agent asks for, and shows a live Claude Code style status while it works. README.md explains it for players and server owners, README.RU.md is its Russian copy, MODRINTH.md the Modrinth page; read README.md first.
+The Minecraft plugin of Allay. `/ask` asks the AI helper a question, `/askall` asks in front of everyone, `/askx` turns a request into commands, and chat mode (`/allay chat`) sends whatever a player writes in chat to Allay. The plugin streams the answer from Allay Server (allay-ai/server) over protocol v2, runs the game tools the agent asks for, and shows a live Claude Code style status while it works. README.md explains it for players and server owners, README.RU.md is its Russian copy, MODRINTH.md the Modrinth page; read README.md first.
 
 ## Talking to the owner
 
@@ -18,14 +18,18 @@ Two Gradle modules. `core` holds everything that doesn't touch a game platform a
 | `core/…/Lang.kt`, `GeoIp.kt`, `Yaml.kt` | Each reader's language: `lang/<code>.yml` (in `core/src/main/resources`) with `{name}` placeholders and `{n|one|other}` plurals, picked by the country of the IP (DB-IP, downloaded into `geoip/`), then the game's language, then `locales.default`. `YamlConfig` reads YAML with SnakeYAML exactly as Bukkit's `FileConfiguration` did; `YamlTest` in `spigot` holds it to that |
 | `core/…/Config.kt` | `config.yml` as settings. Sounds and particles stay names; the platform resolves them |
 | `core/…/Chat.kt`, `PlayerSettings.kt` | `Permissions`; chat mode's routing by the first character (`!`, `?`, `~`). Each player's settings in `players.json`; the random `server-id` that names the server's shared thread of public questions |
-| `core/…/tools/` | What tools share on every platform: `ClientTool` and `ToolRegistry`, `ItemData` with `compact()` and `Items.detail()` (an item as the model reads it), `Facts`, `Dimensions`, `Mechanics` (vanilla formulas and tables, with tests), the notebook (`notes/<uuid>.json`), goals (`goals/<uuid>.json`), reminders, books, buttons and their store, time zones (`timezones.json`), and `Guide` (the commands and prefixes `get_buddy_guide` lists; a new command or permission goes there too) |
-| `spigot/…/Zygote.kt` | Plugin entry: `/ask`, `/askall`, `/askx`, and `/buddy` with its subcommands and tab completion; builds the core's pieces and the `Host` |
+| `core/…/tools/` | What tools share on every platform: `ClientTool` and `ToolRegistry`, `ItemData` with `compact()` and `Items.detail()` (an item as the model reads it), `Facts`, `Dimensions`, `Mechanics` (vanilla formulas and tables, with tests), the notebook (`notes/<uuid>.json`), goals (`goals/<uuid>.json`), reminders, books, buttons and their store, time zones (`timezones.json`), and `Guide` (the commands and prefixes `get_allay_guide` lists; a new command or permission goes there too) |
+| `spigot/…/Zygote.kt` | Plugin entry: `/ask`, `/askall`, `/askx`, and `/allay` with its subcommands and tab completion; builds the core's pieces and the `Host` |
 | `spigot/…/Handler.kt`, `Animator.kt`, `Executor.kt` | Runs questions for Bukkit senders. A public question (`visibility: "public"`) and its answer go to everyone online; status, tool lines, buttons, and errors stay with the asker. The action bar, sounds, and particles; `/askx` commands as the player, minus `blocked_commands` |
-| `spigot/…/ChatMode.kt`, `Locales.kt`, `MemoryCommands.kt` | Chat mode's events, the join reminder, the tip under a second `/ask`; each player's language from their login; `/buddy new`, `/buddy memory`, `/buddy forget` |
+| `spigot/…/ChatMode.kt`, `Locales.kt`, `MemoryCommands.kt` | Chat mode's events, the join reminder, the tip under a second `/ask`; each player's language from their login; `/allay new`, `/allay memory`, `/allay forget` |
 | `spigot/…/tools/` | The client tools on Bukkit. They run on the server thread and see only the asking player and the world around them; other players appear only as a count. Each can be switched off in `config.yml`. `ItemStacks.kt` turns Bukkit items into `ItemData`. `ActionTools` change nothing that matters (compass, sorting, a ping, reminders); `NotebookTools` keep notes with coordinates; `LookTools` (`look_at`) reads whatever is under the crosshair, `InspectTools` searches and inspects items and containers, `CareTools` gear, XP, food; `GoalTools` and `Goals.kt` the goals' boss bars and events; `OperatorTools` change the game and are operator-only |
 | `spigot/…/Clicks.kt`, `menus/` | Buttons under answers (`add_buttons`, books, the chat mode tip) and what each does when pressed; the recipe, enchanting, villager, and settings windows |
 
-The contract with the backend is `docs/protocol-v2.md` in mcbuddy-ai/mcbuddy-server. Change both sides together.
+The contract with the backend is `docs/protocol-v2.md` in allay-ai/server. Change both sides together.
+
+## Coming from MCBuddy
+
+Allay was MCBuddy until 4.0.0. `McBuddyMigration` (core) runs first in `onEnable`: it moves `plugins/mcbuddy-spigot/` into `plugins/Allay/`, puts everything back if a move fails, does nothing when both folders hold data, and leaves `moved-from-mcbuddy.txt` so it runs once. It compares the moved `lang/` files with 3.1.0's, kept in `core/src/main/resources/mcbuddy-3.1.0/`, and keeps only the lines an admin changed. The backend still accepts the 3.x tool names `get_buddy_guide` and `buddy_settings`. The default `server.url` stays `https://mcbuddy.ru` until the new domain answers.
 
 ## Rules that keep it working
 
@@ -35,15 +39,16 @@ The contract with the backend is `docs/protocol-v2.md` in mcbuddy-ai/mcbuddy-ser
 - A tool that creates items or changes the world is an operator tool (`operator = true`). The registry offers it only to operators, `Service` refuses it for anyone else, and the tool checks `isOp()` once more. Keep all three checks; non-operators must not be able to get gear through the assistant.
 - One deliberate exception: `[Взять книгу]` gives anyone the written book with the assistant's own long answer, once per book. The owner allowed it: a book of text is no gear. Don't extend it to other items.
 - Windows (`menus/`) only show pictures. `MenuListener` cancels every click, drag, and hopper move on a `Menu`; keep it that way, or the windows become a dupe.
-- Buttons run `/buddy do <id>`. Ids belong to the player who got them (`ButtonStore`) and expire after an hour, so a typed command can't trigger an action nobody offered.
+- Buttons run `/allay do <id>`. Ids belong to the player who got them (`ButtonStore`) and expire after an hour, so a typed command can't trigger an action nobody offered.
 - Keep tool results compact: they cost tokens on every call. Spots are absolute `x`, `y`, `z` with `distance` and `direction` (`Facts.place`); dimensions are the game's ids through `Dimensions`.
-- Kotlin, kotlinx, OkHttp, Okio, the MaxMind reader, and SnakeYAML are shaded and relocated under `ru.mcbuddy.spigot.libs`.
+- Kotlin, kotlinx, OkHttp, Okio, the MaxMind reader, and SnakeYAML are shaded and relocated under `chat.allay.libs`.
 - `core` never imports `org.bukkit` or `net.minecraft`. Where it needs the game, it asks through `Asker`, `Host`, or `ItemData`; don't add a seam only a future platform would use.
 
 ## Building and releasing
 
-- `./gradlew build` runs both modules' tests and builds `spigot/build/libs/mcbuddy-spigot-<version>.jar`, shaded; Java 25. Nothing in the repo holds the version: local builds are `dev`, CI builds on `master` and pull requests are `dev-<sha>`.
-- Releases are made by hand, only when the owner asks. Add a “## X.Y.Z” section to CHANGELOG.md, push, then run `gh workflow run release.yml -R mcbuddy-ai/mcbuddy-spigot -f version=X.Y.Z` (its `changelog` field overrides the section; one of the two must be there; `-f modrinth=true -f hangar=true` also publish there once those projects exist). It builds with `-PreleaseVersion`, tags `vX.Y.Z`, and attaches `mcbuddy-spigot-X.Y.Z.jar` to a GitHub release. Watch it with `gh run watch`. Never delete or re-tag a published release.
+- `./gradlew build` runs both modules' tests and builds `spigot/build/libs/allay-spigot-<version>.jar`, shaded; Java 25. Nothing in the repo holds the version: local builds are `dev`, CI builds on `master` and pull requests are `dev-<sha>`.
+- Allay sounds like an allay: `ENTITY_ALLAY_AMBIENT_WITH_ITEM` while thinking, `ENTITY_ALLAY_ITEM_GIVEN` with the answer, `ENTITY_ALLAY_AMBIENT_WITHOUT_ITEM` on errors, each pitch moved by up to `ui.sounds.pitch_variation`. Readers of a public answer hear the answer sound at half volume (`ui.sounds.public_answer`). The game plays these quietly, so 1.0 is the mob's own volume.
+- Releases are made by hand, only when the owner asks. Add a “## X.Y.Z” section to CHANGELOG.md, push, then run `gh workflow run release.yml -R allay-ai/minecraft -f version=X.Y.Z` (its `changelog` field overrides the section; one of the two must be there; `-f modrinth=true -f hangar=true` also publish there once those projects exist). It builds with `-PreleaseVersion`, tags `vX.Y.Z`, and attaches `allay-spigot-X.Y.Z.jar` to a GitHub release. Watch it with `gh run watch`. Never delete or re-tag a published release.
 
 ## Installing on Moonlands
 
@@ -55,5 +60,5 @@ Short one-line imperative English messages, one logical change per commit: “Sh
 
 ## Modrinth and Hangar
 
-`build.gradle.kts` is ready for both, as in Mo’Joins: `./gradlew modrinth` uploads to the Modrinth project `mcbuddy` and syncs MODRINTH.md as its description; `./gradlew publishPluginPublicationToHangar` uploads to `MairwunNx/MCBuddy`. Both read the version from `-PreleaseVersion` and the notes from `-PchangelogFile`, and need `--no-configuration-cache`. The projects don't exist yet: create them only when the owner asks (see “Publishing the owner's projects” in `~/c/personal/minecraft/CLAUDE.md`). Tokens are the `MODRINTH_TOKEN` and `HANGAR_TOKEN` secrets; never put them in the repo. MODRINTH.md is for server owners: no build, stack, or related projects, and no Moonlands banner.
+`build.gradle.kts` is ready for both, as in Mo’Joins: `./gradlew modrinth` uploads to the Modrinth project `allay-ai` and syncs MODRINTH.md as its description; `./gradlew publishPluginPublicationToHangar` uploads to `MairwunNx/AllayAI`. On both stores the project is called “Allay AI”, so people know which allay it is; in the game it's plain Allay. Both read the version from `-PreleaseVersion` and the notes from `-PchangelogFile`, and need `--no-configuration-cache`. The projects don't exist yet: create them only when the owner asks (see “Publishing the owner's projects” in `~/c/personal/minecraft/CLAUDE.md`). Tokens are the `MODRINTH_TOKEN` and `HANGAR_TOKEN` secrets; never put them in the repo. MODRINTH.md is for server owners: no build, stack, or related projects, and no Moonlands banner.
 
