@@ -22,7 +22,7 @@ class Config(private val config: YamlConfig, private val pluginVersion: String) 
     val model = config.string("provider.byok.model", "").trim()
     /** Empty: runs get no web search. */
     val searchModel = config.string("provider.byok.search_model", "").trim()
-    /** A key from before 4.1, sent as is through `http.custom_headers`; the backend reads it as BYOK on OpenRouter. */
+    /** A key from before 5.0, sent as is through `http.custom_headers`; the backend reads it as BYOK on OpenRouter. */
     val legacyKey: String? get() = http.customHeaders.entries.firstOrNull { it.key.equals("X-OpenRouter-Token", ignoreCase = true) }?.value?.trim()?.takeIf { it.isNotEmpty() }
   }
 

@@ -404,7 +404,7 @@ billing:
   date: "d MMMM"
   date_year: "d MMMM yyyy"
   no_billing: "&aThis Allay backend serves you on its own key: there's nothing to pay."
-  unsupported: "&7This Allay backend has no subscriptions: it's older than 4.1."
+  unsupported: "&7This Allay backend has no subscriptions: it's older than 5.0."
   license_invalid: "&cThis backend doesn't know the license in license.key. Check server.url in config.yml, or delete license.key and run &f/allay link&c for a new one."
   license_broken: "&clicense.key doesn't hold a license. Fix it, or delete it and run &f/allay link&c for a new one."
   plans:

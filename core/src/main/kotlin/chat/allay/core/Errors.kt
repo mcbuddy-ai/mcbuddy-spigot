@@ -25,7 +25,7 @@ object ErrorCodes {
   const val QUEUE_ERROR = "QUEUE_ERROR"
   const val PROCESSING_ERROR = "PROCESSING_ERROR"
 
-  // Since 4.1: who pays for the model.
+  // Since 5.0: who pays for the model.
   const val LICENSE_REQUIRED = "LICENSE_REQUIRED"
   const val LICENSE_INVALID = "LICENSE_INVALID"
   const val SUBSCRIPTION_INACTIVE = "SUBSCRIPTION_INACTIVE"

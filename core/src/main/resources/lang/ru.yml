@@ -404,7 +404,7 @@ billing:
   date: "d MMMM"
   date_year: "d MMMM yyyy"
   no_billing: "&aЭтот бэкенд Allay работает на своём ключе: платить не нужно."
-  unsupported: "&7Этот бэкенд Allay не знает о подписках: он старше 4.1."
+  unsupported: "&7Этот бэкенд Allay не знает о подписках: он старше 5.0."
   license_invalid: "&cЭтот бэкенд не знает лицензию из license.key. Проверь server.url в config.yml или удали license.key и выполни &f/allay link&c, чтобы получить новую."
   license_broken: "&cВ license.key нет лицензии. Исправь файл или удали его и выполни &f/allay link&c, чтобы получить новую."
   plans:

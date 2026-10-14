@@ -62,7 +62,7 @@ provider:
     search_model: ""      # empty: no web search; on OpenRouter, say, "perplexity/sonar"
 ```
 
-Run `/allay reload`, then `/allay status` to check: it shows the API, the models, and the key with all but its ends hidden. Allay looks into the game through tools, so a model that can't call them won't work; the note under a failed question tells an operator what to change. On `allay.chat` your own key costs nothing extra, up to 20 questions a minute and 2000 a day per server. A key from before 4.1 in `http.custom_headers` (`X-OpenRouter-Token`) keeps working as your own OpenRouter key.
+Run `/allay reload`, then `/allay status` to check: it shows the API, the models, and the key with all but its ends hidden. Allay looks into the game through tools, so a model that can't call them won't work; the note under a failed question tells an operator what to change. On `allay.chat` your own key costs nothing extra, up to 20 questions a minute and 2000 a day per server. A key from before 5.0 in `http.custom_headers` (`X-OpenRouter-Token`) keeps working as your own OpenRouter key.
 
 ### A subscription (`hosted`, the default)
 

@@ -65,7 +65,7 @@ http:
   retry_on_connection_failure: true
   logging: false            # Log each request's method, URL, and status (never the body)
   compression_enabled: true
-  # Extra headers for every request. An X-OpenRouter-Token here from before 4.1 still
+  # Extra headers for every request. An X-OpenRouter-Token here from before 5.0 still
   # works as your own OpenRouter key; provider.byok above is the new place for it.
   custom_headers: {}
   #  "X-OpenRouter-Token": "sk-or-v1-…"

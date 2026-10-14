@@ -26,7 +26,7 @@ object Protocol {
     val player: PlayerInfo? = null,
     val server: ServerInfo,
     val tools: List<String>,
-    /** Since 4.1, in byok mode only: the server's own model; the key itself goes in `X-Provider-Key`. */
+    /** Since 5.0, in byok mode only: the server's own model; the key itself goes in `X-Provider-Key`. */
     val provider: Provider? = null,
   )
 
@@ -70,7 +70,7 @@ object Protocol {
   @Serializable data class ErrorEvent(
     val code: String = "PROCESSING_ERROR",
     val message: String = "",
-    /** Since 4.1: when a spent quota refills, and when a rate limit lets go (seconds). */
+    /** Since 5.0: when a spent quota refills, and when a rate limit lets go (seconds). */
     val resets_at: String? = null,
     val retry_after: Long? = null,
   )
