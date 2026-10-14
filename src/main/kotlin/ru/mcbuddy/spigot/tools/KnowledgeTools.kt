@@ -18,7 +18,6 @@ import org.bukkit.inventory.ShapedRecipe
 import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.inventory.SmithingTransformRecipe
 import org.bukkit.inventory.StonecuttingRecipe
-import ru.mcbuddy.spigot.Plurals
 
 /** What this server knows that the model might not: its exact recipes, and the asker's advancements. */
 object KnowledgeTools {
@@ -29,13 +28,14 @@ object KnowledgeTools {
       val item = (args["item"] as? JsonPrimitive)?.contentOrNull?.trim()?.lowercase()?.removePrefix("minecraft:")
         ?.replace(' ', '_') ?: throw ToolError("say which item")
       val material = Material.matchMaterial(item)?.takeIf { it.isItem } ?: throw ToolError("no item called $item")
-      val found = Bukkit.getRecipesFor(ItemStack(material)).take(5).mapNotNull(::describe)
+      val all = Bukkit.getRecipesFor(ItemStack(material)).mapNotNull(::describe)
+      val found = all.take(5)
       val result = buildJsonObject {
         put("item", material.key.key)
         put("recipes", JsonArray(found))
+        if (all.size > found.size) put("more_recipes", all.size - found.size)
       }
-      val count = found.size.toLong()
-      return ToolOutput(result, if (count == 0L) "рецептов нет" else "$count ${Plurals.ru(count, "рецепт", "рецепта", "рецептов")}")
+      return ToolOutput(result, if (found.isEmpty()) context.lang.text("summary.recipes_none") else context.lang.text("summary.recipes", "count" to all.size))
     }
 
     private fun choice(choice: RecipeChoice?): String = when (choice) {
@@ -83,7 +83,8 @@ object KnowledgeTools {
 
     override fun run(context: ToolContext, args: JsonObject): ToolOutput {
       val player = context.requirePlayer()
-      val filter = (args["filter"] as? JsonPrimitive)?.contentOrNull ?: "todo"
+      val filter = (args["filter"] as? JsonPrimitive)?.contentOrNull?.lowercase() ?: "todo"
+      if (filter !in setOf("todo", "done", "all")) throw ToolError("filter must be todo, done, or all")
       val done = mutableListOf<JsonObject>()
       val todo = mutableListOf<JsonObject>()
       Bukkit.advancementIterator().forEach { advancement ->
@@ -91,6 +92,8 @@ object KnowledgeTools {
         val display = advancement.display ?: return@forEach
         if (key.startsWith("recipes/") || display.isHidden) return@forEach
         val entry = buildJsonObject {
+          // The key set_goal takes for an advancement goal, such as story/mine_diamond.
+          put("key", key)
           put("title", display.title)
           put("description", display.description)
         }
@@ -104,12 +107,16 @@ object KnowledgeTools {
       }
       val result = buildJsonObject {
         put("done_count", done.size)
-        if (filter == "done") put("done", JsonArray(done.take(40))) else put("next", JsonArray(todo.take(40)))
+        put("todo_count", todo.size)
+        if (filter != "todo") put("done", JsonArray(done.take(MAX_ADVANCEMENTS)))
+        if (filter != "done") put("todo", JsonArray(todo.take(MAX_ADVANCEMENTS)))
       }
-      val count = done.size.toLong()
-      return ToolOutput(result, "получено $count, впереди ${todo.size}")
+      return ToolOutput(result, context.lang.text("summary.advancements", "done" to done.size, "todo" to todo.size))
     }
   }
+
+  /** Advancements listed per list at most; the counts cover them all. */
+  private const val MAX_ADVANCEMENTS = 40
 
   val all = listOf(recipes, advancements)
 }

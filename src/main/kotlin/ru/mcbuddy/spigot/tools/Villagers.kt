@@ -1,5 +1,8 @@
 package ru.mcbuddy.spigot.tools
 
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.bukkit.Material
 import org.bukkit.entity.AbstractVillager
 import org.bukkit.entity.Player
@@ -7,7 +10,6 @@ import org.bukkit.entity.Villager
 import org.bukkit.entity.WanderingTrader
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.MerchantRecipe
-import ru.mcbuddy.spigot.Plurals
 
 /** Villagers and wandering traders around a player, nearest first, with what they trade. */
 object Villagers {
@@ -52,35 +54,21 @@ object Villagers {
     else -> Material.VILLAGER_SPAWN_EGG
   }
 
-  /** Russian names as the game shows them; the window's lore can't ask the client to translate. */
-  val PROFESSIONS_RU = mapOf(
-    "armorer" to "Бронник", "butcher" to "Мясник", "cartographer" to "Картограф", "cleric" to "Священник", "farmer" to "Фермер",
-    "fisherman" to "Рыбак", "fletcher" to "Лучник", "leatherworker" to "Кожевник", "librarian" to "Библиотекарь", "mason" to "Каменщик",
-    "shepherd" to "Пастух", "toolsmith" to "Инструментальщик", "weaponsmith" to "Оружейник", "nitwit" to "Нищий", "none" to "Безработный",
-    "wandering_trader" to "Странствующий торговец",
-  )
-
-  /** What villagers usually ask for, in Russian; anything else shows its id. */
-  private val PRICES_RU = mapOf(
-    "emerald" to "изумруд", "book" to "книга", "paper" to "бумага", "wheat" to "пшеница", "potato" to "картофель", "carrot" to "морковь",
-    "beetroot" to "свёкла", "pumpkin" to "тыква", "melon" to "арбуз", "coal" to "уголь", "iron_ingot" to "железный слиток",
-    "diamond" to "алмаз", "stick" to "палка", "string" to "нить", "feather" to "перо", "flint" to "кремень", "leather" to "кожа",
-    "rabbit_hide" to "кроличья шкурка", "rotten_flesh" to "гнилая плоть", "gold_ingot" to "золотой слиток", "glass_pane" to "стеклянная панель",
-    "compass" to "компас", "ink_sac" to "чернильный мешок", "clay_ball" to "комок глины", "stone" to "камень", "chicken" to "сырая курица",
-    "porkchop" to "сырая свинина", "rabbit" to "сырая крольчатина", "mutton" to "сырая баранина", "beef" to "сырая говядина",
-    "dried_kelp_block" to "блок сушёной ламинарии", "sweet_berries" to "сладкие ягоды", "cod" to "сырая треска", "salmon" to "сырой лосось",
-    "tropical_fish" to "тропическая рыба", "pufferfish" to "иглобрюх", "bucket" to "ведро", "lapis_lazuli" to "лазурит",
-    "redstone" to "красная пыль", "glass_bottle" to "пузырёк", "nether_wart" to "адский нарост", "scute" to "щиток", "tripwire_hook" to "крюк",
-    "white_wool" to "белая шерсть", "writable_book" to "книга с пером",
-  )
-
-  fun priceRu(item: ItemStack): String {
-    val name = PRICES_RU[item.type.key.key] ?: item.type.key.key.replace('_', ' ')
+  /** “3 × Emerald” in the reader's language; the window's lore can't ask the client to translate, so `items.<id>` in the language file names what villagers usually ask for. */
+  fun price(lang: ru.mcbuddy.spigot.Lang, item: ItemStack): String {
+    val id = item.type.key.key
+    val name = if (lang.has("items.$id")) lang.text("items.$id") else id.replace('_', ' ')
     return "${item.amount} × $name"
+  }
+
+  /** One trade as every tool shows it: what this player pays now, what they get (books name their enchantment), and how many are left. */
+  fun trade(offer: MerchantRecipe) = buildJsonObject {
+    put("buy", buildJsonArray { prices(offer).forEach { item -> item.compact()?.let(::add) } })
+    offer.result.compact()?.let { put("sell", it) }
+    put("left", (offer.maxUses - offer.uses).coerceAtLeast(0))
+    put("max_uses", offer.maxUses)
   }
 
   /** The price this player pays now, with demand and their discounts. */
   fun prices(offer: MerchantRecipe): List<ItemStack> = listOfNotNull(offer.getAdjustedIngredient1() ?: offer.ingredients.firstOrNull()) + offer.ingredients.drop(1)
-
-  fun blocks(distance: Long) = "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")}"
 }

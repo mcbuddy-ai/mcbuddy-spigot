@@ -117,7 +117,7 @@ class GoalBook(initial: List<Goal>, private val max: () -> Int, private val newI
 }
 
 /** Goals on disk in `goals/<uuid>.json`, their boss bars, and the events and ticks that move them. */
-class Goals(private val plugin: Plugin, private val max: () -> Int, private val doneMessage: () -> String) : Listener {
+class Goals(private val plugin: Plugin, private val locales: ru.mcbuddy.spigot.Locales, private val max: () -> Int) : Listener {
   private val folder = File(plugin.dataFolder, "goals")
   private val books = ConcurrentHashMap<UUID, GoalBook>()
   private val bars = ConcurrentHashMap<String, BossBar>()
@@ -159,11 +159,11 @@ class Goals(private val plugin: Plugin, private val max: () -> Int, private val 
     return removed.size
   }
 
-  /** What the bar says: the title, then where the player stands. */
-  fun label(goal: Goal): String = when (goal.kind) {
-    "reach" -> "${goal.title} · ${max(0, goal.target - goal.progress)} ${ru.mcbuddy.spigot.Plurals.ru(max(0, goal.target - goal.progress), "блок", "блока", "блоков")}"
+  /** What the bar says, in the player's language: the title, then where the player stands. */
+  fun label(goal: Goal, lang: ru.mcbuddy.spigot.Lang): String = when (goal.kind) {
+    "reach" -> lang.text("goals.bar_distance", "title" to goal.title, "blocks" to max(0, goal.target - goal.progress))
     "advancement", "biome", "dimension" -> goal.title
-    else -> "${goal.title} · ${goal.progress / goal.scale}/${goal.target / goal.scale}"
+    else -> lang.text("goals.bar_count", "title" to goal.title, "progress" to goal.progress / goal.scale, "target" to goal.target / goal.scale)
   }
 
   private fun baseline(player: Player, goal: Goal): Long = when (goal.kind) {
@@ -184,7 +184,7 @@ class Goals(private val plugin: Plugin, private val max: () -> Int, private val 
   }
 
   private fun distance(player: Player, goal: Goal): Double? {
-    if (goal.dimension != null && player.world.environment.name.lowercase() != goal.dimension) return null
+    if (goal.dimension != null && Dimensions.id(player.world) != Dimensions.normalize(goal.dimension)) return null
     return hypot(player.location.x - goal.x!!, player.location.z - goal.z!!)
   }
 
@@ -201,7 +201,7 @@ class Goals(private val plugin: Plugin, private val max: () -> Int, private val 
         }
         "reach" -> distance(player, goal)?.let { d -> if (d <= (goal.radius ?: 10)) goal.target else (goal.baseline - d.toLong()).coerceIn(0, goal.target - 1) } ?: goal.progress
         "biome" -> if (player.location.block.biome.key.key == goal.biome) 1 else 0
-        "dimension" -> if (player.world.environment.name.lowercase() == goal.dimension) 1 else 0
+        "dimension" -> if (Dimensions.id(player.world) == Dimensions.normalize(goal.dimension)) 1 else 0
         else -> continue
       }
       book.progress(goal.id, value)?.let { update(player, it) }
@@ -211,7 +211,7 @@ class Goals(private val plugin: Plugin, private val max: () -> Int, private val 
   private fun update(player: Player, goal: Goal) {
     if (goal.done) return complete(player, goal)
     val bar = bars[key(player.uniqueId, goal.id)] ?: return show(player)
-    bar.setTitle(formatMessage(label(goal)))
+    bar.setTitle(formatMessage(label(goal, locales.of(player))))
     bar.progress = goal.fraction
   }
 
@@ -220,7 +220,7 @@ class Goals(private val plugin: Plugin, private val max: () -> Int, private val 
     save(player.uniqueId)
     bars.remove(key(player.uniqueId, goal.id))?.removeAll()
     player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1f)
-    player.sendMessage(formatMessage(doneMessage().replace("{title}", goal.title)))
+    locales.of(player).send(player, "goals.done", "title" to goal.title)
   }
 
   private fun show(player: Player) {
@@ -229,7 +229,7 @@ class Goals(private val plugin: Plugin, private val max: () -> Int, private val 
       bars.computeIfAbsent(key(player.uniqueId, goal.id)) {
         val color = runCatching { BarColor.valueOf(goal.color.uppercase()) }.getOrDefault(BarColor.GREEN)
         val style = runCatching { BarStyle.valueOf(goal.style.uppercase()) }.getOrDefault(BarStyle.SOLID)
-        Bukkit.createBossBar(formatMessage(label(goal)), color, style)
+        Bukkit.createBossBar(formatMessage(label(goal, locales.of(player))), color, style)
       }.apply {
         progress = goal.fraction
         if (player !in players) addPlayer(player)

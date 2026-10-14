@@ -11,7 +11,6 @@ import org.bukkit.Statistic
 import org.bukkit.boss.BarColor
 import org.bukkit.boss.BarStyle
 import org.bukkit.entity.Player
-import ru.mcbuddy.spigot.Plurals
 
 /** Goals with a boss bar: “collect 16 diamonds”, “reach level 30”, “find a cherry grove”. */
 object GoalTools {
@@ -20,9 +19,26 @@ object GoalTools {
     override fun run(context: ToolContext, args: JsonObject) = body(context, context.requirePlayer(), args)
   }
 
-  private val DIMENSIONS = setOf("normal", "nether", "the_end")
+  /** Goals in one tool: `action` set, list, or cancel. */
+  private val goals = tool("goals") { context, player, args ->
+    when (val action = args.string("action")?.lowercase() ?: "list") {
+      "set" -> set(context, player, args)
+      "list" -> {
+        val goals = context.features.goals.of(player.uniqueId).all()
+        ToolOutput(buildJsonObject { put("goals", buildJsonArray { goals.forEach { add(describe(it)) } }) }, if (goals.isEmpty()) context.lang.text("summary.goals_none") else context.lang.text("summary.goals", "count" to goals.size))
+      }
+      "cancel" -> {
+        val all = args.bool("all") == true
+        val id = if (all) null else args.string("id") ?: throw ToolError("id is required to cancel a goal, or all: true")
+        val removed = context.features.goals.remove(player, id)
+        if (removed == 0 && !all) throw ToolError("there is no goal with this id")
+        ToolOutput(buildJsonObject { put("cancelled", removed) }, context.lang.text("summary.goals_cancelled", "count" to removed))
+      }
+      else -> throw ToolError("action must be set, list, or cancel, not $action")
+    }
+  }
 
-  private val set = tool("set_goal") { context, player, args ->
+  private fun set(context: ToolContext, player: Player, args: JsonObject): ToolOutput {
     val kind = args.string("kind")?.lowercase() ?: throw ToolError("kind is required: ${Goal.KINDS.joinToString()}")
     if (kind !in Goal.KINDS) throw ToolError("unknown kind $kind; use ${Goal.KINDS.joinToString()}")
     val title = args.string("title")?.take(40) ?: throw ToolError("title is required: what the bar says, in the player's language")
@@ -63,8 +79,7 @@ object GoalTools {
       "reach" -> {
         val x = args.int("x") ?: throw ToolError("reach needs x and z")
         val z = args.int("z") ?: throw ToolError("reach needs x and z")
-        val dimension = args.string("dimension")?.lowercase() ?: player.world.environment.name.lowercase()
-        if (dimension !in DIMENSIONS) throw ToolError("dimension must be normal, nether, or the_end")
+        val dimension = args.string("dimension")?.let(Dimensions::parse) ?: Dimensions.id(player.world)
         base.copy(x = x, z = z, radius = (args.int("radius") ?: 10).coerceIn(2, 200), dimension = dimension)
       }
       "biome" -> {
@@ -73,13 +88,12 @@ object GoalTools {
         base.copy(biome = name)
       }
       else -> {
-        val dimension = args.string("dimension")?.lowercase() ?: throw ToolError("dimension is required: nether or the_end")
-        if (dimension !in DIMENSIONS) throw ToolError("dimension must be normal, nether, or the_end")
+        val dimension = Dimensions.parse(args.string("dimension") ?: throw ToolError("dimension is required: the_nether or the_end"))
         base.copy(dimension = dimension)
       }
     }
     val goal = context.features.goals.add(player, spec)
-    ToolOutput(describe(goal), "${goal.title}: ${goal.progress / goal.scale}/${goal.target / goal.scale}")
+    return ToolOutput(describe(goal), context.lang.text("summary.goal_set", "title" to goal.title, "progress" to goal.progress / goal.scale, "target" to goal.target / goal.scale))
   }
 
   private fun describe(goal: Goal) = buildJsonObject {
@@ -91,20 +105,5 @@ object GoalTools {
     if (goal.done) put("done", true)
   }
 
-  private val list = tool("get_goals") { context, player, _ ->
-    val goals = context.features.goals.of(player.uniqueId).all()
-    val count = goals.size.toLong()
-    ToolOutput(buildJsonArray { goals.forEach { add(describe(it)) } }, if (count == 0L) "целей нет" else "$count ${Plurals.ru(count, "цель", "цели", "целей")}")
-  }
-
-  private val cancel = tool("cancel_goal") { context, player, args ->
-    val all = args.bool("all") == true
-    val id = if (all) null else args.string("id") ?: throw ToolError("id is required, or all: true")
-    val removed = context.features.goals.remove(player, id)
-    if (removed == 0 && !all) throw ToolError("there is no goal with this id")
-    val count = removed.toLong()
-    ToolOutput(buildJsonObject { put("cancelled", removed) }, "снял $count ${Plurals.ru(count, "цель", "цели", "целей")}")
-  }
-
-  val all = listOf(set, list, cancel)
+  val all = listOf(goals)
 }

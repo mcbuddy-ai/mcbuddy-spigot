@@ -31,10 +31,10 @@ class ToolsTest {
   @Test fun `the plugin offers exactly the tools of the protocol`() {
     val names = ToolRegistry.all().map { it.name }.toSet()
     assertEquals(
-      setOf("get_player_status", "get_inventory", "get_surroundings", "get_target", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server", "get_locations", "get_villager_trades", "point_to", "sort_inventory", "set_reminder", "get_reminders", "cancel_reminder",
-        "get_container", "scan_nearby_containers", "get_block_info", "get_map_info", "get_enchant_options", "get_mob_info", "get_light_spawn_check", "get_brewing_items", "scan_farm",
+      setOf("get_player_status", "get_inventory", "get_surroundings", "look_at", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server", "get_locations",
+        "point_to", "sort_inventory", "reminders", "scan_nearby_containers", "find_item", "get_light_spawn_check", "get_brewing_items", "scan_farm",
         "get_item_durability", "get_xp_info", "get_food_options", "add_note", "find_notes", "delete_note", "ping_me",
-        "locate_biome", "get_death_info", "find_villagers", "get_anvil_plan", "add_buttons", "write_book", "set_timezone", "set_goal", "get_goals", "cancel_goal", "inspect_item",
+        "locate_biome", "get_death_info", "find_villagers", "get_anvil_plan", "add_buttons", "write_book", "set_timezone", "goals", "inspect_item",
         "give_item", "teleport", "set_gamemode", "heal", "apply_effect", "set_time", "set_weather"),
       names,
     )
@@ -96,14 +96,34 @@ class ToolsTest {
   }
 
   @Test fun `labels fill in arguments and fall back to defaults`() {
-    val labels = ToolLabels(mapOf("get_inventory" to "Роюсь в карманах"))
-    assertEquals("Роюсь в карманах", labels.label("get_inventory", null))
-    assertEquals("Ищу в интернете: «рецепт маяка»", labels.label("search_web", buildJsonObject { put("query", "рецепт маяка") }))
-    assertEquals("Ищу рецепт: ", labels.label("get_recipes", null))
-    assertEquals("Вызываю new_tool", labels.label("new_tool", null))
+    val lang = Texts(mapOf("ru" to mapOf(
+      "tools.get_inventory" to "Роюсь в карманах",
+      "tools.search_web" to "Ищу в интернете: «{query}»",
+      "tools.get_recipes" to "Ищу рецепт: {item}",
+      "tools.exact_calculations" to "Считаю точно",
+      "tools.reminders.add" to "Ставлю напоминание",
+      "tools.reminders.list" to "Смотрю напоминания",
+      "tool_lines.unknown" to "Пользуюсь {name}",
+    )), "ru").lang("ru")
+    assertEquals("Роюсь в карманах", ToolLabels.label(lang, "get_inventory", null))
+    assertEquals("Ищу в интернете: «рецепт маяка»", ToolLabels.label(lang, "search_web", buildJsonObject { put("query", "рецепт маяка") }))
+    assertEquals("Ищу рецепт: ", ToolLabels.label(lang, "get_recipes", null))
+    assertEquals("Пользуюсь new_tool", ToolLabels.label(lang, "new_tool", null))
     // Server tools may come with arrays; a placeholder that isn't a plain value just stays empty.
-    assertEquals("Считаю точно", labels.label("exact_calculations", buildJsonObject { put("expressions", kotlinx.serialization.json.JsonArray(listOf(JsonPrimitive("2+2")))) }))
-    assertEquals("Ищу рецепт: ", ToolLabels(mapOf("get_recipes" to "Ищу рецепт: {item}")).label("get_recipes", buildJsonObject { put("item", kotlinx.serialization.json.JsonArray(emptyList())) }))
+    assertEquals("Считаю точно", ToolLabels.label(lang, "exact_calculations", buildJsonObject { put("expressions", kotlinx.serialization.json.JsonArray(listOf(JsonPrimitive("2+2")))) }))
+    assertEquals("Ищу рецепт: ", ToolLabels.label(lang, "get_recipes", buildJsonObject { put("item", kotlinx.serialization.json.JsonArray(emptyList())) }))
+    // Tools with an action label each action, and list when the call names none.
+    assertEquals("Ставлю напоминание", ToolLabels.label(lang, "reminders", buildJsonObject { put("action", "add") }))
+    assertEquals("Смотрю напоминания", ToolLabels.label(lang, "reminders", null))
+  }
+
+  @Test fun `dimensions read the game's ids and the old Bukkit names alike`() {
+    assertEquals("overworld", ru.mcbuddy.spigot.tools.Dimensions.normalize("normal"))
+    assertEquals("the_nether", ru.mcbuddy.spigot.tools.Dimensions.normalize("Nether"))
+    assertEquals("the_end", ru.mcbuddy.spigot.tools.Dimensions.normalize("minecraft:the_end"))
+    assertEquals("the_nether", ru.mcbuddy.spigot.tools.Dimensions.parse("the_nether"))
+    assertNull(ru.mcbuddy.spigot.tools.Dimensions.normalize(null))
+    kotlin.test.assertFailsWith<ru.mcbuddy.spigot.tools.ToolError> { ru.mcbuddy.spigot.tools.Dimensions.parse("moon") }
   }
 
   @Test fun `server versions read the same on Spigot and Paper`() {

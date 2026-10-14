@@ -6,7 +6,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.Plugin
-import ru.mcbuddy.spigot.Minecraft.formatMessage
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -54,7 +53,7 @@ class ReminderBook(private val max: () -> Int, private val newId: () -> String =
 }
 
 /** Reminders the assistant set for players. They live in memory: a restart or the player leaving drops them. */
-class Reminders(private val plugin: Plugin, private val maxPending: () -> Int, private val template: () -> String) : Listener {
+class Reminders(private val plugin: Plugin, private val locales: ru.mcbuddy.spigot.Locales, private val maxPending: () -> Int) : Listener {
   private val books = ConcurrentHashMap<UUID, ReminderBook>()
 
   fun of(player: Player): ReminderBook = books.computeIfAbsent(player.uniqueId) { ReminderBook(maxPending) }
@@ -65,7 +64,7 @@ class Reminders(private val plugin: Plugin, private val maxPending: () -> Int, p
       val task = plugin.server.scheduler.runTaskLater(plugin, Runnable {
         book.fired(id)
         if (!player.isOnline) return@Runnable
-        player.sendMessage(formatMessage(template().replace("{text}", text)))
+        locales.of(player).send(player, "messages.reminder", "text" to text)
         player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BELL, 0.8f, 1.2f)
       }, minutes * 1_200L)
       task::cancel

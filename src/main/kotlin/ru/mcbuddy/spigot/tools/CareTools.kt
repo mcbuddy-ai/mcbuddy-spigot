@@ -8,26 +8,28 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.Damageable
-import ru.mcbuddy.spigot.Plurals
 import ru.mcbuddy.spigot.tools.Facts.round1
 
 /** Tools about keeping the player going: gear wear, experience, and what to eat. */
 object CareTools {
-  private fun tool(name: String, body: (Player, JsonObject) -> ToolOutput) = object : ClientTool {
+  private fun tool(name: String, body: (ToolContext, Player, JsonObject) -> ToolOutput) = object : ClientTool {
     override val name = name
-    override fun run(context: ToolContext, args: JsonObject) = body(context.requirePlayer(), args)
+    override fun run(context: ToolContext, args: JsonObject) = body(context, context.requirePlayer(), args)
   }
 
   private val armorSuffixes = listOf("_helmet", "_chestplate", "_leggings", "_boots")
 
-  private val durability = tool("get_item_durability") { player, _ ->
+  /** Where an item sits, in inspect_item's words: `from` and, for the inventory, `slot` (0–8 is the hotbar). */
+  private class Spot(val from: String, val slot: Int? = null)
+
+  private val durability = tool("get_item_durability") { context, player, _ ->
     val inventory = player.inventory
-    val slots: List<Pair<String, ItemStack?>> = (0..8).map { "hotbar_$it" to inventory.getItem(it) } + listOf(
-      "head" to inventory.helmet, "chest" to inventory.chestplate, "legs" to inventory.leggings, "feet" to inventory.boots,
-      "offhand" to inventory.itemInOffHand,
-    )
+    val slots: List<Pair<Spot, ItemStack?>> = listOf(
+      Spot("head") to inventory.helmet, Spot("chest") to inventory.chestplate, Spot("legs") to inventory.leggings, Spot("feet") to inventory.boots,
+      Spot("offhand") to inventory.itemInOffHand,
+    ) + inventory.storageContents.mapIndexed { slot, item -> Spot("inventory", slot) to item }
     var low = 0
-    val items = slots.mapNotNull { (slot, item) ->
+    val items = slots.mapNotNull { (spot, item) ->
       if (item == null || item.type.isAir) return@mapNotNull null
       val max = item.type.maxDurability.toInt()
       if (max <= 0) return@mapNotNull null
@@ -38,11 +40,12 @@ object CareTools {
       val percent = Mechanics.durabilityPercent(remaining, max)
       if (percent < 10) low++
       buildJsonObject {
-        put("slot", slot)
+        put("from", spot.from)
+        spot.slot?.let { put("slot", it) }
         put("id", item.type.key.key)
-        put("remaining", remaining)
-        put("max", max)
-        put("percent", percent)
+        put("damage", damage)
+        put("max_damage", max)
+        put("percent_left", percent)
         if (unbreaking > 0) {
           put("unbreaking", unbreaking)
           put("expected_uses", Mechanics.expectedUses(remaining, unbreaking, armor))
@@ -51,11 +54,10 @@ object CareTools {
         if (percent < 10) put("almost_broken", true)
       }
     }
-    val n = items.size.toLong()
-    ToolOutput(buildJsonObject { put("items", buildJsonArray { items.forEach(::add) }) }, if (low > 0) "$low на исходе из $n" else "$n ${Plurals.ru(n, "предмет", "предмета", "предметов")}, всё в порядке")
+    ToolOutput(buildJsonObject { put("items", buildJsonArray { items.forEach(::add) }) }, if (low > 0) context.lang.text("summary.wear_low", "low" to low, "count" to items.size) else context.lang.text("summary.wear_fine", "count" to items.size))
   }
 
-  private val xp = tool("get_xp_info") { player, args ->
+  private val xp = tool("get_xp_info") { context, player, args ->
     val target = args.int("target_level")?.also { if (it !in 0..100) throw ToolError("target_level must be 0–100") }
     val level = player.level
     val toNext = Mechanics.pointsToNext(level)
@@ -70,10 +72,10 @@ object CareTools {
         put("points_to_target", (Mechanics.pointsAt(it) - points).coerceAtLeast(0))
       }
     }
-    ToolOutput(result, "уровень $level, $points очков")
+    ToolOutput(result, context.lang.text("summary.xp", "level" to level, "points" to points))
   }
 
-  private val food = tool("get_food_options") { player, _ ->
+  private val food = tool("get_food_options") { context, player, _ ->
     val counts = mutableMapOf<String, Int>()
     val custom = mutableMapOf<String, Pair<Int, Double>>()
     player.inventory.contents.filterNotNull().filterNot { it.type.isAir }.forEach { item ->
@@ -89,7 +91,7 @@ object CareTools {
       buildJsonObject {
         put("id", id)
         put("count", count)
-        put("hunger", nutrition)
+        put("nutrition", nutrition)
         put("saturation", saturation)
         known?.note?.let { put("note", it) }
       }
@@ -97,14 +99,13 @@ object CareTools {
     val result = buildJsonObject {
       put("food", player.foodLevel)
       put("saturation", round1(player.saturation.toDouble()))
-      put("hunger_missing", 20 - player.foodLevel)
+      put("food_missing", 20 - player.foodLevel)
       put("foods", buildJsonArray { foods.forEach(::add) })
     }
-    val n = foods.size.toLong()
-    ToolOutput(result, if (n == 0L) "еды нет" else "$n ${Plurals.ru(n, "вид", "вида", "видов")} еды")
+    ToolOutput(result, if (foods.isEmpty()) context.lang.text("summary.food_none") else context.lang.text("summary.food", "kinds" to foods.size))
   }
 
-  private val anvil = tool("get_anvil_plan") { player, args ->
+  private val anvil = tool("get_anvil_plan") { context, player, args ->
     val item = player.inventory.itemInMainHand.takeUnless { it.type.isAir } ?: throw ToolError("the player holds nothing; ask them to hold the item")
     val wanted = args["enchantments"] as? JsonObject ?: throw ToolError("enchantments is required, such as { \"sharpness\": 5, \"mending\": 1 }")
     if (wanted.isEmpty() || wanted.size > 10) throw ToolError("give 1–10 enchantments")
@@ -131,8 +132,7 @@ object CareTools {
       put("total_levels", plan.total)
       put("too_expensive", plan.tooExpensive)
     }
-    val total = plan.total.toLong()
-    ToolOutput(result, if (plan.tooExpensive) "слишком дорого" else "$total ${Plurals.ru(total, "уровень", "уровня", "уровней")} за ${plan.steps.size} ${Plurals.ru(plan.steps.size.toLong(), "шаг", "шага", "шагов")}")
+    ToolOutput(result, if (plan.tooExpensive) context.lang.text("summary.anvil_too_expensive") else context.lang.text("summary.anvil", "levels" to plan.total, "steps" to plan.steps.size))
   }
 
   val all = listOf(durability, xp, food, anvil)

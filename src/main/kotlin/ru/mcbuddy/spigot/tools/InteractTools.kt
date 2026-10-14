@@ -6,7 +6,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import ru.mcbuddy.spigot.Plurals
 import ru.mcbuddy.spigot.menus.RecipeMenu
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -28,8 +27,7 @@ object InteractTools {
     // Every button is checked before any is added, so a bad one doesn't leave half a row.
     val made = list.map { button(player, it) }
     context.buttons += made
-    val count = made.size.toLong()
-    ToolOutput(buildJsonObject { put("added", made.size); put("total", context.buttons.size) }, "$count ${Plurals.ru(count, "кнопка", "кнопки", "кнопок")}")
+    ToolOutput(buildJsonObject { put("added", made.size); put("total", context.buttons.size) }, context.lang.text("summary.buttons", "count" to made.size))
   }
 
   private fun button(player: Player, args: JsonObject): Button {
@@ -42,9 +40,9 @@ object InteractTools {
     }
     return when (type) {
       "ask" -> Button.Ask(label, args.string("question")?.take(200) ?: throw ToolError("ask needs the question it asks"))
-      "point" -> coordinates().let { (x, y, z) -> Button.Point(label, x, y, z, args.string("dimension")?.lowercase()) }
+      "point" -> coordinates().let { (x, y, z) -> Button.Point(label, x, y, z, args.string("dimension")?.let(Dimensions::parse)) }
       "note" -> coordinates().let { (x, y, z) ->
-        Button.Note(label, args.string("text")?.take(200) ?: throw ToolError("note needs the text to save"), x, y, z, args.string("dimension")?.lowercase())
+        Button.Note(label, args.string("text")?.take(200) ?: throw ToolError("note needs the text to save"), x, y, z, args.string("dimension")?.let(Dimensions::parse))
       }
       "recipe" -> {
         val item = material(args.string("item") ?: throw ToolError("recipe needs the item"))
@@ -68,14 +66,13 @@ object InteractTools {
     // Labels come from the config when the handler draws them.
     context.buttons += Button.ReadBook("", written.id)
     context.buttons += Button.TakeBook("", written.id)
-    val pages = written.pages.size.toLong()
-    ToolOutput(buildJsonObject { put("pages", written.pages.size) }, "$pages ${Plurals.ru(pages, "страница", "страницы", "страниц")}")
+    ToolOutput(buildJsonObject { put("pages", written.pages.size) }, context.lang.text("summary.book", "pages" to written.pages.size))
   }
 
   private val timezone = tool("set_timezone") { context, player, args ->
     val zone = context.features.zones.set(player.uniqueId, args.string("zone") ?: throw ToolError("zone is required, such as Asia/Yekaterinburg"))
     val now = ZonedDateTime.now(zone).format(DateTimeFormatter.ofPattern("HH:mm"))
-    ToolOutput(buildJsonObject { put("zone", zone.id); put("local_time", now) }, "${zone.id}, сейчас $now")
+    ToolOutput(buildJsonObject { put("zone", zone.id); put("local_time", now) }, context.lang.text("summary.timezone", "zone" to zone.id, "time" to now))
   }
 
   val all = listOf(buttons, book, timezone)

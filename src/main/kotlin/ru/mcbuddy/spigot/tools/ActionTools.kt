@@ -9,7 +9,6 @@ import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import ru.mcbuddy.spigot.Plurals
 import java.time.Instant
 
 /** Harmless things any player may ask for: nothing here creates items or changes the world. */
@@ -23,6 +22,10 @@ object ActionTools {
     val x = args.double("x") ?: throw ToolError("x is required")
     val z = args.double("z") ?: throw ToolError("z is required")
     val world = player.world
+    // Nether coordinates in the overworld point somewhere else entirely, so a mismatch is an error, not a guess.
+    args.string("dimension")?.let(Dimensions::parse)?.let { wanted ->
+      if (wanted != Dimensions.id(world)) throw ToolError("the player is in ${Dimensions.id(world)}, not $wanted; convert the coordinates first (the nether is 1:8) or give a spot in their dimension")
+    }
     val y = (args.double("y") ?: player.location.y).coerceIn(world.minHeight.toDouble(), world.maxHeight - 1.0)
     val limit = world.worldBorder.size / 2 + 1
     val center = world.worldBorder.center
@@ -41,7 +44,7 @@ object ActionTools {
       put("direction", direction)
       put("compass", world.environment == org.bukkit.World.Environment.NORMAL)
     }
-    ToolOutput(result, "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")} на ${Facts.DIRECTIONS_RU[direction]}")
+    ToolOutput(result, context.lang.text("summary.distance", "blocks" to distance, "direction" to context.lang.text("directions.$direction")))
   }
 
   /** A short line of particles from the player toward the target; only this player sees it. */
@@ -63,7 +66,7 @@ object ActionTools {
     }
   }
 
-  private val sortInventory = tool("sort_inventory") { _, player, _ ->
+  private val sortInventory = tool("sort_inventory") { context, player, _ ->
     val inventory = player.inventory
     // Slots 9–35: the hotbar is muscle memory, armor and offhand live elsewhere.
     val main = (9..35).map { inventory.getItem(it)?.takeUnless { item -> item.type.isAir } }
@@ -77,43 +80,46 @@ object ActionTools {
     ) ?: throw ToolError("the inventory has overstacked items and can't be sorted safely")
     sorted.slots.forEachIndexed { index, item -> inventory.setItem(9 + index, item) }
     val merged = sorted.merged.toLong()
-    ToolOutput(buildJsonObject { put("merged_stacks", merged) }, if (merged > 0) "объединил $merged ${Plurals.ru(merged, "стак", "стака", "стаков")}" else "разложил по порядку")
+    ToolOutput(buildJsonObject { put("merged_stacks", merged) }, if (merged > 0) context.lang.text("summary.sorted_merged", "stacks" to merged) else context.lang.text("summary.sorted"))
   }
 
-  private val reminder = tool("set_reminder") { context, player, args ->
-    val minutes = args.int("minutes") ?: throw ToolError("minutes is required")
-    if (minutes !in 1..120) throw ToolError("minutes must be 1–120")
-    val text = args.string("text")?.take(100) ?: throw ToolError("text is required")
-    val reminder = context.reminders.add(player, minutes, text)
-    ToolOutput(buildJsonObject { put("id", reminder.id); put("minutes", minutes); put("text", text) }, "через $minutes ${Plurals.ru(minutes.toLong(), "минуту", "минуты", "минут")}")
-  }
-
-  private val reminders = tool("get_reminders") { context, player, _ ->
-    val list = context.reminders.of(player).list()
-    val now = System.currentTimeMillis()
-    val result = buildJsonArray {
-      list.forEach { reminder ->
-        add(buildJsonObject {
-          put("id", reminder.id)
-          put("text", reminder.text)
-          put("minutes_left", ((reminder.dueAt - now).coerceAtLeast(0) + 59_999) / 60_000)
-          put("due_at", Instant.ofEpochMilli(reminder.dueAt).toString())
-        })
+  /** Reminders in one tool: `action` add, list, or cancel. */
+  private val reminders = tool("reminders") { context, player, args ->
+    val lang = context.lang
+    when (val action = args.string("action")?.lowercase() ?: "list") {
+      "add" -> {
+        val minutes = args.int("minutes") ?: throw ToolError("minutes is required to add a reminder")
+        if (minutes !in 1..120) throw ToolError("minutes must be 1–120")
+        val text = args.string("text")?.take(100) ?: throw ToolError("text is required to add a reminder")
+        val reminder = context.reminders.add(player, minutes, text)
+        ToolOutput(buildJsonObject { put("id", reminder.id); put("minutes", minutes); put("text", text) }, lang.text("summary.reminder_set", "minutes" to minutes))
       }
+      "list" -> {
+        val list = context.reminders.of(player).list()
+        val now = System.currentTimeMillis()
+        val result = buildJsonObject {
+          put("reminders", buildJsonArray {
+            list.forEach { reminder ->
+              add(buildJsonObject {
+                put("id", reminder.id)
+                put("text", reminder.text)
+                put("minutes_left", ((reminder.dueAt - now).coerceAtLeast(0) + 59_999) / 60_000)
+                put("due_at", Instant.ofEpochMilli(reminder.dueAt).toString())
+              })
+            }
+          })
+        }
+        ToolOutput(result, if (list.isEmpty()) lang.text("summary.reminders_none") else lang.text("summary.reminders", "count" to list.size))
+      }
+      "cancel" -> {
+        val book = context.reminders.of(player)
+        val all = args.bool("all") == true
+        val cancelled = if (all) book.cancelAll() else book.cancel(args.string("id") ?: throw ToolError("id is required to cancel a reminder, or all: true"))
+        if (cancelled == 0 && !all) throw ToolError("there is no reminder with this id")
+        ToolOutput(buildJsonObject { put("cancelled", cancelled) }, lang.text("summary.reminders_cancelled", "count" to cancelled))
+      }
+      else -> throw ToolError("action must be add, list, or cancel, not $action")
     }
-    val count = list.size.toLong()
-    ToolOutput(result, if (count == 0L) "напоминаний нет" else "$count ${Plurals.ru(count, "напоминание", "напоминания", "напоминаний")}")
-  }
-
-  private val cancelReminder = tool("cancel_reminder") { context, player, args ->
-    val book = context.reminders.of(player)
-    val cancelled = when {
-      args.bool("all") == true -> book.cancelAll()
-      else -> book.cancel(args.string("id") ?: throw ToolError("id is required, or all: true"))
-    }
-    if (cancelled == 0 && args.bool("all") != true) throw ToolError("there is no reminder with this id")
-    val count = cancelled.toLong()
-    ToolOutput(buildJsonObject { put("cancelled", cancelled) }, "отменил $count ${Plurals.ru(count, "напоминание", "напоминания", "напоминаний")}")
   }
 
   private val ping = tool("ping_me") { context, player, _ ->
@@ -128,8 +134,8 @@ object ActionTools {
         player.world.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.2f + pulse * 0.3f)
       }, pulse * 8L)
     }
-    ToolOutput(buildJsonObject { put("pinged", true); put("y", above.blockY) }, "дзынь!")
+    ToolOutput(buildJsonObject { put("pinged", true); put("y", above.blockY) }, context.lang.text("summary.ping"))
   }
 
-  val all = listOf(pointTo, sortInventory, reminder, reminders, cancelReminder, ping)
+  val all = listOf(pointTo, sortInventory, reminders, ping)
 }

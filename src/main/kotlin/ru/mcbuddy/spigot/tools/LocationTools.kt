@@ -7,7 +7,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.bukkit.Location
 import org.bukkit.entity.Player
-import ru.mcbuddy.spigot.Plurals
 
 /** Places that matter to the asker: where they respawn, where the world starts, where they last died. */
 object LocationTools {
@@ -18,7 +17,7 @@ object LocationTools {
       put("x", place.blockX)
       put("y", place.blockY)
       put("z", place.blockZ)
-      put("dimension", world.environment.name.lowercase())
+      put("dimension", Dimensions.id(world))
       if (world == player.world) {
         val dx = place.x - player.location.x
         val dz = place.z - player.location.z
@@ -40,9 +39,8 @@ object LocationTools {
         put("last_death", describe(death, player))
       }
       val summary = if (death?.world == player.world) {
-        val distance = Math.round(death.distance(player.location))
-        "смерть в $distance ${Plurals.ru(distance, "блоке", "блоках", "блоках")}"
-      } else if (player.respawnLocation != null) "есть точка возрождения" else "точки возрождения нет"
+        context.lang.text("summary.death_near", "blocks" to Math.round(death.distance(player.location)))
+      } else if (player.respawnLocation != null) context.lang.text("summary.respawn_set") else context.lang.text("summary.respawn_none")
       return ToolOutput(result, summary)
     }
   }
@@ -78,9 +76,8 @@ object LocationTools {
         }
       }
       val summary = if (world == player.world) {
-        val distance = Math.round(place.distance(player.location))
-        "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")} до места смерти"
-      } else "смерть в другом измерении"
+        context.lang.text("summary.death_distance", "blocks" to Math.round(place.distance(player.location)))
+      } else context.lang.text("summary.death_elsewhere")
       return ToolOutput(result, summary)
     }
   }

@@ -9,7 +9,6 @@ import kotlinx.serialization.json.putJsonObject
 import org.bukkit.Bukkit
 import org.bukkit.Registry
 import org.bukkit.World
-import ru.mcbuddy.spigot.Plurals
 import ru.mcbuddy.spigot.tools.Facts.round1
 
 /** Tools about the world around the asker and the server itself. */
@@ -31,7 +30,7 @@ object WorldTools {
       val day = world.fullTime / 24_000 + 1
       val phase = Facts.dayPhase(world.time)
       val result = buildJsonObject {
-        put("dimension", world.environment.name.lowercase())
+        put("dimension", Dimensions.id(world))
         put("time", world.time)
         put("phase", phase)
         put("day", day)
@@ -52,7 +51,7 @@ object WorldTools {
         }
         put("border", round1(world.worldBorder.size))
       }
-      return ToolOutput(result, "день $day, сейчас ${PHASES[phase] ?: phase}")
+      return ToolOutput(result, context.lang.text("summary.world", "day" to day, "phase" to context.lang.text("phases.$phase")))
     }
   }
 
@@ -66,12 +65,11 @@ object WorldTools {
       val result = buildJsonObject {
         put("software", server.name)
         put("version", version)
-        put("difficulty", Bukkit.getWorlds().first().difficulty.name.lowercase())
         put("online", online)
         put("max_players", server.maxPlayers)
         put("plugin_version", org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(WorldTools::class.java).description.version)
       }
-      return ToolOutput(result, "${server.name} $version, $online ${Plurals.ru(online, "игрок", "игрока", "игроков")} онлайн")
+      return ToolOutput(result, context.lang.text("summary.server", "software" to server.name, "version" to version, "online" to online))
     }
   }
 
@@ -88,7 +86,7 @@ object WorldTools {
       val origin = player.location
       val found = candidates.mapNotNull { player.world.locateNearestStructure(origin, it, context.structureRadius, false) }
         .minByOrNull { it.location.distanceSquared(origin) }
-        ?: return ToolOutput(buildJsonObject { put("found", false); put("radius_chunks", context.structureRadius) }, "не нашёл поблизости")
+        ?: return ToolOutput(buildJsonObject { put("found", false); put("radius_blocks", context.structureRadius * 16) }, context.lang.text("summary.not_found"))
       val at = found.location
       val dx = at.x - origin.x
       val dz = at.z - origin.z
@@ -102,7 +100,7 @@ object WorldTools {
         put("distance", distance)
         put("direction", direction)
       }
-      return ToolOutput(result, "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")} на ${Facts.DIRECTIONS_RU[direction]}")
+      return ToolOutput(result, context.lang.text("summary.distance", "blocks" to distance, "direction" to context.lang.text("directions.$direction")))
     }
   }
 
@@ -120,7 +118,7 @@ object WorldTools {
       val radius = context.features.biomeRadius()
       // The same steps as /locate biome: every 32 blocks across, every 64 up and down.
       val found = player.world.locateNearestBiome(origin, radius, 32, 64, *candidates.toTypedArray())
-        ?: return ToolOutput(buildJsonObject { put("found", false); put("radius_blocks", radius) }, "не нашёл в радиусе $radius блоков")
+        ?: return ToolOutput(buildJsonObject { put("found", false); put("radius_blocks", radius) }, context.lang.text("summary.not_found"))
       val at = found.location
       val dx = at.x - origin.x
       val dz = at.z - origin.z
@@ -135,7 +133,7 @@ object WorldTools {
         put("distance", distance)
         put("direction", direction)
       }
-      return ToolOutput(result, "$distance ${Plurals.ru(distance, "блок", "блока", "блоков")} на ${Facts.DIRECTIONS_RU[direction]}")
+      return ToolOutput(result, context.lang.text("summary.distance", "blocks" to distance, "direction" to context.lang.text("directions.$direction")))
     }
   }
 
@@ -143,8 +141,6 @@ object WorldTools {
   fun version(bukkitVersion: String): String = Regex("^\\d+(\\.\\d+)*").find(bukkitVersion)?.value?.let { found ->
     if (".build" in bukkitVersion) bukkitVersion.substringBefore(".build") else found
   } ?: bukkitVersion
-
-  private val PHASES = mapOf("day" to "светло", "sunset" to "закат", "night" to "ночь", "sunrise" to "рассвет")
 
   val all = listOf(world, server, locate, biome)
 }

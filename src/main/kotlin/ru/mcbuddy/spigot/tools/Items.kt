@@ -104,6 +104,49 @@ object Items {
     return totals
   }
 
+  /** Items grouped by id with counts, biggest first; shulker boxes and bundles add what they hold. */
+  fun counts(items: Iterable<ItemStack?>, limit: Int = 27): JsonObject {
+    val counts = mutableMapOf<String, Int>()
+    items.filterNotNull().filterNot { it.type.isAir }.forEach { item -> counts.merge(item.type.key.key, item.amount, Int::plus) }
+    fun top(totals: Map<String, Int>) = buildJsonObject { totals.entries.sortedByDescending { it.value }.take(limit).forEach { (id, n) -> put(id, n) } }
+    val boxes = inside(items, bundles = false)
+    val bundles = inside(items, shulkerBoxes = false)
+    return buildJsonObject {
+      put("items", top(counts))
+      if (counts.size > limit) put("more_kinds", counts.size - limit)
+      if (boxes.isNotEmpty()) put("inside_shulker_boxes", top(boxes))
+      if (bundles.isNotEmpty()) put("inside_bundles", top(bundles))
+    }
+  }
+
+  /** How many of the matching items a stack is, and how many more its shulker box or bundle holds. */
+  fun matching(item: ItemStack?, match: (String) -> Boolean): Pair<Int, Int> {
+    if (item == null || item.type.isAir) return 0 to 0
+    val direct = if (match(item.type.key.key)) item.amount else 0
+    val nested = contents(item, item.itemMeta)?.filterNotNull()?.filter { !it.type.isAir && match(it.type.key.key) }?.sumOf { it.amount } ?: 0
+    return direct to nested
+  }
+
+  /** What a filled map shows: its center, scale, and whether the player stands on it. */
+  fun map(item: ItemStack, meta: ItemMeta?, player: org.bukkit.entity.Player?): JsonObject? {
+    if (item.type != Material.FILLED_MAP) return null
+    val view = (meta as? org.bukkit.inventory.meta.MapMeta)?.mapView ?: return buildJsonObject { put("empty", true) }
+    val level = view.scale.value.toInt()
+    val span = 128 shl level
+    return buildJsonObject {
+      put("scale_level", level)
+      put("blocks_per_side", span)
+      put("center_x", view.centerX)
+      put("center_z", view.centerZ)
+      view.world?.let { put("dimension", Dimensions.id(it)) }
+      put("locked", view.isLocked)
+      if (player != null) {
+        val at = player.location
+        put("player_inside", view.world == player.world && Math.abs(at.blockX - view.centerX) <= span / 2 && Math.abs(at.blockZ - view.centerZ) <= span / 2)
+      }
+    }
+  }
+
   /** Every effect the item gives, with the seconds its tooltip shows. */
   fun effects(item: ItemStack, meta: ItemMeta?): List<JsonObject> {
     val all: List<PotionEffect> = when (meta) {
@@ -161,7 +204,7 @@ object Items {
    * dye color, repair cost, a written book's title and author (never its pages), fireworks, and what a shulker box or
    * bundle holds, one level deep. Names, lore, and book titles are written by players.
    */
-  fun detail(item: ItemStack): JsonObject {
+  fun detail(item: ItemStack, player: org.bukkit.entity.Player? = null): JsonObject {
     val meta = item.itemMeta
     val base = item.compact() ?: return buildJsonObject {}
     return buildJsonObject {
@@ -205,6 +248,7 @@ object Items {
         is FireworkEffectMeta -> meta.effect?.let { effect -> putJsonObject("firework") { putJsonArray("explosions") { add(explosion(effect)) } } }
         else -> {}
       }
+      map(item, meta, player)?.let { put("map", it) }
       contents(item, meta)?.let { inside ->
         val (shown, more) = Mechanics.capped(inside.mapIndexedNotNull { slot, stack -> stack.compact(slot) }, MAX_CONTENTS)
         putJsonArray("contents") { shown.forEach(::add) }
