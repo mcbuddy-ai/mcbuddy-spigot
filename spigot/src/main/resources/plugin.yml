@@ -23,7 +23,7 @@ commands:
     permission: allay.askx
   allay:
     description: Allay's chat mode, memory, windows, and settings
-    usage: /<command> chat|hints [on|off] | cancel | new | memory | forget <number|all> | recipe <item> | enchants | villagers | reload
+    usage: /<command> chat|hints [on|off] | cancel | new | memory | forget <number|all> | recipe <item> | enchants | villagers | reload | status | link | locale [player]
 
 permissions:
   allay.ask:
@@ -43,4 +43,7 @@ permissions:
     default: op
   allay.reload:
     description: Reload settings and languages with /allay reload
+    default: op
+  allay.admin:
+    description: See and pay for Allay's model with /allay status and /allay link, and see why a player got their language with /allay locale; hear about the subscription
     default: op

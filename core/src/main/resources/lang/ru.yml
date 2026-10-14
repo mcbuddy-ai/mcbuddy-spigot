@@ -188,6 +188,7 @@ messages:
   askx_usage: "&7Использование: &f/askx <что сделать>\n&7Пример: &f/askx дай мне алмазный меч с остротой 5"
   askall_usage: "&7Использование: &f/askall <вопрос>&7 — вопрос и ответ увидят все игроки онлайн"
   allay_usage: "&6Allay\n&f/allay chat &7[on|off] — режим чата\n&f/allay hints &7[on|off] — подсказка о режиме чата\n&f/allay cancel &7— остановить ответ\n&f/allay new &7— начать разговор заново\n&f/allay memory &7— что я о тебе помню\n&f/allay forget &7<номер|all> — забыть\n&f/allay recipe &7<предмет>, &f/allay enchants&7, &f/allay villagers &7— окна"
+  allay_admin_usage: "&6Для админов\n&f/allay status &7— кто платит за модель\n&f/allay link &7— оплатить подписку в Telegram\n&f/allay locale &7[игрок] — какой язык у игрока и почему\n&f/allay reload &7— перечитать настройки и языки"
   no_permission: "&cУ тебя нет на это прав."
   players_only: "&cЭто только для игроков."
   thinking: "&eСпрашиваю AI-ассистента, секунду…"
@@ -371,6 +372,15 @@ errors:
     PROCESSING_ERROR: "&cЧто-то пошло не так. Попробуй позже."
     PARSE_ERROR: "&cНе удалось прочитать ответ AI. Попробуй позже."
     INVALID_FORMAT: "&cAI ответил в неверном формате. Попробуй позже."
+    LICENSE_REQUIRED: "&eAllay на этом сервере отдыхает: за него ещё никто не заплатил. Админы знают, что делать."
+    LICENSE_INVALID: "&eAllay сейчас не может войти на этом сервере. Админы знают, что делать."
+    SUBSCRIPTION_INACTIVE: "&eAllay на этом сервере взял перерыв: подписка не оплачена. Админы знают, что делать."
+    QUOTA_EXCEEDED: "&eAllay пока исчерпал лимит этого сервера. Лимит обновится {date} или раньше, если админ его пополнит."
+    RATE_LIMITED: "&eУ Allay слишком много вопросов с этого сервера. Попробуй через {seconds} {seconds|секунду|секунды|секунд}."
+    PROVIDER_AUTH_FAILED: "&cAI-провайдер не принял ключ этого сервера. Скажи администратору."
+    MODEL_NOT_FOUND: "&cAI-модели, выбранной на этом сервере, не существует. Скажи администратору."
+    MODEL_NO_TOOLS: "&cAI-модель этого сервера не умеет пользоваться инструментами Allay. Скажи администратору."
+    PROVIDER_URL_REJECTED: "&cAllay не может достучаться до AI-провайдера этого сервера. Скажи администратору."
   http:
     "400": "&cНекорректный запрос. Попробуй переформулировать."
     "401": "&cОшибка авторизации. Скажи администратору."
@@ -385,6 +395,86 @@ errors:
   network: "&cНе могу достучаться до сервера Allay. Проверь подключение."
   default: "&cПроизошла неожиданная ошибка. Попробуй позже."
   other: "&cПроизошла ошибка: {message}"
+  quota_spent: "&eAllay исчерпал лимит этого сервера. Он вернётся, как только админ его пополнит."
+
+# Оплата модели, для админов: /allay status и /allay link. Сервер платит своим ключом
+# (provider.mode: byok в config.yml) или подпиской Allay, оплаченной звёздами Telegram (hosted).
+billing:
+  # Шаблоны дат Java: как читается «14 ноября», и с годом, если он не текущий.
+  date: "d MMMM"
+  date_year: "d MMMM yyyy"
+  no_billing: "&aЭтот бэкенд Allay работает на своём ключе: платить не нужно."
+  unsupported: "&7Этот бэкенд Allay не знает о подписках: он старше 4.1."
+  license_invalid: "&cЭтот бэкенд не знает лицензию из license.key. Проверь server.url в config.yml или удали license.key и выполни &f/allay link&c, чтобы получить новую."
+  license_broken: "&cВ license.key нет лицензии. Исправь файл или удали его и выполни &f/allay link&c, чтобы получить новую."
+  plans:
+    week: "неделя"
+    month: "месяц"
+    year: "год"
+  link:
+    byok: "&7/allay link нужен для подписки. Сейчас сервер платит своим ключом; чтобы перейти на подписку, поставь &fprovider.mode: hosted&7 в config.yml и выполни &f/allay reload&7."
+    created: "&aНовая лицензия сохранена в &fplugins/Allay/license.key&a. Никому её не показывай: у кого она, тот и пользуется твоей подпиской."
+    ready: "&6Выбери тариф и оплати Allay звёздами Telegram:"
+    pay: "&a[Оплатить в Telegram]"
+    pay_hover: "&7Открывает бота Allay в Telegram"
+    copy: "&7[Скопировать ссылку]"
+    copy_hover: "&7Копирует ссылку, чтобы открыть её на другом устройстве"
+    url: "&7Ссылка: &f{url}"
+    once: "&8Ссылка работает один раз и 24 часа. Кто откроет её первым, к тому Telegram и привяжется подписка, так что никому её не пересылай."
+  status:
+    header: "&6Allay · кто платит за модель"
+    byok: "&7Режим: &fсвой ключ &8(provider.mode: byok)"
+    base_url: "&7API: &f{url}"
+    model: "&7Модель: &f{model}"
+    search_model: "&7Модель поиска: &f{model}"
+    default_model: "по умолчанию бэкенда"
+    no_search: "нет, поиска в интернете не будет"
+    key: "&7Ключ: &f{key}"
+    no_key: "&cКлюч: пусто. Впиши свой в provider.byok.api_key в config.yml и выполни /allay reload."
+    hosted: "&7Режим: &fподписка &8(provider.mode: hosted)"
+    legacy_key: "&7За модель платит ключ из http.custom_headers (X-OpenRouter-Token, &f{key}&7), модели — по умолчанию бэкенда."
+    no_license: "&7Лицензии пока нет. Получи её и оплати: &f/allay link&7."
+    license: "&7Лицензия: &f{id}"
+    linked: "&7Telegram: &fпривязан"
+    not_linked: "&7Telegram: &eещё не привязан&7; открой ссылку из &f/allay link"
+    active: "&7Подписка: &aактивна"
+    inactive: "&7Подписка: &cне активна&7; оплати через &f/allay link"
+    plan: "&7Тариф: &f{plan}&7, оплачен до &f{date}"
+    unpaid: "&7Ещё ничего не оплачено. Оплатить: &f/allay link&7."
+    renews: "&7Продлевается сама в Telegram."
+    no_renew: "&7Сама не продлевается: оплати снова до конца срока через &f/allay link&7."
+    quota: "&7Лимит: {bar}"
+    quota_used: "&7Израсходовано {percent}% лимита этого периода, обновится {date}."
+    quota_used_no_reset: "&7Израсходовано {percent}% лимита этого периода."
+  # Что слышат админы онлайн, когда меняется подписка. Allay проверяет её раз в 5 минут.
+  notice:
+    paid: "&a✔ Allay работает до {date}."
+    quota_80: "&eAllay израсходовал 80% лимита сервера. Лимит обновится {date}."
+    quota_100: "&cAllay исчерпал лимит сервера: вместо ответов игроки видят короткую заметку, пока лимит не обновится {date} или пока ты его не пополнишь."
+    expiring: "&eПодписка Allay заканчивается {date} и сама не продлится."
+    renew: "&a[Продлить]"
+    renew_hover: "&7Выполняет /allay link: ссылка на оплату в Telegram"
+  # Под ошибкой, только для админов: что её исправит.
+  hint:
+    subscription: "&8Админам: оплатить или продлить можно в Telegram."
+    link: "&a[/allay link]"
+    LICENSE_INVALID: "&8Админам: этот бэкенд не знает license.key. Проверь server.url или удали license.key и выполни /allay link."
+    PROVIDER_AUTH_FAILED: "&8Админам: провайдер не принял ключ из provider.byok.api_key ({key}). Проверь его в config.yml и выполни /allay reload."
+    MODEL_NOT_FOUND: "&8Админам: провайдер не знает модель «{model}». Исправь provider.byok.model в config.yml."
+    MODEL_NO_TOOLS: "&8Админам: модель «{model}» не умеет вызывать инструменты, а Allay без них не работает. Выбери в provider.byok.model модель, которая умеет (в списке моделей OpenRouter есть фильтр «Tools»)."
+    PROVIDER_URL_REJECTED: "&8Админам: бэкенд не станет обращаться к {url}. provider.byok.base_url должен быть https и вести на публичный адрес."
+
+# /allay locale [игрок], для админов: на каком языке игрок читает Allay и почему.
+locale:
+  info: "&f{player}&7: &f{language}&7, {reason}."
+  details: "&8Страна по IP: {country} · язык игры: {client} · порядок: {sources}"
+  reason:
+    ip: "по стране IP-адреса"
+    client: "по языку игры"
+    default: "по умолчанию: больше ничего не подошло"
+  unknown: "неизвестно"
+  usage: "&7Использование: &f/allay locale <игрок>"
+  not_found: "&cИгрока {player} нет онлайн."
 
 directions:
   north: "север"

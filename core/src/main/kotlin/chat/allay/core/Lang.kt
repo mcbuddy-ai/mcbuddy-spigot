@@ -87,14 +87,17 @@ class LocaleResolver(private val settings: Config.Locales, private val available
     settings.countries.forEach { (code, countries) -> countries.forEach { putIfAbsent(it.uppercase(), normalize(code)) } }
   }
 
-  fun resolve(country: String?, client: String?): String? {
+  fun resolve(country: String?, client: String?): String? = explain(country, client)?.first
+
+  /** The language and the source that picked it, `ip` or `client`; null when neither did and the default applies. */
+  fun explain(country: String?, client: String?): Pair<String, String>? {
     for (source in settings.sources) {
       val code = when (source) {
         "ip" -> country?.let { byCountry[it.uppercase()] }
         "client" -> client?.let(::fromClient)
         else -> null
       }
-      if (code != null && code in available) return code
+      if (code != null && code in available) return code to source
     }
     return null
   }

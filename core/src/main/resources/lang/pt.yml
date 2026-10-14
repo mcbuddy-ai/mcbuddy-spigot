@@ -188,6 +188,7 @@ messages:
   askx_usage: "&7Uso: &f/askx <o que fazer>\n&7Exemplo: &f/askx me dá uma espada de diamante com afiação 5"
   askall_usage: "&7Uso: &f/askall <pergunta>&7 — todos os jogadores online veem a pergunta e a resposta"
   allay_usage: "&6Allay\n&f/allay chat &7[on|off] — modo chat\n&f/allay hints &7[on|off] — a dica sobre o modo chat\n&f/allay cancel &7— parar a resposta\n&f/allay new &7— recomeçar a conversa\n&f/allay memory &7— o que eu lembro sobre você\n&f/allay forget &7<número|all> — esquecer\n&f/allay recipe &7<item>, &f/allay enchants&7, &f/allay villagers &7— as janelas"
+  allay_admin_usage: "&6Para admins\n&f/allay status &7— quem paga o modelo\n&f/allay link &7— pagar a assinatura no Telegram\n&f/allay locale &7[jogador] — que idioma um jogador recebe e por quê\n&f/allay reload &7— recarregar configurações e idiomas"
   no_permission: "&cVocê não tem permissão para isso."
   players_only: "&cIsso é só para jogadores."
   thinking: "&ePerguntando ao assistente de IA, um momento…"
@@ -371,6 +372,15 @@ errors:
     PROCESSING_ERROR: "&cAlgo deu errado. Tente mais tarde."
     PARSE_ERROR: "&cNão deu para ler a resposta da IA. Tente mais tarde."
     INVALID_FORMAT: "&cA IA respondeu no formato errado. Tente mais tarde."
+    LICENSE_REQUIRED: "&eO Allay está de folga neste servidor: ninguém pagou por ele ainda. Os admins sabem o que fazer."
+    LICENSE_INVALID: "&eO Allay não consegue entrar neste servidor agora. Os admins sabem o que fazer."
+    SUBSCRIPTION_INACTIVE: "&eO Allay está de folga neste servidor: a assinatura não foi paga. Os admins sabem o que fazer."
+    QUOTA_EXCEEDED: "&eO Allay gastou o limite deste servidor por enquanto. Ele renova em {date}, ou antes se um admin recarregar."
+    RATE_LIMITED: "&eO Allay está recebendo perguntas demais deste servidor. Tente de novo em {seconds} {seconds|segundo|segundos}."
+    PROVIDER_AUTH_FAILED: "&cO provedor de IA recusou a chave deste servidor. Avise um admin."
+    MODEL_NOT_FOUND: "&cO modelo de IA configurado neste servidor não existe. Avise um admin."
+    MODEL_NO_TOOLS: "&cO modelo de IA deste servidor não consegue usar as ferramentas do Allay. Avise um admin."
+    PROVIDER_URL_REJECTED: "&cO Allay não consegue chegar ao provedor de IA deste servidor. Avise um admin."
   http:
     "400": "&cPedido inválido. Tente reformular."
     "401": "&cFalha na autorização. Avise um admin."
@@ -385,6 +395,86 @@ errors:
   network: "&cNão consigo falar com o servidor do Allay. Confira a conexão."
   default: "&cAlgo inesperado deu errado. Tente mais tarde."
   other: "&cAlgo deu errado: {message}"
+  quota_spent: "&eO Allay gastou o limite deste servidor. Ele volta assim que um admin recarregar."
+
+# Pagar o modelo, para admins: /allay status e /allay link. Um servidor paga com a própria chave
+# (provider.mode: byok no config.yml) ou com a assinatura do Allay, paga com Telegram Stars (hosted).
+billing:
+  # Padrões de data do Java: como “14 de novembro” aparece, e com o ano quando não é o atual.
+  date: "d 'de' MMMM"
+  date_year: "d 'de' MMMM 'de' yyyy"
+  no_billing: "&aEste backend do Allay funciona com a própria chave: não há nada a pagar."
+  unsupported: "&7Este backend do Allay não tem assinaturas: é anterior à 4.1."
+  license_invalid: "&cEste backend não conhece a licença do license.key. Confira server.url no config.yml, ou apague o license.key e use &f/allay link&c para pegar uma nova."
+  license_broken: "&cO license.key não contém uma licença. Corrija o arquivo, ou apague e use &f/allay link&c para pegar uma nova."
+  plans:
+    week: "semanal"
+    month: "mensal"
+    year: "anual"
+  link:
+    byok: "&7/allay link é para a assinatura. Agora este servidor paga com a própria chave; para mudar, coloque &fprovider.mode: hosted&7 no config.yml e use &f/allay reload&7."
+    created: "&aUma licença nova foi salva em &fplugins/Allay/license.key&a. Guarde só para você: quem tiver ela usa a sua assinatura."
+    ready: "&6Escolha um plano e pague o Allay com Telegram Stars:"
+    pay: "&a[Pagar no Telegram]"
+    pay_hover: "&7Abre o bot do Allay no Telegram"
+    copy: "&7[Copiar link]"
+    copy_hover: "&7Copia o link para abrir em outro aparelho"
+    url: "&7Link: &f{url}"
+    once: "&8O link funciona uma vez e por 24 horas. Quem abrir primeiro vincula a assinatura ao próprio Telegram, então não compartilhe."
+  status:
+    header: "&6Allay · quem paga o modelo"
+    byok: "&7Modo: &fsua própria chave &8(provider.mode: byok)"
+    base_url: "&7API: &f{url}"
+    model: "&7Modelo: &f{model}"
+    search_model: "&7Modelo de busca: &f{model}"
+    default_model: "o padrão do backend"
+    no_search: "nenhum, então sem busca na web"
+    key: "&7Chave: &f{key}"
+    no_key: "&cChave: vazia. Coloque a sua em provider.byok.api_key no config.yml e use /allay reload."
+    hosted: "&7Modo: &fassinatura &8(provider.mode: hosted)"
+    legacy_key: "&7Quem paga o modelo é a chave em http.custom_headers (X-OpenRouter-Token, &f{key}&7), com os modelos padrão do backend."
+    no_license: "&7Ainda não há licença. Pegue uma e pague com &f/allay link&7."
+    license: "&7Licença: &f{id}"
+    linked: "&7Telegram: &fvinculado"
+    not_linked: "&7Telegram: &eainda não vinculado&7; abra o link de &f/allay link"
+    active: "&7Assinatura: &aativa"
+    inactive: "&7Assinatura: &cinativa&7; pague com &f/allay link"
+    plan: "&7Plano: &f{plan}&7, pago até &f{date}"
+    unpaid: "&7Nada pago ainda. Para pagar: &f/allay link&7."
+    renews: "&7Renova sozinha no Telegram."
+    no_renew: "&7Não renova sozinha: pague de novo antes do fim com &f/allay link&7."
+    quota: "&7Limite: {bar}"
+    quota_used: "&7{percent}% do limite deste período usado; renova em {date}."
+    quota_used_no_reset: "&7{percent}% do limite deste período usado."
+  # O que os admins online ouvem quando a assinatura muda. O Allay confere a cada 5 minutos.
+  notice:
+    paid: "&a✔ O Allay está ativo até {date}."
+    quota_80: "&eO Allay usou 80% do limite deste servidor. Ele renova em {date}."
+    quota_100: "&cO Allay gastou o limite deste servidor: os jogadores recebem um aviso curto em vez de respostas até ele renovar em {date} ou você recarregar."
+    expiring: "&eA assinatura do Allay termina em {date} e não renova sozinha."
+    renew: "&a[Renovar]"
+    renew_hover: "&7Executa /allay link: um link para pagar no Telegram"
+  # Embaixo de um erro, só para admins: o que resolve.
+  hint:
+    subscription: "&8Para admins: pague ou renove no Telegram."
+    link: "&a[/allay link]"
+    LICENSE_INVALID: "&8Para admins: este backend não conhece o license.key. Confira server.url, ou apague o license.key e use /allay link."
+    PROVIDER_AUTH_FAILED: "&8Para admins: o provedor recusou a chave em provider.byok.api_key ({key}). Confira no config.yml e use /allay reload."
+    MODEL_NOT_FOUND: "&8Para admins: o provedor não conhece o modelo “{model}”. Corrija provider.byok.model no config.yml."
+    MODEL_NO_TOOLS: "&8Para admins: o modelo “{model}” não chama ferramentas, e o Allay precisa delas. Escolha um que chame em provider.byok.model (a lista de modelos do OpenRouter filtra por “Tools”)."
+    PROVIDER_URL_REJECTED: "&8Para admins: o backend não vai chamar {url}. provider.byok.base_url precisa ser https e apontar para um endereço público."
+
+# /allay locale [jogador], para admins: em que idioma um jogador lê o Allay, e por quê.
+locale:
+  info: "&f{player}&7: &f{language}&7, {reason}."
+  details: "&8País pelo IP: {country} · idioma do jogo: {client} · ordem: {sources}"
+  reason:
+    ip: "pelo país do IP"
+    client: "pelo idioma do jogo"
+    default: "o padrão, porque nada mais bateu"
+  unknown: "desconhecido"
+  usage: "&7Uso: &f/allay locale <jogador>"
+  not_found: "&cNão há nenhum jogador {player} online."
 
 directions:
   north: "norte"

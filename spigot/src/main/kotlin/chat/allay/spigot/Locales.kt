@@ -28,6 +28,10 @@ class Locales(private val plugin: JavaPlugin) : Listener {
 
   @Volatile lateinit var texts: Texts; private set
   @Volatile private lateinit var resolver: LocaleResolver
+  @Volatile private var sources: List<String> = emptyList()
+
+  /** What `/allay locale` shows: the language, what picked it (`ip`, `client`, or `default`), and what it was picked from. */
+  class Choice(val code: String, val source: String, val country: String?, val client: String, val sources: List<String>)
 
   /** Reads the language files and starts the GeoIP refresh; `/allay reload` runs it again. */
   fun load(config: Config) {
@@ -46,6 +50,7 @@ class Locales(private val plugin: JavaPlugin) : Listener {
     if (default !in languages) plugin.logger.warning("locales.default: there is no lang/$default.yml; using ${Texts.FALLBACK}")
     texts = Texts(languages, default)
     resolver = LocaleResolver(config.locales, languages.keys)
+    sources = config.locales.sources
     plugin.logger.info("Languages: ${languages.keys.sorted().joinToString()}, default ${texts.default}")
 
     geoIpTask?.cancel()
@@ -71,6 +76,12 @@ class Locales(private val plugin: JavaPlugin) : Listener {
   fun of(sender: CommandSender?): Lang = texts.lang((sender as? Player)?.let { code(it) })
 
   fun code(player: Player): String = resolver.resolve(countries[player.uniqueId], player.locale) ?: texts.default
+
+  fun explain(player: Player): Choice {
+    val country = countries[player.uniqueId]
+    val (code, source) = resolver.explain(country, player.locale) ?: (texts.default to "default")
+    return Choice(code, source, country, player.locale, sources)
+  }
 
   fun stop() {
     geoIpTask?.cancel()

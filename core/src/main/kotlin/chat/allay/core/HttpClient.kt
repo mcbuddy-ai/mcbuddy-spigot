@@ -6,7 +6,8 @@ import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.logging.Logger
 
-class HttpClient(private val log: Logger, private val config: Config) {
+/** The client every backend call goes through; [credentials] adds who pays to each request (never to the log). */
+class HttpClient(private val log: Logger, private val config: Config, private val credentials: Credentials? = null) {
   val client = run {
     val http = config.http
 
@@ -34,6 +35,8 @@ class HttpClient(private val log: Logger, private val config: Config) {
       http.customHeaders.forEach { (key, value) -> if (value?.isNotBlank() == true) requestBuilder.header(key, value) }
       chain.proceed(requestBuilder.build())
     }
+
+    credentials?.let { builder.addInterceptor(it.interceptor()) }
 
     if (http.logging) {
       builder.addInterceptor { chain ->

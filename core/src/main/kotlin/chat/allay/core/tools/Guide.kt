@@ -20,6 +20,9 @@ object Guide {
     Triple("/allay enchants", Permissions.ASK, "opens the enchanting window for the item in hand"),
     Triple("/allay villagers", Permissions.ASK, "opens the window of villagers around and their trades"),
     Triple("/allay reload", Permissions.RELOAD, "reloads Allay's settings and languages"),
+    Triple("/allay status", Permissions.ADMIN, "who pays for the model on this server: the own key, or the subscription with its plan, paid-until date, and how much of the limit is used"),
+    Triple("/allay link", Permissions.ADMIN, "a one-time link to pay for Allay's subscription in Telegram Stars (week, month, or year)"),
+    Triple("/allay locale [player]", Permissions.ADMIN, "which language a player reads Allay in, and why: their IP's country, their game's language, or the default"),
   )
 
   /** The commands a player with these permissions may use, as usage to what it does. */

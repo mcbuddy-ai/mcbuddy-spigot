@@ -44,10 +44,12 @@ class Service<C>(
   private val serverId: String,
   private val host: Host<C>,
   private val scope: CoroutineScope,
+  /** Who pays: the headers go on through the client's interceptor, the `provider` block goes in the body here. */
+  private val credentials: Credentials,
 ) {
-  @Serializable data class AskRequest(val question: String, val platform: String = "minecraft", val user_id: String? = null)
+  @Serializable data class AskRequest(val question: String, val platform: String = "minecraft", val user_id: String? = null, val provider: Protocol.Provider? = null)
   @Serializable data class AskResponse(val answer: String, val status: String? = null, val timestamp: String? = null)
-  @Serializable data class AskXRequest(val action: String, val platform: String = "minecraft", val user_id: String? = null)
+  @Serializable data class AskXRequest(val action: String, val platform: String = "minecraft", val user_id: String? = null, val provider: Protocol.Provider? = null)
   @Serializable data class AskXResponse(val isSequence: Boolean, val commands: List<String>, val status: String? = null, val timestamp: String? = null, val error: String? = null)
 
   /** How a run ended. */
@@ -65,6 +67,7 @@ class Service<C>(
   private val json = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true
+    explicitNulls = false
   }
   private val errorParser = ErrorParser()
   private val jsonType = "application/json".toMediaType()
@@ -91,11 +94,11 @@ class Service<C>(
     run.call = call
     call.execute().use { response ->
       if (response.code == 404 || response.code == 405) throw V2Unsupported()
-      if (!response.isSuccessful) throw ApiErrorException(errorParser.parseErrorFromResponse(response))
+      if (!response.isSuccessful) throw failure(errorParser.parseErrorFromResponse(response))
 
       var outcome: Outcome? = null
       var commands: Protocol.Commands? = null
-      var failure: Protocol.ErrorEvent? = null
+      var failed: Protocol.ErrorEvent? = null
       val parser = SseParser { name, data ->
         when (val event = Protocol.decode(name, data)) {
           is Event.Started -> run.runId = event.data.run_id
@@ -109,17 +112,17 @@ class Service<C>(
           is Event.Command -> commands = event.data
           is Event.Spent -> run.usage(event.data.input_tokens, event.data.output_tokens + event.data.reasoning_tokens)
           is Event.Finished -> outcome = Outcome(event.data.answer.ifBlank { run.answer() }, commands)
-          is Event.Failed -> failure = event.data
+          is Event.Failed -> failed = event.data
           null -> {}
         }
       }
       val source = response.body.source()
-      while (!run.cancelled && outcome == null && failure == null) {
+      while (!run.cancelled && outcome == null && failed == null) {
         val line = source.readUtf8Line() ?: break
         parser.line(line)
       }
       parser.end()
-      failure?.let { throw ApiErrorException(ApiError(it.code, it.message)) }
+      failed?.let { throw failure(ApiError(it.code, it.message, resetsAt = it.resets_at, retryAfter = it.retry_after)) }
       return outcome ?: Outcome(run.answer(), commands).takeIf { it.answer.isNotBlank() || commands != null }
         ?: throw ApiErrorException(ApiError("NO_AI_RESPONSE", "The stream ended without an answer"))
     }
@@ -153,8 +156,12 @@ class Service<C>(
       player = uuid?.let { Protocol.PlayerInfo(asker.name, it.toString(), asker.operator) },
       server = Protocol.ServerInfo(serverId, host.software, host.gameVersion, host.pluginVersion),
       tools = tools.offered(isOperator(asker)),
+      provider = credentials.block(),
     )
   }
+
+  /** The error with the key and the license masked out of its message, should the backend ever echo them. */
+  private fun failure(error: ApiError) = ApiErrorException(error.copy(message = credentials.scrub(error.message)))
 
   /** Only a player can be an operator here: the console asks without the tools that change the game. */
   private fun isOperator(asker: Asker) = asker.uuid != null && asker.operator
@@ -218,7 +225,7 @@ class Service<C>(
   private fun send(path: String, method: String): String {
     val request = Request.Builder().url("${config.server.url}$path").method(method, null).build()
     client.newCall(request).execute().use { response ->
-      if (!response.isSuccessful) throw ApiErrorException(errorParser.parseErrorFromResponse(response))
+      if (!response.isSuccessful) throw failure(errorParser.parseErrorFromResponse(response))
       return response.body.string()
     }
   }
@@ -228,12 +235,12 @@ class Service<C>(
     val userId = run.asker.uuid?.toString() ?: "console"
     return when (run.mode) {
       Run.Mode.ASK -> {
-        val body = json.encodeToString(AskRequest.serializer(), AskRequest(message, user_id = userId))
+        val body = json.encodeToString(AskRequest.serializer(), AskRequest(message, user_id = userId, provider = credentials.block()))
         val answer = execute(run, "/api/ask", body) { json.decodeFromString<AskResponse>(it).answer }
         Outcome(answer, null)
       }
       Run.Mode.ASKX -> {
-        val body = json.encodeToString(AskXRequest.serializer(), AskXRequest(message, user_id = userId))
+        val body = json.encodeToString(AskXRequest.serializer(), AskXRequest(message, user_id = userId, provider = credentials.block()))
         val response = execute(run, "/api/askx", body) { json.decodeFromString<AskXResponse>(it) }
         response.error?.let { throw ApiErrorException(ApiError("AI_ERROR", it)) }
         Outcome("", Protocol.Commands(response.isSequence, response.commands))
@@ -245,7 +252,7 @@ class Service<C>(
     val call = client.newCall(Request.Builder().url("${config.server.url}$path").post(body.toRequestBody(jsonType)).build())
     run.call = call
     call.execute().use { response ->
-      if (!response.isSuccessful) throw ApiErrorException(errorParser.parseErrorFromResponse(response))
+      if (!response.isSuccessful) throw failure(errorParser.parseErrorFromResponse(response))
       return read(response.body.string())
     }
   }

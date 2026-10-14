@@ -27,6 +27,8 @@ class Handler(
   private val animator: Animator,
   private val executor: Executor,
   private val scope: CoroutineScope,
+  /** The hint operators get under an error a payment or the config fixes. */
+  private val billing: () -> BillingCommands,
   private val clicks: () -> Clicks,
 ) {
   private val runs = ConcurrentHashMap<String, Run>()
@@ -105,7 +107,8 @@ class Handler(
             animator.stopPlayerAnimation(it)
             animator.playErrorSound(it)
           }
-          sender.sendMessage(formatMessage(ErrorHandler.message(lang, e)))
+          sender.sendMessage(formatMessage(ErrorHandler.message(lang, e, billing().zone(sender))))
+          billing().hint(sender, e)
           if (public) everyoneBut(sender).forEach { locales.of(it).send(it, "public.failed") }
         }
       } finally {

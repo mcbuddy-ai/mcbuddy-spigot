@@ -26,7 +26,12 @@ object Protocol {
     val player: PlayerInfo? = null,
     val server: ServerInfo,
     val tools: List<String>,
+    /** Since 4.1, in byok mode only: the server's own model; the key itself goes in `X-Provider-Key`. */
+    val provider: Provider? = null,
   )
+
+  /** Empty [model] means the backend's default; empty [search_model] means no web search. */
+  @Serializable data class Provider(val base_url: String, val model: String, val search_model: String)
 
   @Serializable data class PlayerInfo(val name: String, val uuid: String, val op: Boolean)
 
@@ -62,7 +67,13 @@ object Protocol {
 
   @Serializable data class Done(val answer: String = "", val duration_ms: Long = 0)
 
-  @Serializable data class ErrorEvent(val code: String = "PROCESSING_ERROR", val message: String = "")
+  @Serializable data class ErrorEvent(
+    val code: String = "PROCESSING_ERROR",
+    val message: String = "",
+    /** Since 4.1: when a spent quota refills, and when a rate limit lets go (seconds). */
+    val resets_at: String? = null,
+    val retry_after: Long? = null,
+  )
 
   @Serializable data class ToolResult(val ok: Boolean, val result: JsonElement? = null, val error: String? = null)
 

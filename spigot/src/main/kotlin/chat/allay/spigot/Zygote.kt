@@ -49,6 +49,10 @@ class Zygote : JavaPlugin(), TabCompleter {
   private lateinit var menus: MenuListener
   private lateinit var clicks: Clicks
   private lateinit var chat: ChatMode
+  private lateinit var license: License
+  private lateinit var announcements: Announcements
+  private lateinit var billing: BillingCommands
+  private var watch: BillingWatch? = null
   private val buttons = ButtonStore()
   private val locales = Locales(this)
 
@@ -56,6 +60,9 @@ class Zygote : JavaPlugin(), TabCompleter {
     // Before anything reads the data folder: a server coming from MCBuddy brings its data along.
     McBuddyMigration(File(dataFolder.parentFile, "mcbuddy-spigot"), dataFolder, logger).run()
     saveDefaultConfig()
+    // Both outlive /allay reload: the license file, and what operators already heard about the subscription.
+    license = License(dataFolder)
+    announcements = Announcements(dataFolder, logger)
     // Outlives /allay reload, so reminders already set keep their schedule.
     reminders = Reminders(this, locales) { configuration.tools.maxReminders }
     server.pluginManager.registerEvents(reminders, this)
@@ -95,16 +102,36 @@ class Zygote : JavaPlugin(), TabCompleter {
   private fun initializeComponents() {
     configuration = Config(settingsFile(), description.version)
     locales.load(configuration)
-    client = HttpClient(logger, configuration).client
+    val credentials = Credentials(configuration, license)
+    client = HttpClient(logger, configuration, credentials).client
     if (::handler.isInitialized) handler.cancelAll()
     if (::animator.isInitialized) animator.stopAllAnimations()
     animator = Animator(this, configuration)
     val tools = ToolRegistry(Tools.all(), configuration.tools::enabled)
-    service = Service(configuration, client, tools, features.zones, features.serverId, host, scope)
+    service = Service(configuration, client, tools, features.zones, features.serverId, host, scope, credentials)
+    val licenses = Billing(client, configuration, license)
+    billing = BillingCommands(this, configuration, locales, licenses, credentials, features.zones, scope)
+    watch?.stop()
+    watch = BillingWatch(this, locales, licenses, credentials, announcements, billing).also { it.start() }
+    reportProvider()
     executor = Executor(this, configuration, locales, animator)
-    handler = Handler(this, configuration, locales, service, animator, executor, scope) { clicks }
+    handler = Handler(this, configuration, locales, service, animator, executor, scope, { billing }) { clicks }
     clicks = Clicks(this, configuration, features, buttons) { player, question -> handler.ask(player, question, Run.Mode.ASK) }
     memory = MemoryCommands(this, locales, service, scope)
+  }
+
+  /** One line at start and on reload about who pays for the model; the key and the license show masked, if at all. */
+  private fun reportProvider() {
+    val provider = configuration.provider
+    when {
+      provider.byok && provider.apiKey.isEmpty() ->
+        logger.warning("provider.mode is byok, but provider.byok.api_key is empty: questions fail until you put your key there and run /allay reload")
+      provider.byok -> logger.info("Paying for the model with this server's key ${Secrets.mask(provider.apiKey)} at ${provider.baseUrl}")
+      license.broken -> logger.warning("${License.FILE} holds no license: fix it, or delete it and run /allay link")
+      license.read() != null -> logger.info("Paying for the model with Allay's subscription, license ${license.id}; /allay status shows how it stands")
+      provider.legacyKey != null -> logger.info("Paying for the model with the X-OpenRouter-Token key in http.custom_headers (${Secrets.mask(provider.legacyKey)})")
+      else -> logger.info("No ${License.FILE} yet: if the backend asks for a subscription, run /allay link")
+    }
   }
 
   /** What the backend client needs from Bukkit. */
@@ -131,6 +158,7 @@ class Zygote : JavaPlugin(), TabCompleter {
 
   override fun onDisable() {
     if (::handler.isInitialized) handler.cancelAll()
+    watch?.stop()
     if (::reminders.isInitialized) reminders.cancelAll()
     if (::goals.isInitialized) goals.stop()
     if (::menus.isInitialized) menus.stop()
@@ -173,10 +201,17 @@ class Zygote : JavaPlugin(), TabCompleter {
             "on" -> true
             "off" -> false
             null -> !current
-            else -> return lang.send(sender, "messages.allay_usage")
+            else -> return usage(sender, lang)
           }
           if (word == "chat") chat.set(player, wanted) else chat.hints(player, wanted)
         }
+      }
+      word == "link" || word == "status" || word == "locale" -> when {
+        !sender.hasPermission(Permissions.ADMIN) -> lang.send(sender, "messages.no_permission")
+        word == "link" && args.size == 1 -> billing.link(sender)
+        word == "status" && args.size == 1 -> billing.status(sender)
+        word == "locale" && args.size <= 2 -> billing.locale(sender, args.getOrNull(1))
+        else -> usage(sender, lang)
       }
       !asker -> lang.send(sender, "messages.no_permission")
       word == "cancel" && args.size == 1 -> handler.cancel(sender)
@@ -187,8 +222,13 @@ class Zygote : JavaPlugin(), TabCompleter {
         if (args.size < 2) lang.send(sender, "messages.recipe_usage") else clicks.recipe(player, args.drop(1).joinToString("_"))
       word == "enchants" && args.size == 1 && player != null -> clicks.enchants(player)
       word == "villagers" && args.size == 1 && player != null -> clicks.villagers(player, null)
-      else -> lang.send(sender, "messages.allay_usage")
+      else -> usage(sender, lang)
     }
+  }
+
+  private fun usage(sender: CommandSender, lang: Lang) {
+    lang.send(sender, "messages.allay_usage")
+    if (sender.hasPermission(Permissions.ADMIN)) lang.send(sender, "messages.allay_admin_usage")
   }
 
   override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
@@ -198,7 +238,10 @@ class Zygote : JavaPlugin(), TabCompleter {
         if (sender.hasPermission(Permissions.CHAT)) addAll(listOf("chat", "hints"))
         if (sender.hasPermission(Permissions.ASK)) addAll(listOf("cancel", "new", "memory", "forget", "recipe", "enchants", "villagers"))
         if (sender.hasPermission(Permissions.RELOAD)) add("reload")
+        if (sender.hasPermission(Permissions.ADMIN)) addAll(listOf("status", "link", "locale"))
       }
+      args.size == 2 && args[0].equals("locale", ignoreCase = true) && sender.hasPermission(Permissions.ADMIN) ->
+        server.onlinePlayers.map { it.name }
       args.size == 2 && args[0].lowercase() in setOf("chat", "hints") -> listOf("on", "off")
       args.size == 2 && args[0].equals("forget", ignoreCase = true) -> listOf("all")
       args.size == 2 && args[0].equals("recipe", ignoreCase = true) ->

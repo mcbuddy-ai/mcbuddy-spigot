@@ -188,6 +188,7 @@ messages:
   askx_usage: "&7Verwendung: &f/askx <was ich tun soll>\n&7Beispiel: &f/askx gib mir ein Diamantschwert mit Schärfe 5"
   askall_usage: "&7Verwendung: &f/askall <Frage>&7 – alle Spieler online sehen Frage und Antwort"
   allay_usage: "&6Allay\n&f/allay chat &7[on|off] – Chatmodus\n&f/allay hints &7[on|off] – der Tipp zum Chatmodus\n&f/allay cancel &7– Antwort stoppen\n&f/allay new &7– Gespräch neu anfangen\n&f/allay memory &7– was ich über dich weiß\n&f/allay forget &7<Nummer|all> – vergessen\n&f/allay recipe &7<Item>, &f/allay enchants&7, &f/allay villagers &7– die Fenster"
+  allay_admin_usage: "&6Für Admins\n&f/allay status &7– wer das Modell bezahlt\n&f/allay link &7– das Abo in Telegram bezahlen\n&f/allay locale &7[Spieler] – welche Sprache ein Spieler bekommt und warum\n&f/allay reload &7– Einstellungen und Sprachen neu laden"
   no_permission: "&cDafür hast du keine Rechte."
   players_only: "&cDas geht nur für Spieler."
   thinking: "&eFrage den KI-Assistenten, einen Moment…"
@@ -371,6 +372,15 @@ errors:
     PROCESSING_ERROR: "&cEtwas ist schiefgelaufen. Versuch es später noch mal."
     PARSE_ERROR: "&cDie Antwort der KI war nicht lesbar. Versuch es später noch mal."
     INVALID_FORMAT: "&cDie KI hat im falschen Format geantwortet. Versuch es später noch mal."
+    LICENSE_REQUIRED: "&eAllay macht auf diesem Server Pause: Bisher hat niemand dafür bezahlt. Deine Admins wissen, was zu tun ist."
+    LICENSE_INVALID: "&eAllay kann sich auf diesem Server gerade nicht anmelden. Deine Admins wissen, was zu tun ist."
+    SUBSCRIPTION_INACTIVE: "&eAllay macht auf diesem Server Pause: Das Abo ist nicht bezahlt. Deine Admins wissen, was zu tun ist."
+    QUOTA_EXCEEDED: "&eAllay hat das Limit dieses Servers erst mal aufgebraucht. Es füllt sich am {date} wieder auf, oder früher, wenn ein Admin nachlegt."
+    RATE_LIMITED: "&eAllay bekommt gerade zu viele Fragen von diesem Server. Versuch es in {seconds} {seconds|Sekunde|Sekunden} noch mal."
+    PROVIDER_AUTH_FAILED: "&cDer KI-Anbieter hat den Schlüssel dieses Servers abgelehnt. Sag einem Admin Bescheid."
+    MODEL_NOT_FOUND: "&cDas KI-Modell dieses Servers gibt es nicht. Sag einem Admin Bescheid."
+    MODEL_NO_TOOLS: "&cDas KI-Modell dieses Servers kann Allays Werkzeuge nicht nutzen. Sag einem Admin Bescheid."
+    PROVIDER_URL_REJECTED: "&cAllay erreicht den KI-Anbieter dieses Servers nicht. Sag einem Admin Bescheid."
   http:
     "400": "&cUngültige Anfrage. Formulier es anders."
     "401": "&cAnmeldung fehlgeschlagen. Sag einem Admin Bescheid."
@@ -385,6 +395,86 @@ errors:
   network: "&cDer Allay-Server ist nicht erreichbar. Prüf deine Verbindung."
   default: "&cEtwas Unerwartetes ist schiefgelaufen. Versuch es später noch mal."
   other: "&cEtwas ist schiefgelaufen: {message}"
+  quota_spent: "&eAllay hat das Limit dieses Servers aufgebraucht. Es geht weiter, sobald ein Admin nachlegt."
+
+# Das Modell bezahlen, für Admins: /allay status und /allay link. Ein Server zahlt mit seinem eigenen
+# Schlüssel (provider.mode: byok in config.yml) oder mit Allays Abo, bezahlt mit Telegram Stars (hosted).
+billing:
+  # Java-Datumsmuster: wie „14. November“ aussieht, und mit Jahr, wenn es nicht das aktuelle ist.
+  date: "d. MMMM"
+  date_year: "d. MMMM yyyy"
+  no_billing: "&aDieses Allay-Backend läuft mit seinem eigenen Schlüssel: Du musst nichts bezahlen."
+  unsupported: "&7Dieses Allay-Backend kennt keine Abos: Es ist älter als 4.1."
+  license_invalid: "&cDieses Backend kennt die Lizenz in license.key nicht. Prüf server.url in config.yml, oder lösch license.key und führ &f/allay link&c aus, um eine neue zu bekommen."
+  license_broken: "&cIn license.key steht keine Lizenz. Reparier die Datei, oder lösch sie und führ &f/allay link&c aus, um eine neue zu bekommen."
+  plans:
+    week: "Woche"
+    month: "Monat"
+    year: "Jahr"
+  link:
+    byok: "&7/allay link ist fürs Abo. Dieser Server zahlt gerade mit seinem eigenen Schlüssel; zum Wechseln setz &fprovider.mode: hosted&7 in config.yml und führ &f/allay reload&7 aus."
+    created: "&aEine neue Lizenz liegt in &fplugins/Allay/license.key&a. Behalt sie für dich: Wer sie hat, nutzt dein Abo."
+    ready: "&6Such dir einen Tarif aus und bezahl Allay mit Telegram Stars:"
+    pay: "&a[In Telegram bezahlen]"
+    pay_hover: "&7Öffnet Allays Bot in Telegram"
+    copy: "&7[Link kopieren]"
+    copy_hover: "&7Kopiert den Link, um ihn auf einem anderen Gerät zu öffnen"
+    url: "&7Link: &f{url}"
+    once: "&8Der Link funktioniert einmal und 24 Stunden lang. Wer ihn zuerst öffnet, verknüpft das Abo mit seinem Telegram – teil ihn also mit niemandem."
+  status:
+    header: "&6Allay · wer das Modell bezahlt"
+    byok: "&7Modus: &feigener Schlüssel &8(provider.mode: byok)"
+    base_url: "&7API: &f{url}"
+    model: "&7Modell: &f{model}"
+    search_model: "&7Suchmodell: &f{model}"
+    default_model: "Standard des Backends"
+    no_search: "keins, also keine Websuche"
+    key: "&7Schlüssel: &f{key}"
+    no_key: "&cSchlüssel: leer. Trag deinen in provider.byok.api_key in config.yml ein und führ /allay reload aus."
+    hosted: "&7Modus: &fAbo &8(provider.mode: hosted)"
+    legacy_key: "&7Das Modell bezahlt der Schlüssel aus http.custom_headers (X-OpenRouter-Token, &f{key}&7), mit den Standardmodellen des Backends."
+    no_license: "&7Noch keine Lizenz. Hol dir eine und bezahl mit &f/allay link&7."
+    license: "&7Lizenz: &f{id}"
+    linked: "&7Telegram: &fverknüpft"
+    not_linked: "&7Telegram: &enoch nicht verknüpft&7; öffne den Link aus &f/allay link"
+    active: "&7Abo: &aaktiv"
+    inactive: "&7Abo: &cnicht aktiv&7; bezahl mit &f/allay link"
+    plan: "&7Tarif: &f{plan}&7, bezahlt bis &f{date}"
+    unpaid: "&7Noch nichts bezahlt. Bezahlen: &f/allay link&7."
+    renews: "&7Verlängert sich in Telegram von selbst."
+    no_renew: "&7Verlängert sich nicht von selbst: Bezahl vor dem Ende erneut mit &f/allay link&7."
+    quota: "&7Limit: {bar}"
+    quota_used: "&7{percent} % des Limits dieser Periode verbraucht, füllt sich am {date} wieder auf."
+    quota_used_no_reset: "&7{percent} % des Limits dieser Periode verbraucht."
+  # Was Admins online hören, wenn sich am Abo etwas ändert. Allay schaut alle 5 Minuten nach.
+  notice:
+    paid: "&a✔ Allay ist bis zum {date} aktiv."
+    quota_80: "&eAllay hat 80 % des Limits dieses Servers verbraucht. Es füllt sich am {date} wieder auf."
+    quota_100: "&cAllay hat das Limit dieses Servers aufgebraucht: Spieler bekommen statt Antworten einen kurzen Hinweis, bis es sich am {date} wieder auffüllt oder du nachlegst."
+    expiring: "&eAllays Abo endet am {date} und verlängert sich nicht von selbst."
+    renew: "&a[Verlängern]"
+    renew_hover: "&7Führt /allay link aus: ein Link zum Bezahlen in Telegram"
+  # Unter einem Fehler, nur für Admins: was ihn behebt.
+  hint:
+    subscription: "&8Für Admins: Bezahlen oder verlängern geht in Telegram."
+    link: "&a[/allay link]"
+    LICENSE_INVALID: "&8Für Admins: Dieses Backend kennt license.key nicht. Prüf server.url, oder lösch license.key und führ /allay link aus."
+    PROVIDER_AUTH_FAILED: "&8Für Admins: Der Anbieter hat den Schlüssel aus provider.byok.api_key ({key}) abgelehnt. Prüf ihn in config.yml und führ /allay reload aus."
+    MODEL_NOT_FOUND: "&8Für Admins: Der Anbieter kennt das Modell „{model}“ nicht. Korrigier provider.byok.model in config.yml."
+    MODEL_NO_TOOLS: "&8Für Admins: Das Modell „{model}“ kann keine Werkzeuge aufrufen, und Allay braucht sie. Wähl in provider.byok.model eins, das es kann (die Modellliste von OpenRouter filtert nach „Tools“)."
+    PROVIDER_URL_REJECTED: "&8Für Admins: Das Backend ruft {url} nicht auf. provider.byok.base_url muss https sein und auf eine öffentliche Adresse zeigen."
+
+# /allay locale [Spieler], für Admins: in welcher Sprache ein Spieler Allay liest und warum.
+locale:
+  info: "&f{player}&7: &f{language}&7, {reason}."
+  details: "&8Land per IP: {country} · Spielsprache: {client} · Reihenfolge: {sources}"
+  reason:
+    ip: "nach dem Land der IP"
+    client: "nach der Sprache im Spiel"
+    default: "Standard, weil sonst nichts gepasst hat"
+  unknown: "unbekannt"
+  usage: "&7Verwendung: &f/allay locale <Spieler>"
+  not_found: "&cSpieler {player} ist nicht online."
 
 directions:
   north: "Norden"
