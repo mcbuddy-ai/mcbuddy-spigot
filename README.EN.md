@@ -26,30 +26,28 @@
 - **`/ask recipe <item>`** — open the recipe window for an item
 - **`/ask enchants`** — open the enchanting window for the item in your hand
 - **`/ask villagers`** — open the window of villagers around you and their trades
-- **`/ask reload`** — reload plugin configuration (`mcbuddy.reload`)
+- **`/ask reload`** — reload the plugin’s settings and languages (`mcbuddy.reload`)
 
 ### The Assistant Knows the Game
 
 The assistant decides what it needs to know and asks the plugin while it answers. Ask “what should I do next?” and it looks at your inventory, advancements, and statistics instead of guessing.
 
 - **Player state** — health, food, XP, coordinates, biome, effects, the item in hand
-- **Inventory** — armor, offhand, and the ender chest on request
-- **Items** — which enchantments a book holds, what a potion does, the trim on your armor, what’s in a shulker box or bundle; a weapon’s attack damage and speed as the game’s tooltip shows them, so the assistant can compare two swords
+- **Inventory** — armor, offhand, and the ender chest on request; the assistant also counts what’s inside bundles and shulker boxes
+- **Items** — which enchantments a book holds, what a potion does, the trim on your armor, what’s in a shulker box or bundle, where a map points; a weapon’s attack damage and speed as the game’s tooltip shows them, so the assistant can compare two swords even when one of them sits in a shulker box
 - **Surroundings** — blocks and creatures around you: ores, chests, spawners, mobs
-- **Crosshair** — the block or creature you’re looking at
+- **Crosshair** — everything you’re looking at, in one call: a block with its hardness and drops, a chest’s contents, the bookshelves around an enchanting table, a mob and how many hits it takes, a villager’s trades
 - **World** — time, day, moon phase, weather, difficulty, and the rules that change advice
 - **Statistics and advancements** — playtime, deaths, what you have and what comes next
 - **Recipes** — the exact recipes of your server
 - **Structures and biomes** — the nearest village, stronghold, cherry grove, and so on
 - **Key places** — your respawn point, the world spawn, and where you last died
 - **Death** — where you died, what you dropped, and how long your things will lie there
-- **Trades** — the deals of the villager you’re looking at, and of every villager around: who sells Mending, who sells arrows
+- **Trades** — every villager around: who sells Mending, who sells arrows
 - **Anvil** — the order to put books on that costs least and never hits “Too Expensive!”
-- **Containers** — what’s in the chest in front of you, down to each item’s enchantments, and which chest nearby holds the item you need
-- **Blocks** — hardness, the right tool, what drops with what you hold, crop growth
+- **Finding things** — where the item you need is and how many there are: in your inventory, your ender chest, and the chests nearby, including inside shulker boxes and bundles
 - **Gear** — how much life your tools and armor have left and what needs repair
 - **XP and food** — points to the level you want and what to eat from your inventory right now
-- **Maps, enchanting tables, mobs** — the scale of the map in hand, how many bookshelves count, how many hits a mob takes
 - **Dark spots** — where hostile mobs can spawn around you
 - **Potions and farms** — what you have for brewing, how crops grow, and how many animals are around
 - **Web search** — the assistant looks up fresh facts by itself when it needs them
@@ -57,7 +55,7 @@ The assistant decides what it needs to know and asks the plugin while it answers
 
 ### The Assistant Lends a Hand
 
-For any player, the assistant can show the way (it points your compass and draws a particle trail only you see), tidy your inventory (the hotbar stays put), and remind you of something in 1–120 minutes. It lists and cancels reminders on request, and up to 10 can wait per player. Ask it to ping you, and a sound and particles go off above you so friends can find you. None of this hands out items or changes the world.
+For any player, the assistant can show the way (it points your compass and draws a particle trail only you see; it won’t point at a spot in another dimension and converts the coordinates first), tidy your inventory (the hotbar stays put), and remind you of something in 1–120 minutes. It lists and cancels reminders on request, and up to 10 can wait per player. Ask it to ping you, and a sound and particles go off above you so friends can find you. None of this hands out items or changes the world.
 
 ### Buttons under the answer
 The assistant puts buttons under its answer, and you just click:
@@ -98,6 +96,10 @@ The assistant remembers the last 8 questions and answers and folds older ones in
 ### Privacy
 
 Tools only know about the player who asked and the world around them. Other players show up only as a count nearby: no names, coordinates, or inventories. Every tool can be switched off in `config.yml`.
+
+### Languages
+
+Each player reads the plugin in their own language: English, Russian, Spanish, Portuguese, or German. The plugin picks it by the country of the player’s IP address, then by the game’s language, then falls back to `locales.default`. For the country it uses DB-IP’s free database, which it downloads by itself and refreshes every 30 days, and addresses never leave your server. All texts live in `plugins/mcbuddy-spigot/lang/<language>.yml`: edit them as you like, and add a new language with a file and a line in `locales.countries`. The assistant always answers in the language of the question.
 
 ### Live Status, Like Claude Code
 
@@ -217,32 +219,25 @@ Tools only know about the player who asked and the world around them. Other play
    - Restart the server
    - Configure `plugins/mcbuddy-spigot/config.yml`
 
-### Configuration
+### Settings
 
-Edit `plugins/mcbuddy-spigot/config.yml`. The new keys:
+Edit `plugins/mcbuddy-spigot/config.yml`. It holds only settings: the texts live in `lang/`. Every key has a default.
 
 | Key | What it sets |
 |---|---|
-| `ui.action_bar.format` | The status line: `{spinner}`, `{verb}`, `{elapsed}`, `{input}`, `{output}` |
-| `ui.action_bar.spinner`, `frame_millis` | Spinner frames and speed |
-| `ui.action_bar.verbs`, `askx_verbs`, `verb_seconds` | Verbs and how often they change |
-| `ui.tool_lines.*` | The `⏺`/`⎿` chat lines and tool labels |
+| `server.url` | The MCBuddy backend address |
+| `locales.default`, `locales.sources`, `locales.countries` | The default language, where to take a player’s language from, and which countries get which language |
+| `geoip.*` | DB-IP’s country database: whether it’s on, where to download it, and how often to refresh it (30 days) |
+| `ui.action_bar.*` | The spinner and how often the verb changes; the status text and the verbs live in `lang/` |
+| `ui.tool_lines.enabled` | The `⏺`/`⎿` chat lines |
 | `tools.enabled.<tool>` | Switch a tool on or off |
 | `tools.operator.enabled`, `tools.operator.<tool>` | Operator tools: all at once or one by one |
-| `messages.reminder`, `messages.memory_*`, `messages.forget*` | Texts for reminders and memory |
-| `tools.reminders.max_pending` | How many reminders can wait per player (10) |
-| `tools.notes.max_per_player` | How many notes one player’s notebook can hold (200) |
-| `tools.goals.max_per_player` | How many goals one player can have at once (5) |
-| `tools.locate_biome_radius` | Biome search radius in blocks (2048) |
-| `tools.villager_radius` | Villager search radius in blocks (32) |
+| `tools.reminders.max_pending`, `tools.notes.max_per_player`, `tools.goals.max_per_player` | How many reminders (10), notes (200), and goals (5) one player can have |
+| `tools.locate_structure_radius`, `tools.locate_biome_radius`, `tools.villager_radius` | Search radius for structures (in chunks), biomes, and villagers (in blocks) |
 | `time.zone` | The players’ default time zone (`Europe/Moscow`) |
-| `ui.buttons.*` | How buttons under answers look and their hover texts |
-| `menus.*` | Texts of the recipe, enchanting, and villager windows |
-| `messages.goal_done`, `messages.button_*`, `messages.path_*`, and so on | Texts for goals, buttons, and windows |
-| `tools.locate_structure_radius` | Structure search radius in chunks |
 | `http.tool_timeout` | Seconds a tool may run |
 
-An old `config.yml` keeps working: missing keys take their defaults.
+A `config.yml` from 2.3 still loads: the plugin skips its texts (`messages`, `menus`, `error_messages`, the labels in `ui`), since they now live in `lang/`.
 
 ## Tech Stack
 
@@ -252,6 +247,10 @@ An old `config.yml` keeps working: missing keys take their defaults.
 - **kotlinx-serialization** — JSON serialization for API interaction
 - **OkHttp 5.5** — HTTP client and Server-Sent Events from MCBuddy Server; shaded under `ru.mcbuddy.spigot.libs` so it can’t clash with other plugins
 - **Gradle + Shadow** — build system and fat JAR creation
+
+## Credits
+
+The plugin finds a player’s country by IP with DB-IP’s [IP to Country Lite](https://db-ip.com) database, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ## AI Participation
 
