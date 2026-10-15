@@ -9,6 +9,8 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent
+import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.event.player.PlayerLocaleChangeEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitTask
@@ -23,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class Locales(private val plugin: JavaPlugin) : Listener {
   private val countries = ConcurrentHashMap<UUID, String>()
+  /** Each online player's language as of their join or their last change of the game's language, for other threads. */
+  private val current = ConcurrentHashMap<UUID, String>()
   val geoIp = GeoIp(File(plugin.dataFolder, "geoip"), plugin.logger)
   private var geoIpTask: BukkitTask? = null
 
@@ -52,6 +56,8 @@ class Locales(private val plugin: JavaPlugin) : Listener {
     resolver = LocaleResolver(config.locales, languages.keys)
     sources = config.locales.sources
     plugin.logger.info("Languages: ${languages.keys.sorted().joinToString()}, default ${texts.default}")
+    // The files or the rules may have changed under players already online.
+    plugin.server.onlinePlayers.forEach { current[it.uniqueId] = code(it) }
 
     geoIpTask?.cancel()
     if (!config.geoIp.enabled || "ip" !in config.locales.sources) {
@@ -80,6 +86,9 @@ class Locales(private val plugin: JavaPlugin) : Listener {
 
   fun code(player: Player): String = resolver.resolve(countries[player.uniqueId], player.locale) ?: texts.default
 
+  /** An online player's language without asking Bukkit, so any thread can read it; null when they're offline. */
+  fun known(player: UUID): String? = current[player]
+
   fun explain(player: Player): Choice {
     val country = countries[player.uniqueId]
     val (code, source) = resolver.explain(country, player.locale) ?: (texts.default to "default")
@@ -100,5 +109,16 @@ class Locales(private val plugin: JavaPlugin) : Listener {
   @EventHandler
   fun onQuit(event: PlayerQuitEvent) {
     countries.remove(event.player.uniqueId)
+    current.remove(event.player.uniqueId)
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  fun onJoin(event: PlayerJoinEvent) {
+    current[event.player.uniqueId] = code(event.player)
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  fun onLocaleChange(event: PlayerLocaleChangeEvent) {
+    current[event.player.uniqueId] = resolver.resolve(countries[event.player.uniqueId], event.locale) ?: texts.default
   }
 }

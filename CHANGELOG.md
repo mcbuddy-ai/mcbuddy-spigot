@@ -2,6 +2,10 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 5.2.0
+
+- 📊 **Plan.** With Plan installed, each player's page gets an Allay block: chat mode (also a column in the players table), the language Allay talks to them in, their goals with progress, notes, and waiting reminders. The server's “Plugins Overview” shows who pays for the model, how many players use chat mode with a pie of on and off, and, with a subscription, its plan, paid-until date, and the share of the limit used. Plan is optional.
+
 ## 5.1.0
 
 - 🧩 **PlaceholderAPI.** Write `{papi:name}` in any text in `lang/` to show `%name%` for the player the message is about: the reader, or the asker in a question or answer everyone sees. `{papi:luckperms_prefix}{player}` puts a rank in front of a name. Allay fills only the tags your texts hold, never a `%` or a `{papi:…}` in a player's question or in an answer. Your texts don't change.

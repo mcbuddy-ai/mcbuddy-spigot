@@ -15,6 +15,7 @@
 - 📒 **A notebook, goals with a boss bar, and reminders.**
 - 🪟 **Buttons under answers** and **recipe, enchanting, and villager windows** that only show pictures, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled, picked by the player's country, then by their game's language.
+- 📊 **Plan**, if you have it: chat mode, goals, notes, and language on each player's page, and who pays for the model in the server's overview.
 - 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
 - 🪽 **It sounds like an allay:** a curious hum while it works, a happy chortle with the answer.
 - ✻ **A live status like Claude Code** in the action bar, and a chat line for each tool the assistant uses.
@@ -70,6 +71,10 @@ The country lookup needs no account and sends no address anywhere. On the first 
 | `/allay locale [player]` | Which language a player reads Allay in, and why |
 
 `allay.ask`, `allay.askall`, and `allay.chat` are everyone's by default; `allay.askx`, `allay.askall.nocooldown`, `allay.reload`, and `allay.admin` (status, link, locale, and the subscription notes) belong to operators. `scan_nearby_containers` and `find_item` see through walls: switch them off under `tools.enabled` if your players have claims.
+
+## Plan
+
+With [Plan](https://modrinth.com/plugin/plan) installed, each player's page shows their chat mode, language, goals with progress, notes, and waiting reminders. The server's “Plugins Overview” shows who pays for the model, how many players use chat mode, and, with a subscription, its plan, paid-until date, and the share of the limit used. Never a key, a license, or a price.
 
 ## PlaceholderAPI
 

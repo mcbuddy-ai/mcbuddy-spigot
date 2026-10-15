@@ -17,5 +17,6 @@ allprojects {
       name = "spigotmc-repo"
     }
     maven("https://repo.extendedclip.com/releases/")
+    maven("https://repo.playeranalytics.net/releases/")
   }
 }

@@ -24,6 +24,7 @@ Two Gradle modules. `core` holds everything that doesn't touch a game platform a
 | `spigot/…/Handler.kt`, `Animator.kt`, `Executor.kt` | Runs questions for Bukkit senders. A public question (`visibility: "public"`) and its answer go to everyone online; status, tool lines, buttons, and errors stay with the asker. The action bar, sounds, and particles; `/askx` commands as the player, minus `blocked_commands` |
 | `spigot/…/BillingCommands.kt`, `BillingWatch.kt` | `/allay link`, `/allay status`, `/allay locale`, and the operator's hint under a billing or provider error; the 5-minute poll of the subscription and its notes to operators |
 | `spigot/…/Placeholders.kt` | PlaceholderAPI, optional: what fills `{papi:…}` in texts (`Lang.about`; `Locales.of` sets the reader, `broadcast` the asker) and the `%allay_…%` expansion, registered on the first tick since Allay loads before it |
+| `spigot/…/Plan.kt` | Plan, optional: the `DataExtension` behind Allay's block on players' pages and in “Plugins Overview”. Plan calls it off the server thread, so it reads only thread-safe state (`Locales.known`, `Goals.snapshot`, `Notes.count`, `BillingWatch.status`); registered on the first tick and again on `/plan reload`. Labels are English: Plan's panel is for admins. Never a key, a license, or dollars there |
 | `spigot/…/ChatMode.kt`, `Locales.kt`, `MemoryCommands.kt` | Chat mode's events, the join reminder, the tip under a second `/ask`; each player's language from their login; `/allay new`, `/allay memory`, `/allay forget` |
 | `spigot/…/tools/` | The client tools on Bukkit. They run on the server thread and see only the asking player and the world around them; other players appear only as a count. Each can be switched off in `config.yml`. `ItemStacks.kt` turns Bukkit items into `ItemData`. `ActionTools` change nothing that matters (compass, sorting, a ping, reminders); `NotebookTools` keep notes with coordinates; `LookTools` (`look_at`) reads whatever is under the crosshair, `InspectTools` searches and inspects items and containers, `CareTools` gear, XP, food; `GoalTools` and `Goals.kt` the goals' boss bars and events; `OperatorTools` change the game and are operator-only |
 | `spigot/…/Clicks.kt`, `menus/` | Buttons under answers (`add_buttons`, books, the chat mode tip) and what each does when pressed; the recipe, enchanting, villager, and settings windows |
@@ -62,10 +63,10 @@ Allay was MCBuddy until 4.0.0. `McBuddyMigration` (core) runs first in `onEnable
 1. `./gradlew build`: the tests and the jar.
 2. A real Paper with the jar, started and stopped by the script, which fails on any error about the plugin:
    ```sh
-   python3 -I .claude/scripts/paper_smoke.py --game 26.3 --plugin spigot/build/libs/allay-spigot-dev.jar --modrinth placeholderapi --command "papi list" --expect "registered internal expansion: allay"
+   python3 -I .claude/scripts/paper_smoke.py --game 26.3 --plugin spigot/build/libs/allay-spigot-dev.jar --modrinth placeholderapi --modrinth plan --command "papi list" --expect "registered internal expansion: allay" --expect "Registered extension: Allay" --ignore 'Plan\] Failed to enable geolocation'
    ```
    Pass `--game` the version the project targets, and `--build` to pin a Paper build. The script downloads Paper and Modrinth plugins into `~/.cache/paper-smoke` and keeps the server folder when something fails.
-3. A question needs a backend and a player. After a release reaches Moonlands, the log shows `Allay X.Y.Z is on`, `papi list` lists `allay`, and the owner asks `/ask` once. Allay builds against the Spigot API, so it runs on Spigot too; the check uses Paper, which Moonlands runs.
+3. A question needs a backend and a player. After a release reaches Moonlands, the log shows `Allay X.Y.Z is on`, `papi list` lists `allay`, and the owner asks `/ask` once. Plan's server values show up right away; a player's block fills on their next join or leave. Allay builds against the Spigot API, so it runs on Spigot too; the check uses Paper, which Moonlands runs.
 
 ## Versions
 
@@ -73,6 +74,7 @@ Where the versions live, for `/update-deps` and `/update-minecraft` (both in `.c
 
 - The game: `org.spigotmc:spigot-api` (twice) and `gameVersions` (Modrinth) and `platformVersions` (Hangar) in `spigot/build.gradle.kts`, and `api-version` in `spigot/src/main/resources/plugin.yml`. `ToolsTest` and `ProtocolTest` spell out version strings. What Allay knows about the game (`Mechanics`, `Items`, `Facts`, the tools' tables) comes from the game: read the new jar when the version moves.
 - PlaceholderAPI: `compileOnly("me.clip:placeholderapi:…")` in `spigot/build.gradle.kts`, from `repo.extendedclip.com` (root `build.gradle.kts`).
+- Plan: `compileOnly("com.djrapitops:plan-api:…")` in `spigot/build.gradle.kts`, from `repo.playeranalytics.net`. The API can run ahead of the Plan servers use: `Plan.REQUIRED` lists the capabilities Allay relies on; graphs and statistics need Plan 5.9.
 - Java: `jvmToolchain` in both modules; CI's `setup-java`.
 - Gradle in `gradle/wrapper/gradle-wrapper.properties`; Kotlin and the Gradle plugins in the root `build.gradle.kts`; libraries (kotlinx, OkHttp, the MaxMind reader, SnakeYAML) in each module's `dependencies`, relocated by `shadowJar`.
 

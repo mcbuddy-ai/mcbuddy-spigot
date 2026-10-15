@@ -20,6 +20,9 @@ class PlayerSettings(private val folder: File, private val log: Logger) {
 
   fun of(player: UUID): Settings = players[player.toString()] ?: Settings()
 
+  /** How many players have chat mode on; safe from any thread. */
+  fun chatModeCount(): Int = players.values.count { it.chat_mode }
+
   fun update(player: UUID, change: (Settings) -> Settings): Settings {
     val settings = players.compute(player.toString()) { _, old -> change(old ?: Settings()) }!!
     save()

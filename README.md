@@ -18,6 +18,7 @@
 - 📒 **A notebook, goals, and reminders.** “Remember there's an arrow trader here”, “set a goal to collect 16 diamonds” (a boss bar at the top), “remind me in 5 minutes”.
 - 🪟 **Buttons and windows.** Answers end with buttons: a follow-up question, the way to a spot, a recipe, enchantments, the villagers around. The recipe, enchanting, and villager windows show pictures only, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled; the plugin picks one by the player's country, then by their game's language. The assistant answers in the language of the question.
+- 📊 **Plan**, if you have it: chat mode, goals, notes, and language on each player's page, and who pays for the model in the server's overview.
 - 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
 - 🪽 **It sounds like an allay.** A curious hum while it works, a happy chortle with the answer, a soft sigh when something fails, each a little different from the last.
 - ✻ **A live status like Claude Code:** a spinner and a changing verb in the action bar, and a chat line for each tool the assistant uses.
@@ -161,6 +162,15 @@ With [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi) installed, All
 | `%allay_language%` | The language Allay talks to the player in, like `ru` |
 
 The other way round, write `{papi:name}` in any text in `lang/` to show `%name%` for the player the message is about: the reader for most messages, the asker in a question or answer everyone sees. So `{papi:luckperms_prefix}{player}` puts the asker's rank in front of their name. Allay fills only the tags the text itself holds: a `%` or a `{papi:…}` in a player's question or in an answer stays as written. Without PlaceholderAPI the tags show nothing.
+
+## Plan
+
+With [Plan](https://modrinth.com/plugin/plan) installed, Allay adds its own block to Plan's pages:
+
+- **Each player's page:** whether chat mode is on (also a column in the players table), the language Allay talks to them in, their goals with progress, and how many notes and waiting reminders they have.
+- **The server's “Plugins Overview”:** who pays for the model, how many players use chat mode, and a pie of chat mode on and off. With a subscription, its plan, the paid-until date, and how much of the limit is used, as a percentage.
+
+Plan's labels are in English, since its panel is for admins. Allay never shows a key, a license, or prices there.
 
 ## Settings
 

@@ -43,6 +43,9 @@ class Goals(private val plugin: Plugin, private val locales: chat.allay.spigot.L
   /** How many goals an online player has, without touching the disk; safe from any thread. */
   fun count(uuid: UUID): Int = books[uuid]?.all()?.size ?: 0
 
+  /** A player's goals, online or not, without loading them for good; safe from any thread. */
+  fun snapshot(uuid: UUID): List<Goal> = books[uuid]?.all() ?: files.peek(uuid)
+
   fun start() {
     ticker = plugin.server.scheduler.runTaskTimer(plugin, Runnable { plugin.server.onlinePlayers.forEach(::poll) }, 20L, 20L)
     plugin.server.onlinePlayers.forEach(::show)

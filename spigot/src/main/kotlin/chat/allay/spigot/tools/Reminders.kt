@@ -32,6 +32,9 @@ class Reminders(private val plugin: Plugin, private val locales: chat.allay.spig
     }
   }
 
+  /** How many reminders a player has waiting; they live only while the player is online. Safe from any thread. */
+  fun pending(uuid: UUID): Int = books[uuid]?.list()?.size ?: 0
+
   fun cancelAll() {
     books.values.forEach(ReminderBook::cancelAll)
     books.clear()

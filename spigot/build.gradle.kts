@@ -12,6 +12,7 @@ dependencies {
   implementation(project(":core"))
   compileOnly("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
   compileOnly("me.clip:placeholderapi:2.12.3")
+  compileOnly("com.djrapitops:plan-api:5.9-R1.3")
 
   testImplementation("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
   testImplementation(kotlin("test"))

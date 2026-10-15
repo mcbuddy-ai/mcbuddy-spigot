@@ -109,6 +109,9 @@ class GoalFiles(dataFolder: File, private val log: Logger) {
     Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
   }
 
+  /** The goals on disk without touching the file, for readers on other threads; a broken file reads as none. */
+  fun peek(uuid: UUID): List<Goal> = runCatching { json.decodeFromString<List<Goal>>(File(folder, "$uuid.json").readText()) }.getOrDefault(emptyList())
+
   fun load(uuid: UUID): List<Goal> {
     val file = File(folder, "$uuid.json")
     if (!file.exists()) return emptyList()

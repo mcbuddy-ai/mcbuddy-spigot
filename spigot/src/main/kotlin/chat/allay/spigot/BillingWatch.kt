@@ -23,6 +23,9 @@ class BillingWatch(
 ) {
   private var task: BukkitTask? = null
 
+  /** The subscription as the last poll saw it; null with a key of the server's own or before the first poll. */
+  @Volatile var status: LicenseStatus? = null; private set
+
   fun start() {
     stop()
     task = plugin.server.scheduler.runTaskTimerAsynchronously(plugin, Runnable(::poll), 20L * 30, 20L * 60 * 5)
@@ -38,6 +41,7 @@ class BillingWatch(
     val status = runCatching { billing.status() }
       .onFailure { plugin.logger.fine("Couldn't check the subscription: ${credentials.scrub(it.toString())}") }
       .getOrNull() ?: return
+    this.status = status
     val notices = announcements.check(status)
     if (notices.isNotEmpty() && plugin.isEnabled) plugin.server.scheduler.runTask(plugin, Runnable { notices.forEach(::announce) })
   }

@@ -61,6 +61,10 @@ class Notes(dataFolder: File, private val log: Logger, private val max: () -> In
 
   fun of(uuid: UUID): NoteBook = books.computeIfAbsent(uuid) { NoteBook(load(it), max) }
 
+  /** How many notes a player keeps, read from disk without loading the notebook when it isn't open; safe from any thread. */
+  fun count(uuid: UUID): Int = books[uuid]?.all()?.size
+    ?: runCatching { json.decodeFromString<List<Note>>(File(folder, "$uuid.json").readText()).size }.getOrDefault(0)
+
   fun save(uuid: UUID) {
     val book = books[uuid] ?: return
     folder.mkdirs()
