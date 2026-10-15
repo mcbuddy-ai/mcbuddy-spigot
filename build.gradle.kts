@@ -16,5 +16,6 @@ allprojects {
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
       name = "spigotmc-repo"
     }
+    maven("https://repo.extendedclip.com/releases/")
   }
 }

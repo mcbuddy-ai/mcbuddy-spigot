@@ -31,9 +31,13 @@ class Texts(private val languages: Map<String, Map<String, Any>>, default: Strin
 
 /**
  * One reader's language. Texts use `&` colors, `{name}` placeholders, and plurals as `{n|stack|stacks}`,
- * with as many forms as the language has (Russian takes three: `{n|стак|стака|стаков}`).
+ * with as many forms as the language has (Russian takes three: `{n|стак|стака|стаков}`). `{papi:name}` asks
+ * [external] for another plugin's placeholder; without one it shows nothing.
  */
-class Lang(val code: String, private val texts: Texts) {
+class Lang(val code: String, private val texts: Texts, private val external: ((String) -> String?)? = null) {
+  /** The same language with `{papi:…}` filled by [resolve], for the player the message is about. */
+  fun about(resolve: ((String) -> String?)?): Lang = Lang(code, texts, resolve)
+
   /** The text with its placeholders filled; an empty string means the message is off. Unknown keys come back as the key. */
   fun text(key: String, vararg values: Pair<String, Any?>): String = fill(texts.raw(code, key)?.let { it as? String ?: (it as List<*>).joinToString("\n") } ?: key, values.toMap())
 
@@ -47,8 +51,12 @@ class Lang(val code: String, private val texts: Texts) {
 
   fun plural(n: Long, forms: List<String>): String = Plurals.pick(code, n, forms)
 
-  /** One pass, so a value that contains braces (a player's note) is never read as a placeholder. */
+  /**
+   * One pass, so a value that contains braces (a player's note, the model's answer) is never read as a
+   * placeholder, `{papi:…}` included: only the template itself can ask another plugin for anything.
+   */
   private fun fill(template: String, values: Map<String, Any?>): String = PLACEHOLDER.replace(template) { match ->
+    match.groups[3]?.let { return@replace external?.invoke(it.value).orEmpty() }
     val name = match.groupValues[1]
     val value = values[name] ?: return@replace match.value
     val forms = match.groupValues[2]
@@ -56,7 +64,7 @@ class Lang(val code: String, private val texts: Texts) {
   }
 
   private companion object {
-    val PLACEHOLDER = Regex("\\{(\\w+)((?:\\|[^|{}]*)*)}")
+    val PLACEHOLDER = Regex("\\{(\\w+)((?:\\|[^|{}]*)*)}|\\{papi:([^{}\\s]+)}")
   }
 }
 

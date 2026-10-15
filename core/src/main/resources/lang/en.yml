@@ -2,6 +2,7 @@
 # missing here comes from locales.default, then from English. An empty text ("") turns
 # a message off. Colors use & codes (&a, &7, &f…). Placeholders look like {name};
 # plurals look like {count|stack|stacks}: the form is picked by the number in {count}.
+# With PlaceholderAPI, {papi:name} shows %name% for the player the message is about.
 
 status:
   # The live line in the action bar while the assistant works, like Claude Code:

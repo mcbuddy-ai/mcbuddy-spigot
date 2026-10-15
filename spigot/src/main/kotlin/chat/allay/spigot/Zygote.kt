@@ -53,6 +53,7 @@ class Zygote : JavaPlugin(), TabCompleter {
   private lateinit var announcements: Announcements
   private lateinit var billing: BillingCommands
   private var watch: BillingWatch? = null
+  private var placeholders: AutoCloseable? = null
   private val buttons = ButtonStore()
   private val locales = Locales(this)
 
@@ -92,6 +93,10 @@ class Zygote : JavaPlugin(), TabCompleter {
     listOf(goals, deaths, menus, locales, chat).forEach { server.pluginManager.registerEvents(it, this) }
     goals.start()
     initializeComponents()
+    // Allay loads at STARTUP, before PlaceholderAPI; by the first tick every plugin is on.
+    server.scheduler.runTask(this, Runnable {
+      if (Placeholders.available) placeholders = Placeholders.register(this, settings, goals, locales) { handler }
+    })
     listOf("ask", "askx", "askall", "allay").map(::getCommand).forEach {
       it?.setExecutor(this)
       it?.tabCompleter = this
@@ -157,6 +162,7 @@ class Zygote : JavaPlugin(), TabCompleter {
   }
 
   override fun onDisable() {
+    placeholders?.close()
     if (::handler.isInitialized) handler.cancelAll()
     watch?.stop()
     if (::reminders.isInitialized) reminders.cancelAll()

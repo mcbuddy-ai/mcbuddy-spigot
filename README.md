@@ -18,6 +18,7 @@
 - 📒 **A notebook, goals, and reminders.** “Remember there's an arrow trader here”, “set a goal to collect 16 diamonds” (a boss bar at the top), “remind me in 5 minutes”.
 - 🪟 **Buttons and windows.** Answers end with buttons: a follow-up question, the way to a spot, a recipe, enchantments, the villagers around. The recipe, enchanting, and villager windows show pictures only, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled; the plugin picks one by the player's country, then by their game's language. The assistant answers in the language of the question.
+- 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
 - 🪽 **It sounds like an allay.** A curious hum while it works, a happy chortle with the answer, a soft sigh when something fails, each a little different from the last.
 - ✻ **A live status like Claude Code:** a spinner and a changing verb in the action bar, and a chat line for each tool the assistant uses.
 - 🔒 **Private and safe.** Tools know only the player who asked; other players show up only as a count. Tools that give items or change the world are offered to operators only, and the plugin checks again before running one. Every tool can be switched off.
@@ -147,6 +148,19 @@ Chat mode stays on between visits; the plugin reminds you when you join. `player
 | `allay.askall.nocooldown` | operators | Asking everyone without the cooldown |
 | `allay.reload` | operators | `/allay reload` |
 | `allay.admin` | operators | `/allay status`, `/allay link`, `/allay locale`, notes about the subscription, and the hint under an error that a payment or `config.yml` fixes |
+
+## PlaceholderAPI
+
+With [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi) installed, Allay adds:
+
+| Placeholder | What it shows |
+|---|---|
+| `%allay_chat_mode%` | Whether the player's chat mode is on, as PlaceholderAPI's true or false |
+| `%allay_thinking%` | Whether Allay is answering the player right now |
+| `%allay_goals%` | How many goals the player has |
+| `%allay_language%` | The language Allay talks to the player in, like `ru` |
+
+The other way round, write `{papi:name}` in any text in `lang/` to show `%name%` for the player the message is about: the reader for most messages, the asker in a question or answer everyone sees. So `{papi:luckperms_prefix}{player}` puts the asker's rank in front of their name. Allay fills only the tags the text itself holds: a `%` or a `{papi:…}` in a player's question or in an answer stays as written. Without PlaceholderAPI the tags show nothing.
 
 ## Settings
 

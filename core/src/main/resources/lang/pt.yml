@@ -2,6 +2,7 @@
 # chave que falta aqui vem de locales.default e depois do inglês. Um texto vazio ("")
 # desliga a mensagem. As cores usam códigos & (&a, &7, &f…). Substituições são como {name};
 # plurais são como {count|pilha|pilhas}: a forma depende do número em {count}.
+# Com o PlaceholderAPI, {papi:name} mostra %name% do jogador de quem a mensagem fala.
 
 status:
   # A linha viva na barra de ação enquanto o assistente trabalha, como no Claude Code:

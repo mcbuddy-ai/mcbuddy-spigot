@@ -72,8 +72,11 @@ class Locales(private val plugin: JavaPlugin) : Listener {
   private fun bundled(code: String): Map<String, Any> =
     plugin.getResource("lang/$code.yml")?.let { stream -> InputStreamReader(stream, Charsets.UTF_8).use(Texts::read) }.orEmpty()
 
-  /** The language of whoever reads a message; the console and command blocks read the default. */
-  fun of(sender: CommandSender?): Lang = texts.lang((sender as? Player)?.let { code(it) })
+  /**
+   * The language of whoever reads a message; the console and command blocks read the default. A player's
+   * `{papi:…}` placeholders are their own.
+   */
+  fun of(sender: CommandSender?): Lang = texts.lang((sender as? Player)?.let { code(it) }).about(Placeholders.about(sender))
 
   fun code(player: Player): String = resolver.resolve(countries[player.uniqueId], player.locale) ?: texts.default
 

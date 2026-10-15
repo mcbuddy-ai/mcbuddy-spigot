@@ -15,6 +15,7 @@
 - 📒 **A notebook, goals with a boss bar, and reminders.**
 - 🪟 **Buttons under answers** and **recipe, enchanting, and villager windows** that only show pictures, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled, picked by the player's country, then by their game's language.
+- 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
 - 🪽 **It sounds like an allay:** a curious hum while it works, a happy chortle with the answer.
 - ✻ **A live status like Claude Code** in the action bar, and a chat line for each tool the assistant uses.
 - 🔒 **Private and safe.** Tools know only the player who asked; other players show up only as a count. Tools that give items or change the world go to operators only. Every tool can be switched off.
@@ -69,6 +70,12 @@ The country lookup needs no account and sends no address anywhere. On the first 
 | `/allay locale [player]` | Which language a player reads Allay in, and why |
 
 `allay.ask`, `allay.askall`, and `allay.chat` are everyone's by default; `allay.askx`, `allay.askall.nocooldown`, `allay.reload`, and `allay.admin` (status, link, locale, and the subscription notes) belong to operators. `scan_nearby_containers` and `find_item` see through walls: switch them off under `tools.enabled` if your players have claims.
+
+## PlaceholderAPI
+
+With [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi) installed, Allay adds `%allay_chat_mode%` and `%allay_thinking%` (true or false: chat mode is on, Allay is answering right now), `%allay_goals%` (how many goals the player has), and `%allay_language%` (the language Allay talks to them in).
+
+In any text in `lang/`, `{papi:name}` shows `%name%` for the player the message is about: the reader, or the asker in a question everyone sees. Allay fills only the tags the text itself holds, so a `%` in a player's question stays a percent sign.
 
 ## Links
 

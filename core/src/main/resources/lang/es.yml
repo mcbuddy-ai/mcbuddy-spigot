@@ -2,6 +2,7 @@
 # falte aquí se toma de locales.default y luego del inglés. Un texto vacío ("") desactiva
 # el mensaje. Los colores usan códigos & (&a, &7, &f…). Las variables tienen la forma {name};
 # los plurales, {count|stack|stacks}: el número de {count} elige la forma.
+# Con PlaceholderAPI, {papi:name} muestra %name% del jugador del que habla el mensaje.
 
 status:
   # La línea en vivo sobre la barra rápida mientras el asistente trabaja, como en Claude Code:

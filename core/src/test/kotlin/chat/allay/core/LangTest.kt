@@ -30,6 +30,17 @@ class LangTest {
     assertEquals("ru", texts.lang("fr").code)
   }
 
+  @Test fun `papi placeholders come from the template only`() {
+    val texts = Texts(mapOf("en" to mapOf("q" to "{papi:prefix}{player} asks: {text}", "n" to "{n} {n|stack|stacks}")), "en")
+    val papi = texts.lang("en").about { name -> if (name == "prefix") "[VIP] " else "?" }
+    assertEquals("[VIP] Steve asks: hi", papi.text("q", "player" to "Steve", "text" to "hi"))
+    // A player's words or the model's answer never ask another plugin for anything.
+    assertEquals("[VIP] Steve asks: {papi:prefix}", papi.text("q", "player" to "Steve", "text" to "{papi:prefix}"))
+    // Without PlaceholderAPI the tag shows nothing; texts without it read as before.
+    assertEquals("Steve asks: hi", texts.lang("en").text("q", "player" to "Steve", "text" to "hi"))
+    assertEquals("2 stacks", papi.text("n", "n" to 2))
+  }
+
   @Test fun `languages come from the country first, then the game`() {
     val resolver = LocaleResolver(Config.Locales("en", listOf("ip", "client"), mapOf("ru" to listOf("RU", "KZ"), "pt" to listOf("BR"))), setOf("en", "ru", "pt", "de"))
     assertEquals("ru", resolver.resolve("kz", "en_us"))

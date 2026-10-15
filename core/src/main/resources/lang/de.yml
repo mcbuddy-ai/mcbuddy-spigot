@@ -2,6 +2,7 @@
 # Schlüssel, nimmt das Plugin ihn aus locales.default und dann aus dem Englischen. Ein leerer
 # Text ("") schaltet eine Nachricht ab. Farben sind &-Codes (&a, &7, &f…). Platzhalter sehen
 # aus wie {name}, Mehrzahl wie {count|Stapel|Stapel}: Die Zahl in {count} wählt die Form.
+# Mit PlaceholderAPI zeigt {papi:name} den Wert %name% für den Spieler, um den es geht.
 
 status:
   # Die Live-Zeile über der Schnellleiste, während der Assistent arbeitet, wie bei Claude Code:

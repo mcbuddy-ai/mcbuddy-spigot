@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import chat.allay.spigot.Minecraft.formatMessage
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -48,6 +49,9 @@ class Handler(
     return true
   }
 
+  /** Whether Allay is answering this player right now; safe from any thread. */
+  fun busy(player: UUID) = runs.containsKey(player.toString())
+
   fun cancelAll() {
     runs.values.forEach(Run::cancel)
     runs.clear()
@@ -78,7 +82,7 @@ class Handler(
     }
     plugin.logger.info("🔄 Handling ${if (public) "public " else ""}${mode.wire} question")
 
-    if (public) broadcast("public.question", sender.name, message)
+    if (public) broadcast("public.question", sender, message)
     if (configuration.ui.chatStatusEnabled) {
       lang.send(sender, if (mode == Run.Mode.ASK) "messages.thinking" else "messages.askx_thinking")
     }
@@ -126,7 +130,7 @@ class Handler(
     if (run.mode == Run.Mode.ASK) {
       player?.let(animator::playSuccessSound)
       if (run.public) {
-        broadcast("public.answer", sender.name, outcome.answer, colored = true)
+        broadcast("public.answer", sender, outcome.answer, colored = true)
         everyoneBut(sender).forEach(animator::playPublicAnswerSound)
       } else {
         sender.sendMessage(labeled(run, outcome.answer))
@@ -155,12 +159,12 @@ class Handler(
 
   /**
    * A line every player online reads in their own language, and the console too. The question is the player's
-   * own text, so its `&` stays as typed; the answer is Allay's and may use colors.
+   * own text, so its `&` stays as typed; the answer is Allay's and may use colors. `{papi:…}` is the asker's.
    */
-  private fun broadcast(key: String, asker: String, text: String, colored: Boolean = false) {
+  private fun broadcast(key: String, asker: CommandSender, text: String, colored: Boolean = false) {
     val readers = plugin.server.onlinePlayers + plugin.server.consoleSender
     readers.forEach { reader ->
-      val template = locales.of(reader).text(key, "player" to asker, "text" to Minecraft.SLOT)
+      val template = locales.of(reader).about(Placeholders.about(asker)).text(key, "player" to asker.name, "text" to Minecraft.SLOT)
       reader.sendMessage(if (colored) formatMessage(template.replace(Minecraft.SLOT, text)) else Minecraft.withText(template, text))
     }
   }

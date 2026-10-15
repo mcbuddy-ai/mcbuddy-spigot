@@ -2,6 +2,11 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 5.1.0
+
+- 🧩 **PlaceholderAPI.** Write `{papi:name}` in any text in `lang/` to show `%name%` for the player the message is about: the reader, or the asker in a question or answer everyone sees. `{papi:luckperms_prefix}{player}` puts a rank in front of a name. Allay fills only the tags your texts hold, never a `%` or a `{papi:…}` in a player's question or in an answer. Your texts don't change.
+- 📊 **`%allay_chat_mode%`, `%allay_thinking%`, `%allay_goals%`, and `%allay_language%`** for TAB, scoreboards, and other plugins. PlaceholderAPI is optional; without it the tags show nothing.
+
 ## 5.0.2
 
 - ✦ **Your own line in chat mode gets the star too.** What you write to Allay in chat mode now shows as “✦ your question”, without your name, so your side of the talk matches Allay's. The text has a new key, `chat_mode.own`, so servers with their own `lang/` files get it without editing them; the old `chat_mode.echo` is no longer read.

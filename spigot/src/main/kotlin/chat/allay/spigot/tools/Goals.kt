@@ -40,6 +40,9 @@ class Goals(private val plugin: Plugin, private val locales: chat.allay.spigot.L
 
   fun of(uuid: UUID): GoalBook = books.computeIfAbsent(uuid) { GoalBook(files.load(it), max) }
 
+  /** How many goals an online player has, without touching the disk; safe from any thread. */
+  fun count(uuid: UUID): Int = books[uuid]?.all()?.size ?: 0
+
   fun start() {
     ticker = plugin.server.scheduler.runTaskTimer(plugin, Runnable { plugin.server.onlinePlayers.forEach(::poll) }, 20L, 20L)
     plugin.server.onlinePlayers.forEach(::show)
