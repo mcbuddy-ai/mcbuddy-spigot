@@ -5,6 +5,7 @@ The “Release” workflow takes the notes for a version from its section here, 
 ## 5.2.0
 
 - 📊 **Plan.** With Plan installed, each player's page gets an Allay block: chat mode (also a column in the players table), the language Allay talks to them in, their goals with progress, notes, and waiting reminders. The server's “Plugins Overview” shows who pays for the model, how many players use chat mode with a pie of on and off, and, with a subscription, its plan, paid-until date, and the share of the limit used. Plan is optional.
+- 👻 **Vanish support.** A player that SuperVanish, PremiumVanish, Essentials, or another vanish plugin hides no longer shows through Allay: not in the online count, not among the players the assistant sees nearby or looks at, not in `/allay locale` or its completion. Only the player themself and operators still see them. A vanished player's `/askall` or `?` question goes private instead, with a new line, `public.vanished`, telling them why.
 
 ## 5.1.0
 

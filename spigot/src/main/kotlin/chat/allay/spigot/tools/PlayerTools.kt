@@ -108,7 +108,7 @@ object PlayerTools {
       if (notable.containsMatchIn(type.name)) found += block to x * x + (y - origin.blockY) * (y - origin.blockY) + z * z
     }
     val seen = world.getNearbyEntities(origin, ENTITY_RADIUS, ENTITY_RADIUS, ENTITY_RADIUS)
-      .filter { it != player && (it is LivingEntity) }
+      .filter { it != player && (it is LivingEntity) && chat.allay.spigot.Vanish.visible(player, it) }
       .map { Facts.Seen(short(it.type.key.toString()), it.location.distance(origin), it is Enemy, it is Player) }
     val entities = Facts.entities(seen)
     val result = buildJsonObject {

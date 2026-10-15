@@ -257,6 +257,7 @@ public:
   answer: "&3✦ &bAllay &8»&r {text}"
   failed: "&8✦ Allay couldn't answer this time."
   cooldown: "&7You can ask everyone again in {seconds} {seconds|second|seconds}."
+  vanished: "&7You're vanished, so this one stays between you and Allay."
 
 # Buttons under answers. Only the player who got a button can press it; it stops working after an hour.
 buttons:

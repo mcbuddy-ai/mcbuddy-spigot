@@ -114,7 +114,8 @@ class BillingCommands(
   /** `/allay locale [player]`: the language a player reads and what picked it, as in Mo’Joins. */
   fun locale(sender: CommandSender, name: String?) {
     val lang = locales.of(sender)
-    val target = name?.let(plugin.server::getPlayerExact) ?: (sender as? Player).takeIf { name == null }
+    // A vanished player reads as not online to anyone they're hidden from.
+    val target = name?.let(plugin.server::getPlayerExact)?.takeIf { Vanish.visible(sender, it) } ?: (sender as? Player).takeIf { name == null }
     if (target == null) {
       return if (name == null) lang.send(sender, "locale.usage") else lang.send(sender, "locale.not_found", "player" to name)
     }

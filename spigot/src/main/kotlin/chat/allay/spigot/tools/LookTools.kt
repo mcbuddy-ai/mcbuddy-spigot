@@ -56,7 +56,7 @@ object LookTools {
     override fun run(context: ToolContext, args: JsonObject): ToolOutput {
       val player = context.requirePlayer()
       val eye = player.eyeLocation
-      val entity = player.world.rayTraceEntities(eye, eye.direction, ENTITY_RANGE) { it != player }?.hitEntity
+      val entity = player.world.rayTraceEntities(eye, eye.direction, ENTITY_RANGE) { it != player && chat.allay.spigot.Vanish.visible(player, it) }?.hitEntity
       val block = player.getTargetBlockExact(BLOCK_RANGE)
       val entityCloser = entity != null && (block == null || entity.location.distance(eye) < block.location.add(0.5, 0.5, 0.5).distance(eye))
       return when {

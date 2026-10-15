@@ -19,7 +19,7 @@
 - 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
 - 🪽 **It sounds like an allay:** a curious hum while it works, a happy chortle with the answer.
 - ✻ **A live status like Claude Code** in the action bar, and a chat line for each tool the assistant uses.
-- 🔒 **Private and safe.** Tools know only the player who asked; other players show up only as a count. Tools that give items or change the world go to operators only. Every tool can be switched off.
+- 🔒 **Private and safe.** Tools know only the player who asked; other players show up only as a count. Tools that give items or change the world go to operators only. Every tool can be switched off. Vanished players (SuperVanish, PremiumVanish, Essentials) stay hidden from everyone but themselves and operators, and their public questions stay private.
 
 ## Install
 

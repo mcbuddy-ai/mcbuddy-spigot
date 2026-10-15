@@ -250,7 +250,7 @@ class Zygote : JavaPlugin(), TabCompleter {
         if (sender.hasPermission(Permissions.ADMIN)) addAll(listOf("status", "link", "locale"))
       }
       args.size == 2 && args[0].equals("locale", ignoreCase = true) && sender.hasPermission(Permissions.ADMIN) ->
-        server.onlinePlayers.map { it.name }
+        Vanish.visibleTo(sender, server.onlinePlayers).map { it.name }
       args.size == 2 && args[0].lowercase() in setOf("chat", "hints") -> listOf("on", "off")
       args.size == 2 && args[0].equals("forget", ignoreCase = true) -> listOf("all")
       args.size == 2 && args[0].equals("recipe", ignoreCase = true) ->

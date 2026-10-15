@@ -63,6 +63,11 @@ class Handler(
    */
   fun ask(sender: CommandSender, message: String, mode: Run.Mode, public: Boolean = false, tip: Boolean = false): Boolean {
     val lang = locales.of(sender)
+    // A question everyone sees would show a vanished player, so it stays theirs, with a line saying why.
+    if (public && message.isNotBlank() && sender is Player && Vanish.vanished(sender)) {
+      lang.send(sender, "public.vanished")
+      return ask(sender, message, mode, public = false, tip = tip)
+    }
     if (message.isBlank()) {
       lang.send(sender, when {
         mode == Run.Mode.ASKX -> "messages.askx_usage"

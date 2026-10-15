@@ -257,6 +257,7 @@ public:
   answer: "&3✦ &bAllay &8»&r {text}"
   failed: "&8✦ Allay konnte diesmal nicht antworten."
   cooldown: "&7Du kannst in {seconds} {seconds|Sekunde|Sekunden} wieder alle fragen."
+  vanished: "&7Du bist unsichtbar, darum bleibt diese Frage zwischen dir und Allay."
 
 # Knöpfe unter Antworten. Nur wer den Knopf bekommen hat, kann ihn drücken; nach einer Stunde geht er nicht mehr.
 buttons:

@@ -65,7 +65,8 @@ object WorldTools {
     override fun run(context: ToolContext, args: JsonObject): ToolOutput {
       val server = Bukkit.getServer()
       val version = version(server.bukkitVersion)
-      val online = server.onlinePlayers.size.toLong()
+      // Vanished players stay out of the count, unless the asker is one of them or an operator.
+      val online = chat.allay.spigot.Vanish.visibleTo(context.sender, server.onlinePlayers).size.toLong()
       val result = buildJsonObject {
         put("software", server.name)
         put("version", version)

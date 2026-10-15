@@ -257,6 +257,7 @@ public:
   answer: "&3✦ &bAllay &8»&r {text}"
   failed: "&8✦ Allay no pudo responder esta vez."
   cooldown: "&7Podrás preguntar a todos otra vez en {seconds} {seconds|segundo|segundos}."
+  vanished: "&7Estás invisible, así que esta pregunta queda entre tú y Allay."
 
 # Botones bajo las respuestas. Solo puede pulsarlos el jugador que los recibió; dejan de funcionar al cabo de una hora.
 buttons:

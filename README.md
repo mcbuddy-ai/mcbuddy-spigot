@@ -23,6 +23,7 @@
 - 🪽 **It sounds like an allay.** A curious hum while it works, a happy chortle with the answer, a soft sigh when something fails, each a little different from the last.
 - ✻ **A live status like Claude Code:** a spinner and a changing verb in the action bar, and a chat line for each tool the assistant uses.
 - 🔒 **Private and safe.** Tools know only the player who asked; other players show up only as a count. Tools that give items or change the world are offered to operators only, and the plugin checks again before running one. Every tool can be switched off.
+- 👻 **Vanish stays vanish.** A player hidden by SuperVanish, PremiumVanish, Essentials, or any plugin that marks them `vanished` drops out of the online count, what the assistant sees around a player, and `/allay locale`, for everyone but themself and operators. Their `/askall` or `?` question stays private, with a line telling them why.
 
 ## Try it live
 
