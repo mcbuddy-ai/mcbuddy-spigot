@@ -54,7 +54,27 @@ Allay was MCBuddy until 4.0.0. `McBuddyMigration` (core) runs first in `onEnable
 
 - `./gradlew build` runs both modules' tests and builds `spigot/build/libs/allay-spigot-<version>.jar`, shaded; Java 25. Nothing in the repo holds the version: local builds are `dev`, CI builds on `master` and pull requests are `dev-<sha>`.
 - Allay sounds like an allay: `ENTITY_ALLAY_AMBIENT_WITH_ITEM` while thinking, `ENTITY_ALLAY_ITEM_GIVEN` with the answer, `ENTITY_ALLAY_AMBIENT_WITHOUT_ITEM` on errors, each pitch moved by up to `ui.sounds.pitch_variation`. Readers of a public answer hear the answer sound at half volume (`ui.sounds.public_answer`). The game plays these quietly, so 1.0 is the mob's own volume.
+- After a change that reaches what the project ships, add it to CHANGELOG.md in the same push: under the topmost “## X.Y.Z” section while that version isn't released (`gh release view vX.Y.Z` fails), or under a new section with the next version: patch for fixes, minor for features, major for breaking changes. A release then needs only the workflow, and the workflow runs only when the owner asks.
 - Releases are made by hand, only when the owner asks. Add a “## X.Y.Z” section to CHANGELOG.md, push, then run `gh workflow run release.yml -R allay-ai/minecraft -f version=X.Y.Z` (its `changelog` field overrides the section; one of the two must be there; `-f modrinth=true -f hangar=true` also publish there once those projects exist). It builds with `-PreleaseVersion`, tags `vX.Y.Z`, and attaches `allay-spigot-X.Y.Z.jar` to a GitHub release. Watch it with `gh run watch`. Never delete or re-tag a published release.
+
+## Checking a change
+
+1. `./gradlew build`: the tests and the jar.
+2. A real Paper with the jar, started and stopped by the script, which fails on any error about the plugin:
+   ```sh
+   python3 -I .claude/scripts/paper_smoke.py --game 26.3 --plugin spigot/build/libs/allay-spigot-dev.jar --modrinth placeholderapi --command "papi list" --expect "registered internal expansion: allay"
+   ```
+   Pass `--game` the version the project targets, and `--build` to pin a Paper build. The script downloads Paper and Modrinth plugins into `~/.cache/paper-smoke` and keeps the server folder when something fails.
+3. A question needs a backend and a player. After a release reaches Moonlands, the log shows `Allay X.Y.Z is on`, `papi list` lists `allay`, and the owner asks `/ask` once. Allay builds against the Spigot API, so it runs on Spigot too; the check uses Paper, which Moonlands runs.
+
+## Versions
+
+Where the versions live, for `/update-deps` and `/update-minecraft` (both in `.claude/skills/`, the same files in every project of the family):
+
+- The game: `org.spigotmc:spigot-api` (twice) and `gameVersions` (Modrinth) and `platformVersions` (Hangar) in `spigot/build.gradle.kts`, and `api-version` in `spigot/src/main/resources/plugin.yml`. `ToolsTest` and `ProtocolTest` spell out version strings. What Allay knows about the game (`Mechanics`, `Items`, `Facts`, the tools' tables) comes from the game: read the new jar when the version moves.
+- PlaceholderAPI: `compileOnly("me.clip:placeholderapi:…")` in `spigot/build.gradle.kts`, from `repo.extendedclip.com` (root `build.gradle.kts`).
+- Java: `jvmToolchain` in both modules; CI's `setup-java`.
+- Gradle in `gradle/wrapper/gradle-wrapper.properties`; Kotlin and the Gradle plugins in the root `build.gradle.kts`; libraries (kotlinx, OkHttp, the MaxMind reader, SnakeYAML) in each module's `dependencies`, relocated by `shadowJar`.
 
 ## Installing on Moonlands
 
