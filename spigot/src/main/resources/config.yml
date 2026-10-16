@@ -136,6 +136,7 @@ tools:
     get_anvil_plan: true          # The cheapest order of books on the anvil for the item in hand
     get_light_spawn_check: true   # Dark spots around where hostile mobs can spawn
     get_brewing_items: true       # Everything for brewing in the inventory and brewing stands nearby
+    get_brewing_recipe: true      # How to brew a potion, step by step, from the game's own recipes
     scan_farm: true               # The farm around: crops by stage, farmland, animals, spawners
     # How the answer reaches the player
     add_buttons: true             # Buttons under the answer: next question, the way, a note, a recipe, enchantments, villagers

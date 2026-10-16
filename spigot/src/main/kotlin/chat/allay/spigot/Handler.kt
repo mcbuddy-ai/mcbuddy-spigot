@@ -146,11 +146,11 @@ class Handler(
         sender.sendMessage(labeled(run, outcome.answer))
       }
       // Under an answer everyone reads, everyone gets the buttons, each with their own ids, and a question
-      // button asks everyone again, so the shared thread goes on.
+      // button asks everyone again, so the shared thread goes on. The anvil plan reads the asker's inventory: theirs alone.
       val buttons = run.buttons.toList()
       if (run.public) {
         val shared = buttons.map { if (it is Button.Ask) it.copy(public = true) else it }
-        plugin.server.onlinePlayers.forEach { clicks().show(it, shared) }
+        plugin.server.onlinePlayers.forEach { reader -> clicks().show(reader, if (reader == player) shared else shared.filterNot { it is Button.Anvil }) }
       } else {
         player?.let { clicks().show(it, buttons) }
       }

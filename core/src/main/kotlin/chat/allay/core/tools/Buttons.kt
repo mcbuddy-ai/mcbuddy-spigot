@@ -22,6 +22,12 @@ sealed interface Button {
   /** Opens the recipe window for an item. */
   data class Recipe(override val label: String, val item: String) : Button
 
+  /** Opens the brewing window: how to brew [potion] in the bottle [form]. */
+  data class Brewing(override val label: String, val potion: String, val form: String?) : Button
+
+  /** Opens the anvil plan for the item in hand with what the player has, or with these inventory [slots] only. */
+  data class Anvil(override val label: String, val slots: List<Int>?) : Button
+
   /** Opens the enchanting window for the item in hand. */
   data class Enchants(override val label: String) : Button
 

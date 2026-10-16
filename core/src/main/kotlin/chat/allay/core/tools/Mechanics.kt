@@ -145,6 +145,111 @@ object Mechanics {
     return AnvilPlan(plan.steps, plan.total, plan.worst >= TOO_EXPENSIVE)
   }
 
+  /** Something on the anvil: an item or an enchanted book, its enchantments, and its repair cost (0, 1, 3, 7…). */
+  data class AnvilPiece(val book: Boolean, val enchantments: Map<String, Int>, val repairCost: Int) {
+    /** Enchantment levels in all, to rank results: Power V and Unbreaking III are 8. */
+    val levels get() = enchantments.values.sum()
+  }
+
+  /** What the game knows about enchantments, asked of the platform's registry. */
+  interface Enchanting {
+    fun maxLevel(key: String): Int
+
+    /** Whether the enchantment goes on the kind of item being made. */
+    fun fits(key: String): Boolean
+
+    fun compatible(a: String, b: String): Boolean
+
+    /** The anvil cost of one level on an item; a book pays half, at least 1. */
+    fun cost(key: String): Int = ANVIL_COSTS[key] ?: 4
+  }
+
+  /** The anvil's output and its price in levels. */
+  data class Combined(val result: AnvilPiece, val cost: Int)
+
+  /**
+   * One anvil use, priced as the game's `AnvilMenu.createResult` (26.3) does, leaving out repairs and renaming: both
+   * repair costs, then each enchantment on the right at its new level (equal levels go one up, to the maximum) times
+   * its cost, plus 1 for every conflict. Null when the anvil shows nothing: a book on the left of an item, or nothing
+   * on the right that fits.
+   */
+  fun combine(left: AnvilPiece, right: AnvilPiece, rules: Enchanting): Combined? {
+    if (left.book && !right.book) return null
+    val result = LinkedHashMap(left.enchantments)
+    var cost = 0
+    var applied = false
+    var refused = false
+    for ((key, level) in right.enchantments) {
+      val current = result[key] ?: 0
+      var fits = left.book || rules.fits(key)
+      for (other in result.keys) if (other != key && !rules.compatible(key, other)) {
+        fits = false
+        cost++
+      }
+      if (!fits) {
+        refused = true
+        continue
+      }
+      applied = true
+      val next = minOf(if (current == level) level + 1 else max(current, level), rules.maxLevel(key))
+      result[key] = next
+      cost += (if (right.book) max(1, rules.cost(key) / 2) else rules.cost(key)) * next
+    }
+    if ((refused && !applied) || cost <= 0) return null
+    return Combined(AnvilPiece(left.book, result, (max(left.repairCost, right.repairCost) * 2L + 1).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()), left.repairCost + right.repairCost + cost)
+  }
+
+  /** One anvil use in a [MergePlan]: pieces by index on each side, the price, and what comes out. */
+  data class MergeStep(val left: List<Int>, val right: List<Int>, val cost: Int, val result: AnvilPiece)
+
+  /** How to merge what the player has: the pieces it uses, the steps, and the item it ends with. */
+  data class MergePlan(val used: List<Int>, val steps: List<MergeStep>, val result: AnvilPiece, val total: Int, val tooExpensive: Boolean)
+
+  private class Node(val pieces: List<Int>, val piece: AnvilPiece, val total: Int, val worst: Int, val steps: List<MergeStep>) {
+    val doable get() = worst < TOO_EXPENSIVE
+
+    /** Doable first, then the most levels, then the cheapest, then the smallest single step. */
+    fun beats(other: Node?) = other == null ||
+      compareValuesBy(this, other, { !it.doable }, { -it.piece.levels }, { it.total }, { it.worst }) < 0
+  }
+
+  /**
+   * The best way to merge [pieces]: items of one kind and enchanted books, as the player has them. Every subset is
+   * tried in every order, since levels merge differently by order (II + II + III ends at III or at IV). The plan ends
+   * in an item; it may leave a piece out when that piece adds nothing or only costs. At most 8 pieces.
+   */
+  fun mergePlan(pieces: List<AnvilPiece>, rules: Enchanting): MergePlan? {
+    require(pieces.size <= 8) { "at most 8 pieces" }
+    val n = pieces.size
+    val best = Array(1 shl n) { HashMap<AnvilPiece, Node>() }
+    for (i in 0 until n) best[1 shl i][pieces[i]] = Node(listOf(i), pieces[i], 0, 0, emptyList())
+    for (mask in (1 until (1 shl n)).filter { Integer.bitCount(it) >= 2 }.sortedBy(Integer::bitCount)) {
+      var left = (mask - 1) and mask
+      while (left > 0) {
+        val right = mask xor left
+        for (l in best[left].values) for (r in best[right].values) {
+          val made = combine(l.piece, r.piece, rules) ?: continue
+          val step = MergeStep(l.pieces, r.pieces, made.cost, made.result)
+          val node = Node(l.pieces + r.pieces, made.result, l.total + r.total + made.cost, maxOf(made.cost, l.worst, r.worst), l.steps + r.steps + step)
+          if (node.beats(best[mask][made.result])) best[mask][made.result] = node
+        }
+        left = (left - 1) and mask
+      }
+      // Keep the search small: the few best results per set of pieces are enough to build on.
+      if (best[mask].size > KEEP) {
+        val kept = best[mask].values.sortedWith { a, b -> if (a.beats(b)) -1 else if (b.beats(a)) 1 else 0 }.take(KEEP)
+        best[mask].clear()
+        kept.forEach { best[mask][it.piece] = it }
+      }
+    }
+    val plan = best.flatMap { it.values }.filter { !it.piece.book && it.steps.isNotEmpty() }.reduceOrNull { a, b -> if (b.beats(a)) b else a } ?: return null
+    // A plan that ends no better than an item the player already has isn't worth the levels.
+    if (plan.piece.levels <= pieces.filter { !it.book }.maxOf { it.levels }) return null
+    return MergePlan(plan.pieces.sorted(), plan.steps, plan.piece, plan.total, !plan.doable)
+  }
+
+  private const val KEEP = 24
+
   /**
    * How much of a potion's duration an item gives, as its tooltip shows it: a tipped arrow an eighth,
    * a lingering potion a quarter. Read from the item type: Paper's API has no duration scale to ask.

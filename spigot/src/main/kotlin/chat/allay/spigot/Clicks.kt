@@ -15,7 +15,11 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import chat.allay.spigot.Minecraft.formatMessage
+import chat.allay.spigot.menus.AnvilPlanMenu
+import chat.allay.spigot.menus.BrewingMenu
 import chat.allay.spigot.menus.EnchantMenu
+import chat.allay.spigot.tools.Anvils
+import chat.allay.spigot.tools.BrewingRecipes
 import chat.allay.spigot.menus.RecipeMenu
 import chat.allay.spigot.menus.VillagerMenu
 import chat.allay.spigot.tools.Trails
@@ -99,6 +103,8 @@ class Clicks(
     is Button.Copy -> lang.text("buttons.hover.copy", "text" to button.text)
     is Button.Recipe -> lang.text("buttons.hover.recipe")
     is Button.Enchants -> lang.text("buttons.hover.enchants")
+    is Button.Brewing -> lang.text("buttons.hover.brewing")
+    is Button.Anvil -> lang.text("buttons.hover.anvil")
     is Button.Villagers -> lang.text("buttons.hover.villagers")
     is Button.ReadBook -> lang.text("buttons.hover.read_book", "title" to (features.books.find(player.uniqueId, button.book)?.title ?: ""))
     is Button.TakeBook -> lang.text("buttons.hover.take_book", "title" to (features.books.find(player.uniqueId, button.book)?.title ?: ""))
@@ -123,6 +129,8 @@ class Clicks(
       is Button.Copy -> Unit
       is Button.Recipe -> recipe(player, button.item)
       is Button.Enchants -> enchants(player)
+      is Button.Brewing -> brewing(player, button.potion, button.form)
+      is Button.Anvil -> anvil(player, button.slots)
       is Button.Villagers -> villagers(player, button.item)
       is Button.ReadBook -> features.books.find(player.uniqueId, button.book)?.let { player.openBook(BookItems.item(it, ui.bookAuthor)) }
         ?: lang.send(player, "buttons.book_gone")
@@ -185,6 +193,28 @@ class Clicks(
       ?: return lang(player).send(player, "messages.hold_item")
     if (EnchantMenu.applicable(item).isEmpty()) return lang(player).send(player, "messages.no_enchants")
     EnchantMenu(player, lang(player), item.clone()).open()
+  }
+
+  /** `/allay brewing <potion>` and the brewing button: the steps from a water bottle, as the game's recipes have them. */
+  fun brewing(player: Player, potion: String, form: String?) {
+    val lang = lang(player)
+    val chain = try {
+      val (brews, target) = BrewingRecipes.target(player.server, potion, form)
+      Brewing.chain(brews, target)?.let { target to it }
+    } catch (_: ToolError) {
+      null
+    } ?: return player.sendMessage(Minecraft.withText(lang.text("messages.no_brewing", "potion" to Minecraft.SLOT), potion))
+    BrewingMenu(player, lang, chain.first, chain.second).open()
+  }
+
+  /** `/allay anvil` and the anvil button: the cheapest way to merge what the player has onto the item in hand. */
+  fun anvil(player: Player, slots: List<Int>?) {
+    val planned = try {
+      Anvils.plan(player, slots)
+    } catch (error: ToolError) {
+      return lang(player).send(player, "messages.hold_item")
+    } ?: return lang(player).send(player, "messages.anvil_nothing")
+    AnvilPlanMenu(player, lang(player), planned).open()
   }
 
   /** `/allay villagers` and the villagers button. */

@@ -54,8 +54,18 @@ object InteractTools {
       }
       "copy" -> Button.Copy(label, args.string("text")?.take(200)?.ifBlank { null } ?: throw ToolError("copy needs the text to copy"))
       "enchants" -> Button.Enchants(label)
+      "brewing" -> {
+        val (brews, target) = BrewingRecipes.target(player.server, args.string("potion") ?: throw ToolError("brewing needs the potion"), args.string("form"))
+        if (Brewing.chain(brews, target) == null) throw ToolError("the brewing stand can't make ${target.item} of ${target.potion}; don't offer this button")
+        Button.Brewing(label, target.potion, target.item)
+      }
+      "anvil" -> {
+        val slots = (args["slots"] as? JsonArray)?.mapNotNull { (it as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull() }
+        Anvils.plan(player, slots) ?: throw ToolError("nothing in the inventory improves the item in hand; don't offer an anvil button")
+        Button.Anvil(label, slots)
+      }
       "villagers" -> Button.Villagers(label, args.string("item")?.let { material(it).key.key })
-      else -> throw ToolError("unknown button type $type; use ask, point, note, copy, recipe, enchants, or villagers")
+      else -> throw ToolError("unknown button type $type; use ask, point, note, copy, recipe, enchants, brewing, anvil, or villagers")
     }
   }
 

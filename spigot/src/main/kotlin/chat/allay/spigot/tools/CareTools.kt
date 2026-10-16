@@ -110,7 +110,8 @@ object CareTools {
 
   private val anvil = tool("get_anvil_plan") { context, player, args ->
     val item = player.inventory.itemInMainHand.takeUnless { it.type.isAir } ?: throw ToolError("the player holds nothing; ask them to hold the item")
-    val wanted = args["enchantments"] as? JsonObject ?: throw ToolError("enchantments is required, such as { \"sharpness\": 5, \"mending\": 1 }")
+    // Without enchantments to aim for, plan with what the player has: books and items of this kind in the inventory.
+    val wanted = args["enchantments"] as? JsonObject ?: return@tool fromInventory(context, player, (args["slots"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { (it as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull() })
     if (wanted.isEmpty() || wanted.size > 10) throw ToolError("give 1–10 enchantments")
     val books = wanted.keys.map { key ->
       val id = key.lowercase().removePrefix("minecraft:")
@@ -136,6 +137,40 @@ object CareTools {
       put("too_expensive", plan.tooExpensive)
     }
     ToolOutput(result, if (plan.tooExpensive) context.lang.text("summary.anvil_too_expensive") else context.lang.text("summary.anvil", "levels" to plan.total, "steps" to plan.steps.size))
+  }
+
+  private fun fromInventory(context: ToolContext, player: Player, slots: List<Int>?): ToolOutput {
+    val planned = Anvils.plan(player, slots)
+      ?: return ToolOutput(buildJsonObject { put("found", false); put("reason", "nothing in the inventory adds to the item in hand: no enchanted book or second enchanted item of its kind that improves it") }, context.lang.text("summary.anvil_nothing"))
+    val (sources, plan) = planned.sources to planned.plan
+    fun names(pieces: List<Int>) = buildJsonArray { pieces.forEach { add(kotlinx.serialization.json.JsonPrimitive(Anvils.label(sources[it]))) } }
+    fun enchantments(piece: Mechanics.AnvilPiece) = buildJsonObject { piece.enchantments.forEach { (key, level) -> put(key, level) } }
+    val result = buildJsonObject {
+      put("found", true)
+      put("item", player.inventory.itemInMainHand.type.key.key)
+      put("pieces", buildJsonArray {
+        plan.used.forEach { index ->
+          val source = sources[index]
+          add(buildJsonObject {
+            put("piece", Anvils.label(source))
+            source.slot?.let { put("slot", it) }
+            put("kind", if (source.piece.book) "book" else source.item.type.key.key)
+            put("enchantments", enchantments(source.piece))
+            put("repair_cost", source.piece.repairCost)
+          })
+        }
+      })
+      put("steps", buildJsonArray {
+        plan.steps.forEach { step -> add(buildJsonObject { put("left", names(step.left)); put("right", names(step.right)); put("levels", step.cost); put("gives", enchantments(step.result)) }) }
+      })
+      put("result", enchantments(plan.result))
+      put("total_levels", plan.total)
+      put("too_expensive", plan.tooExpensive)
+      val unused = sources.indices.filter { it !in plan.used }
+      if (unused.isNotEmpty()) put("unused", names(unused))
+    }
+    val summary = if (plan.tooExpensive) context.lang.text("summary.anvil_too_expensive") else context.lang.text("summary.anvil", "levels" to plan.total, "steps" to plan.steps.size)
+    return ToolOutput(result, summary)
   }
 
   val all = listOf(durability, xp, food, anvil)

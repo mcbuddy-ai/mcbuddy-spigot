@@ -20,6 +20,8 @@ object Guide {
     Triple("/allay recipe <item>", Permissions.ASK, "opens the recipe window for an item"),
     Triple("/allay enchants", Permissions.ASK, "opens the enchanting window for the item in hand"),
     Triple("/allay villagers", Permissions.ASK, "opens the window of villagers around and their trades"),
+    Triple("/allay brewing <potion> [potion|splash_potion|lingering_potion]", Permissions.ASK, "opens the brewing window: every step from a water bottle to the potion"),
+    Triple("/allay anvil", Permissions.ASK, "opens the anvil plan: the cheapest order to merge the enchanted books and items of its kind from the inventory onto the item in hand"),
     Triple("/allay reload", Permissions.RELOAD, "reloads Allay's settings and languages"),
     Triple("/allay status", Permissions.ADMIN, "who pays for the model on this server: the own key, or the subscription with its plan, paid-until date, and how much of the limit is used"),
     Triple("/allay link", Permissions.ADMIN, "a one-time link to pay for Allay's subscription in Telegram Stars (week, month, or year)"),

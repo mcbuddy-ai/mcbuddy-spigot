@@ -24,12 +24,16 @@ import org.bukkit.inventory.StonecuttingRecipe
 
 /** What this server knows that the model might not: its exact recipes, and the asker's advancements. */
 object KnowledgeTools {
+  private val POTIONS = setOf("potion", "splash_potion", "lingering_potion")
+
   private val recipes = object : Tool {
     override val name = "get_recipes"
 
     override fun run(context: ToolContext, args: JsonObject): ToolOutput {
       val item = (args["item"] as? JsonPrimitive)?.contentOrNull?.trim()?.lowercase()?.removePrefix("minecraft:")
         ?.replace(' ', '_') ?: throw ToolError("say which item")
+      // Potions come from the brewing stand, which Spigot's recipes don't describe.
+      if (item in POTIONS || "potion" in item) throw ToolError("potions are brewed: call get_brewing_recipe with the potion, like night_vision")
       val material = Material.matchMaterial(item)?.takeIf { it.isItem } ?: throw ToolError("no item called $item")
       val all = Bukkit.getRecipesFor(ItemStack(material)).mapNotNull(::describe)
       val found = all.take(5)

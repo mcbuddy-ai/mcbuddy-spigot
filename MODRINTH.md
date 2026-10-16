@@ -13,7 +13,7 @@
 - 🔍 **It finds things** in the inventory, the ender chest, and the chests nearby, inside shulker boxes too.
 - 🧭 **It shows the way** with the compass and a particle trail: to a death point, a village, a biome, or a place from the player's notebook. The trail lasts as long as the walk needs, in a dozen looks, and goes out on arrival.
 - 📒 **A notebook, goals with a boss bar, and reminders.**
-- 🪟 **Buttons under answers** and **recipe, enchanting, and villager windows** that only show pictures, so nothing can be taken from them.
+- 🪟 **Buttons under answers** and **recipe, brewing, anvil, enchanting, and villager windows** that only show pictures, so nothing can be taken from them. Potions come from the game's own brewing recipes; the anvil plan uses the books and items the player really has.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled, picked by the player's country, then by their game's language.
 - 📊 **Plan**, if you have it: chat mode, goals, notes, and language on each player's page, and who pays for the model in the server's overview.
 - 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
@@ -67,6 +67,7 @@ The country lookup needs no account and sends no address anywhere. On the first 
 | `/allay memory`, `/allay forget <number\|all>` | Shows and erases what the assistant remembers about you |
 | `/allay memory <text>` | Remembers the text by hand; with coordinates, a note in the notebook |
 | `/allay recipe <item>`, `/allay enchants`, `/allay villagers` | Opens a window |
+| `/allay brewing <potion>`, `/allay anvil` | Opens the brewing steps or the anvil plan for what you have |
 | `/allay reload` | Reloads the settings and the languages |
 | `/allay status`, `/allay link` | Who pays for the model and how the subscription stands; a link to pay in Telegram |
 | `/allay locale [player]` | Which language a player reads Allay in, and why |

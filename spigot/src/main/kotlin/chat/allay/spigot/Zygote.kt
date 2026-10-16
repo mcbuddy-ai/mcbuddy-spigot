@@ -2,6 +2,7 @@ package chat.allay.spigot
 
 import chat.allay.core.*
 import chat.allay.core.tools.*
+import chat.allay.spigot.tools.BrewingRecipes
 import chat.allay.spigot.tools.ToolContext
 
 import kotlinx.coroutines.CoroutineScope
@@ -232,6 +233,9 @@ class Zygote : JavaPlugin(), TabCompleter {
         if (args.size < 2) lang.send(sender, "messages.recipe_usage") else clicks.recipe(player, args.drop(1).joinToString("_"))
       word == "enchants" && args.size == 1 && player != null -> clicks.enchants(player)
       word == "villagers" && args.size == 1 && player != null -> clicks.villagers(player, null)
+      word == "brewing" && player != null ->
+        if (args.size < 2) lang.send(sender, "messages.brewing_usage") else clicks.brewing(player, args[1], args.getOrNull(2))
+      word == "anvil" && args.size == 1 && player != null -> clicks.anvil(player, null)
       else -> usage(sender, lang)
     }
   }
@@ -246,7 +250,7 @@ class Zygote : JavaPlugin(), TabCompleter {
     val options = when {
       args.size == 1 -> buildList {
         if (sender.hasPermission(Permissions.CHAT)) addAll(listOf("chat", "hints"))
-        if (sender.hasPermission(Permissions.ASK)) addAll(listOf("cancel", "new", "memory", "forget", "recipe", "enchants", "villagers"))
+        if (sender.hasPermission(Permissions.ASK)) addAll(listOf("cancel", "new", "memory", "forget", "recipe", "enchants", "villagers", "brewing", "anvil"))
         if (sender.hasPermission(Permissions.RELOAD)) add("reload")
         if (sender.hasPermission(Permissions.ADMIN)) addAll(listOf("status", "link", "locale"))
       }
@@ -257,6 +261,9 @@ class Zygote : JavaPlugin(), TabCompleter {
       args.size == 2 && args[0].equals("recipe", ignoreCase = true) ->
         return Material.entries.asSequence().filter { it.isItem && !it.isAir && !it.isLegacy }.map { it.key.key }
           .filter { it.startsWith(args[1].lowercase()) }.take(50).toList()
+      args.size == 2 && args[0].equals("brewing", ignoreCase = true) ->
+        return Brewing.potions(BrewingRecipes.all(server)).filter { it.startsWith(args[1].lowercase()) }.take(50)
+      args.size == 3 && args[0].equals("brewing", ignoreCase = true) -> Brewing.FORMS
       else -> return emptyList()
     }
     return options.filter { it.startsWith(args.last(), ignoreCase = true) }

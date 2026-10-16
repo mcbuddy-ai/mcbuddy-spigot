@@ -16,7 +16,7 @@
 - 🔍 **It finds things.** Where an item is and how many there are: in the inventory, the ender chest, and the chests nearby, inside shulker boxes too.
 - 🧭 **It shows the way.** A compass and a particle trail to a death point, a village, a cherry grove, or a place from the player's notebook. The trail lasts as long as the player asks or the walk needs, comes in a dozen looks from flames to hearts, and goes out once they're there.
 - 📒 **A notebook, goals, and reminders.** “Remember there's an arrow trader here”, “set a goal to collect 16 diamonds” (a boss bar at the top), “remind me in 5 minutes”. The assistant knows which dimension the player is in, so a bastion noted in the Nether stays in the Nether. `/allay memory <text>` keeps something without asking the assistant.
-- 🪟 **Buttons and windows.** Answers end with buttons: a follow-up question, the way to a spot, coordinates to copy, a recipe, enchantments, the villagers around. The recipe, enchanting, and villager windows show pictures only, so nothing can be taken from them.
+- 🪟 **Buttons and windows.** Answers end with buttons: a follow-up question, the way to a spot, coordinates to copy, a recipe, the brewing steps, the anvil plan, enchantments, the villagers around. The assistant reads potions from the game's own brewing recipes, and plans the anvil with the books and items you really have: which goes left, which right, and what each step costs. The recipe, brewing, anvil, enchanting, and villager windows show pictures only, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled; the plugin picks one by the player's country, then by their game's language. The assistant answers in the language of the question.
 - 📊 **Plan**, if you have it: chat mode, goals, notes, and language on each player's page, and who pays for the model in the server's overview.
 - 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
@@ -126,6 +126,8 @@ Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lin
 | `/allay memory`, `/allay forget <number\|all>` | Shows and erases what it remembers about you |
 | `/allay memory <text>` | Remembers the text without asking the assistant. With coordinates (`x y z` or `x z`), it's a note in your notebook, in the dimension the text names (“nether”, «ад») or the one you stand in |
 | `/allay recipe <item>`, `/allay enchants`, `/allay villagers` | Opens the recipe, enchanting, or villager window |
+| `/allay brewing <potion> [splash_potion\|lingering_potion]` | Every brewing step from a water bottle to the potion |
+| `/allay anvil` | The cheapest order to merge your enchanted books and items onto the item in your hand |
 | `/allay reload` | Reloads the settings and the languages |
 | `/allay status` | Who pays for the model: your key, masked, or the subscription with its plan, paid-until date, and limit |
 | `/allay link` | A one-time link to pay for the subscription in Telegram |

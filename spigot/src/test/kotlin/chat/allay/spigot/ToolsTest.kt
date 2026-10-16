@@ -37,7 +37,7 @@ class ToolsTest {
     val names = Tools.all().map { it.name }.toSet()
     assertEquals(
       setOf("get_player_status", "get_inventory", "get_surroundings", "look_at", "get_world", "get_statistics", "get_advancements", "get_recipes", "locate_structure", "get_server", "get_locations",
-        "point_to", "sort_inventory", "reminders", "scan_nearby_containers", "find_item", "get_light_spawn_check", "get_brewing_items", "scan_farm",
+        "point_to", "sort_inventory", "reminders", "scan_nearby_containers", "find_item", "get_light_spawn_check", "get_brewing_items", "get_brewing_recipe", "scan_farm",
         "get_item_durability", "get_xp_info", "get_food_options", "add_note", "find_notes", "delete_note", "ping_me",
         "locate_biome", "get_death_info", "find_villagers", "get_anvil_plan", "add_buttons", "write_book", "set_timezone", "goals", "inspect_item",
         "get_allay_guide", "allay_settings",
