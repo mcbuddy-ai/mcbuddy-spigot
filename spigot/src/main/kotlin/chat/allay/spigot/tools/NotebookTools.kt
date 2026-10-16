@@ -38,7 +38,7 @@ object NotebookTools {
       put("text", note.text)
       note.x?.let { put("x", it); put("y", note.y); put("z", note.z); put("dimension", Dimensions.normalize(note.dimension)) }
     }
-    ToolOutput(result, if (note.x != null) context.lang.text("summary.note_saved_at", "x" to note.x, "y" to note.y, "z" to note.z) else context.lang.text("summary.note_saved"))
+    ToolOutput(result, if (note.x != null) context.lang.text("summary.note_saved_at", "x" to note.x, "y" to note.y, "z" to note.z, "dimension" to context.lang.text("dimensions.${Dimensions.normalize(note.dimension)}")) else context.lang.text("summary.note_saved"))
   }
 
   private val find = tool("find_notes") { context, player, args ->

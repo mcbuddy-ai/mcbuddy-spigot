@@ -8,15 +8,15 @@
 
 - 💬 **`/ask` about anything in the game.** “What should I do next?”, “which sword is better?”, “where did I put my redstone?”, “how many hits for this creeper?”. The assistant looks things up in the game while it answers instead of guessing.
 - 🗨️ **Chat mode.** When friends talk on Discord and the game chat is free, `/allay chat` sends everything a player writes to the assistant. `!` in front runs commands, `?` asks in front of everyone, `~` writes to the ordinary chat. After a second `/ask`, a quiet tip offers it, with a button to switch it on and one to hide the tip.
-- 📣 **Questions everyone sees.** `/askall` shows the question and the answer to every player online. Public questions share one thread per server, so a friend can follow up on someone else's question.
+- 📣 **Questions everyone sees.** `/askall` shows the question and the answer to every player online. Public questions share one thread per server, so a friend can follow up on someone else's question. Everyone gets the buttons under a public answer.
 - 📖 **It explains itself.** Ask “what can you do?” or “how do I turn off chat mode?”: the assistant reads the commands and settings this player really has, and switches chat mode when asked in words.
 - 🧩 **It knows the server's plugins.** Questions about graves, claims, or AFK get answers for the plugin and version that really run.
 - 👀 **It sees what the player sees.** One look covers the block under the crosshair with its drops, a chest's contents, an enchanting table's bookshelves, a mob and the hits it takes, a villager's trades.
 - 🎒 **It knows the player's things.** Inventory, armor, the ender chest, what's inside bundles and shulker boxes, and any item in full: enchantments, potion durations, trims, a weapon's damage and speed as the tooltip shows them.
 - 🔍 **It finds things.** Where an item is and how many there are: in the inventory, the ender chest, and the chests nearby, inside shulker boxes too.
-- 🧭 **It shows the way.** A compass and a particle trail to a death point, a village, a cherry grove, or a place from the player's notebook.
-- 📒 **A notebook, goals, and reminders.** “Remember there's an arrow trader here”, “set a goal to collect 16 diamonds” (a boss bar at the top), “remind me in 5 minutes”.
-- 🪟 **Buttons and windows.** Answers end with buttons: a follow-up question, the way to a spot, a recipe, enchantments, the villagers around. The recipe, enchanting, and villager windows show pictures only, so nothing can be taken from them.
+- 🧭 **It shows the way.** A compass and a particle trail to a death point, a village, a cherry grove, or a place from the player's notebook. The trail lasts as long as the player asks or the walk needs, comes in a dozen looks from flames to hearts, and goes out once they're there.
+- 📒 **A notebook, goals, and reminders.** “Remember there's an arrow trader here”, “set a goal to collect 16 diamonds” (a boss bar at the top), “remind me in 5 minutes”. The assistant knows which dimension the player is in, so a bastion noted in the Nether stays in the Nether. `/allay memory <text>` keeps something without asking the assistant.
+- 🪟 **Buttons and windows.** Answers end with buttons: a follow-up question, the way to a spot, coordinates to copy, a recipe, enchantments, the villagers around. The recipe, enchanting, and villager windows show pictures only, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled; the plugin picks one by the player's country, then by their game's language. The assistant answers in the language of the question.
 - 📊 **Plan**, if you have it: chat mode, goals, notes, and language on each player's page, and who pays for the model in the server's overview.
 - 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
@@ -121,9 +121,10 @@ Everything a player reads lives in `lang/<language>.yml`: status verbs, tool lin
 | `/allay` | Opens the settings window: chat mode and its tip, your time zone, memory, starting over, and the recipe, enchanting, and villager windows |
 | `/allay chat [on\|off]` | Chat mode: what you write in chat goes to the assistant |
 | `/allay hints [on\|off]` | The tip about chat mode under answers |
-| `/allay cancel` | Stops the question it's working on |
+| `/allay cancel` | Stops the question it's working on, or with none, hides the way trail |
 | `/allay new` | Starts the conversation over; what it remembers about you stays |
 | `/allay memory`, `/allay forget <number\|all>` | Shows and erases what it remembers about you |
+| `/allay memory <text>` | Remembers the text without asking the assistant. With coordinates (`x y z` or `x z`), it's a note in your notebook, in the dimension the text names (“nether”, «ад») or the one you stand in |
 | `/allay recipe <item>`, `/allay enchants`, `/allay villagers` | Opens the recipe, enchanting, or villager window |
 | `/allay reload` | Reloads the settings and the languages |
 | `/allay status` | Who pays for the model: your key, masked, or the subscription with its plan, paid-until date, and limit |
@@ -186,6 +187,7 @@ Plan's labels are in English, since its panel is for admins. Allay never shows a
 | `tools.operator.*` | Tools that give items, teleport, heal, or change time and weather; operators only |
 | `tools.reminders.max_pending`, `tools.notes.max_per_player`, `tools.goals.max_per_player` | How many reminders (10), notes (200), and goals (5) one player can have |
 | `tools.locate_structure_radius`, `tools.locate_biome_radius`, `tools.villager_radius` | Search radii |
+| `tools.point_to.default_seconds`, `tools.point_to.max_seconds` | How long a way trail lasts when nobody says (30) and at most (600) |
 | `tools.server.hidden_plugins` | Plugins `get_server` leaves out of its list, such as an anti-cheat |
 | `askall.cooldown_seconds` | How long a player waits between two questions everyone sees (30) |
 | `time.zone` | The players' default time zone; a player can tell the assistant theirs |

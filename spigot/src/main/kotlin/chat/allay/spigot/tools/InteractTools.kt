@@ -52,9 +52,10 @@ object InteractTools {
         if (RecipeMenu.recipesFor(item).isEmpty()) throw ToolError("${item.key.key} has no recipe on this server; don't offer a recipe button")
         Button.Recipe(label, item.key.key)
       }
+      "copy" -> Button.Copy(label, args.string("text")?.take(200)?.ifBlank { null } ?: throw ToolError("copy needs the text to copy"))
       "enchants" -> Button.Enchants(label)
       "villagers" -> Button.Villagers(label, args.string("item")?.let { material(it).key.key })
-      else -> throw ToolError("unknown button type $type; use ask, point, note, recipe, enchants, or villagers")
+      else -> throw ToolError("unknown button type $type; use ask, point, note, copy, recipe, enchants, or villagers")
     }
   }
 

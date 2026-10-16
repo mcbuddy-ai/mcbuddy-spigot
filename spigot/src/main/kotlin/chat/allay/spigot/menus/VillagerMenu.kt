@@ -10,7 +10,7 @@ import org.bukkit.entity.Villager
 import org.bukkit.plugin.Plugin
 import chat.allay.core.Lang
 import chat.allay.spigot.menus.Menu.Companion.lore
-import chat.allay.spigot.tools.ActionTools
+import chat.allay.spigot.tools.Trails
 import chat.allay.core.tools.Facts
 import chat.allay.spigot.tools.Villagers
 
@@ -64,7 +64,7 @@ class VillagerMenu(
         if (!villager.trader.isValid) return
         player.closeInventory()
         player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_CHIME, 0.6f, 1.4f)
-        ActionTools.trail(plugin, player, villager.trader.location.add(0.0, 1.0, 0.0), 15)
+        Trails.show(plugin, player, villager.trader.location.add(0.0, 1.0, 0.0), 15)
       }
     }
   }

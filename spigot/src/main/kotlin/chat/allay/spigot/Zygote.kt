@@ -123,8 +123,8 @@ class Zygote : JavaPlugin(), TabCompleter {
     reportProvider()
     executor = Executor(this, configuration, locales, animator)
     handler = Handler(this, configuration, locales, service, animator, executor, scope, { billing }) { clicks }
-    clicks = Clicks(this, configuration, features, buttons) { player, question -> handler.ask(player, question, Run.Mode.ASK) }
-    memory = MemoryCommands(this, locales, service, scope)
+    clicks = Clicks(this, configuration, features, buttons) { player, question, public -> handler.ask(player, question, Run.Mode.ASK, public) }
+    memory = MemoryCommands(this, locales, features, service, scope)
   }
 
   /** One line at start and on reload about who pays for the model; the key and the license show masked, if at all. */
@@ -226,6 +226,7 @@ class Zygote : JavaPlugin(), TabCompleter {
       word == "cancel" && args.size == 1 -> handler.cancel(sender)
       word == "new" && args.size == 1 -> memory.newSession(sender)
       word == "memory" && args.size == 1 -> memory.list(sender)
+      word == "memory" -> memory.remember(sender, args.drop(1).joinToString(" "))
       word == "forget" && args.size <= 2 -> args.getOrNull(1)?.let { memory.forget(sender, it) } ?: memory.usage(sender)
       word == "recipe" && player != null ->
         if (args.size < 2) lang.send(sender, "messages.recipe_usage") else clicks.recipe(player, args.drop(1).joinToString("_"))

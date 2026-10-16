@@ -3,6 +3,7 @@ package chat.allay.spigot.tools
 import chat.allay.core.*
 import chat.allay.core.tools.*
 
+import chat.allay.spigot.send
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -36,8 +37,11 @@ object ActionTools {
     val target = Location(world, x, y, z)
     // Compasses point at this only in the overworld; elsewhere the trail still shows the way.
     player.compassTarget = target
-    val seconds = args.int("seconds")?.also { if (it !in 1..30) throw ToolError("seconds must be 1–30") } ?: 2
-    trail(context.plugin, player, target, seconds)
+    val tools = context.features.config().tools
+    val seconds = args.int("seconds")?.also { if (it !in 1..tools.trailMaxSeconds) throw ToolError("seconds must be 1–${tools.trailMaxSeconds}") }
+      ?: tools.trailSeconds
+    val style = Trails.Style.parse(args.string("style"))
+    Trails.show(context.plugin, player, target, seconds, style) { context.lang.send(player, "messages.arrived") }
     val dx = x - player.location.x
     val dz = z - player.location.z
     val distance = Math.round(Math.hypot(dx, dz))
@@ -45,28 +49,11 @@ object ActionTools {
     val result = buildJsonObject {
       put("distance", distance)
       put("direction", direction)
+      put("seconds", seconds)
+      put("style", style.name.lowercase())
       put("compass", world.environment == org.bukkit.World.Environment.NORMAL)
     }
     ToolOutput(result, context.lang.text("summary.distance", "blocks" to distance, "direction" to context.lang.text("directions.$direction")))
-  }
-
-  /** A short line of particles from the player toward the target; only this player sees it. */
-  fun trail(plugin: org.bukkit.plugin.Plugin, player: Player, target: Location, seconds: Int) {
-    // Two pulses a second, so the line follows the player as they turn and walk.
-    repeat(seconds * 2) { pulse ->
-      plugin.server.scheduler.runTaskLater(plugin, Runnable {
-        if (!player.isOnline || player.world != target.world) return@Runnable
-        val from = player.eyeLocation.subtract(0.0, 0.4, 0.0)
-        val way = target.toVector().subtract(from.toVector())
-        if (way.lengthSquared() < 1) return@Runnable
-        val step = way.normalize().multiply(0.5)
-        val point = from.clone()
-        repeat(24) {
-          point.add(step)
-          player.spawnParticle(Particle.END_ROD, point, 1, 0.0, 0.0, 0.0, 0.0)
-        }
-      }, pulse * 10L)
-    }
   }
 
   private val sortInventory = tool("sort_inventory") { context, player, _ ->

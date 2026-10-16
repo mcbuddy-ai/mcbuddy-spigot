@@ -3,6 +3,7 @@ package chat.allay.spigot
 import chat.allay.core.*
 import chat.allay.core.tools.*
 import chat.allay.spigot.tools.ToolContext
+import chat.allay.spigot.tools.Trails
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -36,10 +37,14 @@ class Handler(
   /** When each player last asked everyone, for `askall.cooldown_seconds`. */
   private val lastPublic = ConcurrentHashMap<String, Long>()
 
-  /** `/allay cancel`: stops the sender's run, like Esc in Claude Code. */
+  /** `/allay cancel`: stops the sender's run, like Esc in Claude Code, or with no run, the way trail. */
   fun cancel(sender: CommandSender): Boolean {
     val run = runs.remove(key(sender))
     if (run == null) {
+      if (sender is Player && Trails.stop(sender)) {
+        locales.of(sender).send(sender, "messages.trail_stopped")
+        return true
+      }
       locales.of(sender).send(sender, "messages.nothing_to_cancel")
       return true
     }
@@ -140,8 +145,15 @@ class Handler(
       } else {
         sender.sendMessage(labeled(run, outcome.answer))
       }
-      // Buttons belong to the asker, even under an answer everyone reads.
-      player?.let { clicks().show(it, run.buttons.toList()) }
+      // Under an answer everyone reads, everyone gets the buttons, each with their own ids, and a question
+      // button asks everyone again, so the shared thread goes on.
+      val buttons = run.buttons.toList()
+      if (run.public) {
+        val shared = buttons.map { if (it is Button.Ask) it.copy(public = true) else it }
+        plugin.server.onlinePlayers.forEach { clicks().show(it, shared) }
+      } else {
+        player?.let { clicks().show(it, buttons) }
+      }
       if (run.tip) player?.let { clicks().tip(it) }
       plugin.logger.info("✅ Question answered")
       return

@@ -18,7 +18,7 @@ import chat.allay.spigot.Minecraft.formatMessage
 import chat.allay.spigot.menus.EnchantMenu
 import chat.allay.spigot.menus.RecipeMenu
 import chat.allay.spigot.menus.VillagerMenu
-import chat.allay.spigot.tools.ActionTools
+import chat.allay.spigot.tools.Trails
 import chat.allay.core.tools.Books
 import chat.allay.core.tools.Button
 import chat.allay.core.tools.ButtonStore
@@ -39,7 +39,8 @@ class Clicks(
   private val config: Config,
   private val features: Features,
   private val store: ButtonStore,
-  private val ask: (Player, String) -> Unit,
+  /** Asks for the player, publicly when the third argument says so. */
+  private val ask: (Player, String, Boolean) -> Unit,
 ) {
   private val ui = config.ui
   private fun lang(player: Player) = features.locales.of(player)
@@ -51,9 +52,12 @@ class Clicks(
     val parts = mutableListOf<BaseComponent>()
     buttons.forEachIndexed { index, button ->
       if (index > 0) parts += TextComponent(" ")
-      val id = store.add(player.uniqueId, button)
       val label = button.label.ifBlank { defaultLabel(lang, button) }
-      parts += clickable(lang.text("buttons.format", "label" to label), id, hover(lang, player, button))
+      parts += if (button is Button.Copy) {
+        copyable(lang.text("buttons.format", "label" to label), button.text, hover(lang, player, button))
+      } else {
+        clickable(lang.text("buttons.format", "label" to label), store.add(player.uniqueId, button), hover(lang, player, button))
+      }
     }
     player.spigot().sendMessage(*parts.toTypedArray())
   }
@@ -77,6 +81,11 @@ class Clicks(
     hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Text(TextComponent.fromLegacyText(formatMessage(hover))))
   }
 
+  private fun copyable(text: String, copied: String, hover: String) = TextComponent(*TextComponent.fromLegacyText(formatMessage(text))).apply {
+    clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, copied)
+    hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Text(TextComponent.fromLegacyText(formatMessage(hover))))
+  }
+
   private fun defaultLabel(lang: Lang, button: Button) = when (button) {
     is Button.ReadBook -> lang.text("buttons.read_book")
     is Button.TakeBook -> lang.text("buttons.take_book")
@@ -87,6 +96,7 @@ class Clicks(
     is Button.Ask -> lang.text("buttons.hover.ask", "question" to button.question)
     is Button.Point -> lang.text("buttons.hover.point", "x" to button.x, "y" to button.y, "z" to button.z)
     is Button.Note -> lang.text("buttons.hover.note", "text" to button.text, "x" to button.x, "y" to button.y, "z" to button.z)
+    is Button.Copy -> lang.text("buttons.hover.copy", "text" to button.text)
     is Button.Recipe -> lang.text("buttons.hover.recipe")
     is Button.Enchants -> lang.text("buttons.hover.enchants")
     is Button.Villagers -> lang.text("buttons.hover.villagers")
@@ -102,11 +112,15 @@ class Clicks(
     when (val button = store.take(player.uniqueId, id)) {
       null -> lang.send(player, "buttons.expired")
       is Button.Ask -> {
-        lang.send(player, "buttons.question", "question" to button.question)
-        ask(player, button.question)
+        // A public question shows itself to everyone; one the player may not ask publicly stays theirs.
+        val public = button.public && player.hasPermission(Permissions.ASKALL)
+        if (!public) lang.send(player, "buttons.question", "question" to button.question)
+        ask(player, button.question, public)
       }
       is Button.Point -> point(player, button)
       is Button.Note -> note(player, button)
+      // Copying happens in the client and never reaches the store; kept for a complete `when`.
+      is Button.Copy -> Unit
       is Button.Recipe -> recipe(player, button.item)
       is Button.Enchants -> enchants(player)
       is Button.Villagers -> villagers(player, button.item)
@@ -129,7 +143,7 @@ class Clicks(
     }
     val target = Location(player.world, button.x + 0.5, button.y.toDouble(), button.z + 0.5)
     player.compassTarget = target
-    ActionTools.trail(plugin, player, target, 15)
+    Trails.show(plugin, player, target, features.config().tools.trailSeconds) { lang(player).send(player, "messages.arrived") }
     val dx = target.x - player.location.x
     val dz = target.z - player.location.z
     val lang = lang(player)

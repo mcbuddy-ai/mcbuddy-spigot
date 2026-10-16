@@ -148,7 +148,7 @@ summary:
   reminders_cancelled: "cancelei {count}"
   ping: "dim-dom!"
   note_saved: "anotado"
-  note_saved_at: "anotado: {x} {y} {z}"
+  note_saved_at: "anotado: {x} {y} {z}, {dimension}"
   notes: "{count} {count|anotação|anotações}"
   notes_all: "nada exato, lendo todas as {count}"
   notes_empty: "o caderno está vazio"
@@ -198,6 +198,8 @@ messages:
   askx_thinking: "&eMontando os comandos…"
   cancelled: "&7Parei."
   nothing_to_cancel: "&7Não estou fazendo nada agora."
+  arrived: "&aVocê chegou."
+  trail_stopped: "&7Tirei o rastro."
   reminder: "&e⏰ Lembrete: &f{text}"
   commands_in_order: "&aExecutando {count} {count|comando|comandos} em ordem…"
   commands_at_once: "&aExecutando {count} {count|comando|comandos}…"
@@ -228,6 +230,10 @@ memory:
   forget_usage: "&7Uso: &f/allay forget <número|all>&7. Os números estão em &f/allay memory"
   not_found: "&cNão existe a anotação número {n}. A lista: &f/allay memory"
   unsupported: "&cEste servidor do Allay ainda não guarda memórias."
+  remembered: "&aGuardei: &f{text}"
+  noted: "&aAnotado no caderno: &f{text} &7({x} {y} {z}, {dimension})"
+  full: "&cMinha memória está cheia. Me faça esquecer algo antes: &f/allay forget <número>"
+  remember_usage: "&7Uso: &f/allay memory <o que lembrar>&7. Com coordenadas, vai para o caderno."
 
 # Modo chat: o que o jogador escreve no chat vai para o Allay. ! executa comandos, ? pergunta na frente
 # de todos, ~ escreve no chat normal. A dica aparece sob o segundo /ask de cada visita.
@@ -268,6 +274,7 @@ buttons:
     ask: "&7Perguntar: &f{question}"
     point: "&7Mostrar o caminho até &f{x} {y} {z}"
     note: "&7Anotar no caderno: &f{text} &7({x} {y} {z})"
+    copy: "&7Copiar: &f{text}"
     recipe: "&7Abrir a receita"
     enchants: "&7Abrir os encantamentos do item na mão"
     villagers: "&7Abrir os aldeões por perto"
@@ -482,6 +489,12 @@ locale:
   unknown: "desconhecido"
   usage: "&7Uso: &f/allay locale <jogador>"
   not_found: "&cNão há nenhum jogador {player} online."
+
+# Dimensions by the game's ids, as the notebook shows them.
+dimensions:
+  overworld: "Superfície"
+  the_nether: "Nether"
+  the_end: "End"
 
 directions:
   north: "norte"

@@ -90,6 +90,9 @@ class Config(private val config: YamlConfig, private val pluginVersion: String) 
     val maxReminders = config.int("tools.reminders.max_pending", 10).coerceIn(1, 100)
     val maxNotes = config.int("tools.notes.max_per_player", 200).coerceIn(1, 1000)
     val maxGoals = config.int("tools.goals.max_per_player", 5).coerceIn(1, 20)
+    /** The longest trail `point_to` may draw, and the length when nobody names one (also for point buttons). */
+    val trailMaxSeconds = config.int("tools.point_to.max_seconds", 600).coerceIn(10, 3600)
+    val trailSeconds = config.int("tools.point_to.default_seconds", 30).coerceIn(1, trailMaxSeconds)
     val biomeRadius = config.int("tools.locate_biome_radius", 2048).coerceIn(64, 6400)
     val villagerRadius = config.int("tools.villager_radius", 32).coerceIn(8, 64)
     /** Plugins `get_server` leaves out of its list, by name, in any case. */

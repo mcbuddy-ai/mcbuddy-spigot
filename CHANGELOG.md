@@ -2,6 +2,17 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 5.3.0
+
+Works with any Allay Server 5.x; the new parts need Allay Server 5.1.
+
+- 🧭 **The assistant knows which dimension you're in.** Every question carries it, so “remember the portal here” or “the bastion at -498 68 -629” from the Nether goes to the Nether. The tool line under a note says where it went: “noted: -20 95 120, Nether”.
+- ✨ **Way trails as long as you need, in many looks.** Ask for “the way for 5 minutes”, or let the assistant pick by the distance. The trail goes out once you arrive, a new one replaces the old, and `/allay cancel` hides it when no answer is running. Twelve looks: sparkle, flame, soul, glow, magic, spark, cherry, notes, hearts, snow, totem, and happy. `tools.point_to.default_seconds` (30) and `max_seconds` (600) set the length; way buttons use the default instead of 15 seconds.
+- 🔘 **Buttons under public answers are for everyone.** Every player online gets them; a question button asks everyone again, and the way, note, and copy buttons work for whoever presses them.
+- 📋 **A copy button.** The assistant can put coordinates or any short text into your clipboard.
+- 📝 **`/allay memory <text>`** keeps something without asking the assistant. Coordinates in the text (`x y z` or `x z`) make a note in your notebook, in the dimension the text names (“nether”, «ад», “the end”) or the one you stand in; anything else becomes a remembered fact.
+- New texts in `lang/`: `messages.arrived`, `messages.trail_stopped`, `memory.remembered`, `memory.noted`, `memory.full`, `memory.remember_usage`, `buttons.hover.copy`, and the `dimensions` section; `summary.note_saved_at` gained `{dimension}`.
+
 ## 5.2.0
 
 - 📊 **Plan.** With Plan installed, each player's page gets an Allay block: chat mode (also a column in the players table), the language Allay talks to them in, their goals with progress, notes, and waiting reminders. The server's “Plugins Overview” shows who pays for the model, how many players use chat mode with a pie of on and off, and, with a subscription, its plan, paid-until date, and the share of the limit used. Plan is optional.

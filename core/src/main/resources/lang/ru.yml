@@ -148,7 +148,7 @@ summary:
   reminders_cancelled: "отменил {count}"
   ping: "дзынь!"
   note_saved: "записал"
-  note_saved_at: "записал: {x} {y} {z}"
+  note_saved_at: "записал: {x} {y} {z}, {dimension}"
   notes: "{count} {count|запись|записи|записей}"
   notes_all: "точного совпадения нет, смотрю все {count}"
   notes_empty: "блокнот пуст"
@@ -198,6 +198,8 @@ messages:
   askx_thinking: "&eПодбираю команды…"
   cancelled: "&7Остановил."
   nothing_to_cancel: "&7Сейчас я ничего не делаю."
+  arrived: "&aТы на месте."
+  trail_stopped: "&7Убрал след."
   reminder: "&e⏰ Напоминание: &f{text}"
   commands_in_order: "&aВыполняю {count} {count|команду|команды|команд} по очереди…"
   commands_at_once: "&aВыполняю {count} {count|команду|команды|команд}…"
@@ -228,6 +230,10 @@ memory:
   forget_usage: "&7Использование: &f/allay forget <номер|all>&7. Номера — в &f/allay memory"
   not_found: "&cНет записи с номером {n}. Список: &f/allay memory"
   unsupported: "&cСервер Allay пока не умеет хранить память."
+  remembered: "&aЗапомнил: &f{text}"
+  noted: "&aЗаписал в блокнот: &f{text} &7({x} {y} {z}, {dimension})"
+  full: "&cПамять заполнена. Сначала дай мне что-нибудь забыть: &f/allay forget <номер>"
+  remember_usage: "&7Использование: &f/allay memory <что запомнить>&7. С координатами запись уйдёт в блокнот."
 
 # Режим чата: всё, что игрок пишет в чат, уходит Allay. ! — команды, ? — вопрос при всех,
 # ~ — сообщение в общий чат. Подсказка о режиме появляется под вторым /ask за заход.
@@ -268,6 +274,7 @@ buttons:
     ask: "&7Спросить: &f{question}"
     point: "&7Показать путь к &f{x} {y} {z}"
     note: "&7Записать в блокнот: &f{text} &7({x} {y} {z})"
+    copy: "&7Скопировать: &f{text}"
     recipe: "&7Открыть рецепт"
     enchants: "&7Открыть чары для предмета в руке"
     villagers: "&7Открыть жителей рядом"
@@ -482,6 +489,12 @@ locale:
   unknown: "неизвестно"
   usage: "&7Использование: &f/allay locale <игрок>"
   not_found: "&cИгрока {player} нет онлайн."
+
+# Dimensions by the game's ids, as the notebook shows them.
+dimensions:
+  overworld: "Верхний мир"
+  the_nether: "Нижний мир"
+  the_end: "Край"
 
 directions:
   north: "север"

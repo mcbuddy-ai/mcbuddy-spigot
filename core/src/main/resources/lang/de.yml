@@ -148,7 +148,7 @@ summary:
   reminders_cancelled: "{count} gelöscht"
   ping: "ding!"
   note_saved: "notiert"
-  note_saved_at: "notiert: {x} {y} {z}"
+  note_saved_at: "notiert: {x} {y} {z}, {dimension}"
   notes: "{count} {count|Notiz|Notizen}"
   notes_all: "nichts Genaues gefunden, lese alle {count}"
   notes_empty: "das Notizbuch ist leer"
@@ -198,6 +198,8 @@ messages:
   askx_thinking: "&eSuche die passenden Befehle…"
   cancelled: "&7Gestoppt."
   nothing_to_cancel: "&7Ich mache gerade nichts."
+  arrived: "&aDu bist da."
+  trail_stopped: "&7Spur ausgeblendet."
   reminder: "&e⏰ Erinnerung: &f{text}"
   commands_in_order: "&aFühre {count} {count|Befehl|Befehle} nacheinander aus…"
   commands_at_once: "&aFühre {count} {count|Befehl|Befehle} aus…"
@@ -228,6 +230,10 @@ memory:
   forget_usage: "&7Verwendung: &f/allay forget <Nummer|all>&7. Die Nummern stehen in &f/allay memory"
   not_found: "&cEinen Eintrag Nummer {n} gibt es nicht. Die Liste: &f/allay memory"
   unsupported: "&cDieser Allay-Server kann sich noch nichts merken."
+  remembered: "&aGemerkt: &f{text}"
+  noted: "&aIm Notizbuch gespeichert: &f{text} &7({x} {y} {z}, {dimension})"
+  full: "&cMein Gedächtnis ist voll. Lass mich erst etwas vergessen: &f/allay forget <Nummer>"
+  remember_usage: "&7Verwendung: &f/allay memory <was ich mir merken soll>&7. Mit Koordinaten landet es im Notizbuch."
 
 # Chatmodus: Was ein Spieler in den Chat schreibt, geht an Allay. ! führt Befehle aus, ? fragt vor allen,
 # ~ schreibt in den normalen Chat. Der Tipp dazu erscheint unter dem zweiten /ask pro Besuch.
@@ -268,6 +274,7 @@ buttons:
     ask: "&7Fragen: &f{question}"
     point: "&7Weg zeigen zu &f{x} {y} {z}"
     note: "&7Im Notizbuch speichern: &f{text} &7({x} {y} {z})"
+    copy: "&7Kopieren: &f{text}"
     recipe: "&7Rezept öffnen"
     enchants: "&7Verzauberungen für den Gegenstand in der Hand öffnen"
     villagers: "&7Dorfbewohner in der Nähe öffnen"
@@ -482,6 +489,12 @@ locale:
   unknown: "unbekannt"
   usage: "&7Verwendung: &f/allay locale <Spieler>"
   not_found: "&cSpieler {player} ist nicht online."
+
+# Dimensions by the game's ids, as the notebook shows them.
+dimensions:
+  overworld: "Oberwelt"
+  the_nether: "Nether"
+  the_end: "Ende"
 
 directions:
   north: "Norden"

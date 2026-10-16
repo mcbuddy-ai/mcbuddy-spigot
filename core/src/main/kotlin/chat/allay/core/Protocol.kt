@@ -33,7 +33,8 @@ object Protocol {
   /** Empty [model] means the backend's default; empty [search_model] means no web search. */
   @Serializable data class Provider(val base_url: String, val model: String, val search_model: String)
 
-  @Serializable data class PlayerInfo(val name: String, val uuid: String, val op: Boolean)
+  /** [dimension] (since 5.3) is where the player stands, so the model knows which dimension “here” is. */
+  @Serializable data class PlayerInfo(val name: String, val uuid: String, val op: Boolean, val dimension: String? = null)
 
   /** [id] is random and kept by the plugin; it names the server's shared thread of public questions. */
   @Serializable data class ServerInfo(val id: String? = null, val software: String, val version: String, val plugin_version: String)

@@ -153,7 +153,7 @@ class Service<C>(
       user_id = uuid?.toString() ?: "console",
       locale = uuid?.let { asker.locale },
       timezone = uuid?.let(zones::of) ?: config.time.zone,
-      player = uuid?.let { Protocol.PlayerInfo(asker.name, it.toString(), asker.operator) },
+      player = uuid?.let { Protocol.PlayerInfo(asker.name, it.toString(), asker.operator, asker.dimension) },
       server = Protocol.ServerInfo(serverId, host.software, host.gameVersion, host.pluginVersion),
       tools = tools.offered(isOperator(asker)),
       provider = credentials.block(),
@@ -206,12 +206,20 @@ class Service<C>(
   @Serializable data class Memory(val id: String, val text: String, val created_at: String? = null)
   @Serializable private data class Memories(val memories: List<Memory> = emptyList())
   @Serializable private data class Deleted(val deleted: Int = 0)
+  @Serializable private data class Remember(val text: String)
+  @Serializable private data class Remembered(val memory: Memory)
 
   /** `/allay new`: the backend forgets the conversation but keeps the memories. */
   suspend fun resetSession(userId: String) = withContext(IO) { send("/api/v2/users/${path(userId)}/session", "DELETE") }
 
   suspend fun memories(userId: String): List<Memory> = withContext(IO) {
     json.decodeFromString<Memories>(send("/api/v2/users/${path(userId)}/memories", "GET")).memories
+  }
+
+  /** `/allay memory <text>`: saves a fact as the remember tool would. A full memory answers `MEMORY_FULL`. */
+  suspend fun remember(userId: String, text: String): Memory = withContext(IO) {
+    val body = json.encodeToString(Remember.serializer(), Remember(text))
+    json.decodeFromString<Remembered>(send("/api/v2/users/${path(userId)}/memories", "POST", body)).memory
   }
 
   /** Forgets one memory, or all of them when [id] is null; returns how many went. */
@@ -222,8 +230,8 @@ class Service<C>(
 
   private fun path(segment: String) = java.net.URLEncoder.encode(segment, Charsets.UTF_8).replace("+", "%20")
 
-  private fun send(path: String, method: String): String {
-    val request = Request.Builder().url("${config.server.url}$path").method(method, null).build()
+  private fun send(path: String, method: String, body: String? = null): String {
+    val request = Request.Builder().url("${config.server.url}$path").method(method, body?.toRequestBody(jsonType)).build()
     client.newCall(request).execute().use { response ->
       if (!response.isSuccessful) throw failure(errorParser.parseErrorFromResponse(response))
       return response.body.string()

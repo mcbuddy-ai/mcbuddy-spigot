@@ -148,7 +148,7 @@ summary:
   reminders_cancelled: "cancelados: {count}"
   ping: "¡ding!"
   note_saved: "apuntado"
-  note_saved_at: "apuntado: {x} {y} {z}"
+  note_saved_at: "apuntado: {x} {y} {z}, {dimension}"
   notes: "{count} {count|nota|notas}"
   notes_all: "nada exacto, leyendo las {count}"
   notes_empty: "la libreta está vacía"
@@ -198,6 +198,8 @@ messages:
   askx_thinking: "&eBuscando los comandos…"
   cancelled: "&7Parado."
   nothing_to_cancel: "&7Ahora mismo no estoy haciendo nada."
+  arrived: "&aYa has llegado."
+  trail_stopped: "&7He quitado el rastro."
   reminder: "&e⏰ Recordatorio: &f{text}"
   commands_in_order: "&aEjecutando {count} {count|comando|comandos} en orden…"
   commands_at_once: "&aEjecutando {count} {count|comando|comandos}…"
@@ -228,6 +230,10 @@ memory:
   forget_usage: "&7Uso: &f/allay forget <número|all>&7. Los números están en &f/allay memory"
   not_found: "&cNo hay ninguna entrada con el número {n}. La lista: &f/allay memory"
   unsupported: "&cEste servidor de Allay aún no puede guardar recuerdos."
+  remembered: "&aRecordado: &f{text}"
+  noted: "&aApuntado en la libreta: &f{text} &7({x} {y} {z}, {dimension})"
+  full: "&cMi memoria está llena. Haz que olvide algo primero: &f/allay forget <número>"
+  remember_usage: "&7Uso: &f/allay memory <qué recordar>&7. Con coordenadas, va a la libreta."
 
 # Modo chat: lo que el jugador escribe en el chat va a Allay. ! ejecuta comandos, ? pregunta delante de
 # todos, ~ escribe en el chat normal. El consejo aparece bajo el segundo /ask de cada visita.
@@ -268,6 +274,7 @@ buttons:
     ask: "&7Preguntar: &f{question}"
     point: "&7Mostrar el camino a &f{x} {y} {z}"
     note: "&7Apuntar en la libreta: &f{text} &7({x} {y} {z})"
+    copy: "&7Copiar: &f{text}"
     recipe: "&7Abrir la receta"
     enchants: "&7Abrir los encantamientos del objeto en la mano"
     villagers: "&7Abrir los aldeanos cercanos"
@@ -482,6 +489,12 @@ locale:
   unknown: "desconocido"
   usage: "&7Uso: &f/allay locale <jugador>"
   not_found: "&cNo hay ningún jugador {player} en línea."
+
+# Dimensions by the game's ids, as the notebook shows them.
+dimensions:
+  overworld: "Superficie"
+  the_nether: "Nether"
+  the_end: "End"
 
 directions:
   north: "norte"

@@ -151,7 +151,7 @@ tools:
     find_notes: true              # Find notes, nearest first
     delete_note: true             # Delete a note
     # Harmless actions: they give nothing and change nothing in the world
-    point_to: true                # Point the compass at a spot and draw a trail for up to 30 seconds (only the player sees it)
+    point_to: true                # Point the compass at a spot and draw a trail toward it (only the player sees it)
     sort_inventory: true          # Merge stacks and sort the inventory (the hotbar stays)
     reminders: true               # Remind the player in 1–120 minutes; list and cancel reminders
     ping_me: true                 # A sound and particles over the player, seen and heard by everyone nearby
@@ -174,6 +174,11 @@ tools:
     max_per_player: 200       # Notes in one player's notebook
   goals:
     max_per_player: 5         # Goals one player can have at once
+  # The trail point_to and the way buttons draw. It ends early once the player arrives,
+  # and /allay cancel stops it.
+  point_to:
+    default_seconds: 30       # When the assistant names no length, and for way buttons
+    max_seconds: 600          # The longest trail the assistant may draw (10–3600)
   # The biome search radius in blocks (64–6400); it runs on the main thread, like /locate biome.
   locate_biome_radius: 2048
   # How far to look for villagers, in blocks (8–64).

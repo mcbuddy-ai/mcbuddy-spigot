@@ -7,14 +7,17 @@ import java.util.concurrent.ConcurrentHashMap
 sealed interface Button {
   val label: String
 
-  /** Asks Allay this question, as if the player typed `/ask question`. */
-  data class Ask(override val label: String, val question: String) : Button
+  /** Asks Allay this question, as if the player typed `/ask question`; under an answer everyone read, as `/askall`. */
+  data class Ask(override val label: String, val question: String, val public: Boolean = false) : Button
 
   /** Shows the way to a spot with a particle trail and the compass. */
   data class Point(override val label: String, val x: Int, val y: Int, val z: Int, val dimension: String?) : Button
 
   /** Writes a note with these coordinates into the player's notebook. */
   data class Note(override val label: String, val text: String, val x: Int, val y: Int, val z: Int, val dimension: String?) : Button
+
+  /** Puts text into the player's clipboard, such as coordinates; the client does it, so no id is needed. */
+  data class Copy(override val label: String, val text: String) : Button
 
   /** Opens the recipe window for an item. */
   data class Recipe(override val label: String, val item: String) : Button

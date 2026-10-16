@@ -17,5 +17,8 @@ interface Asker {
   /** The language the player's game is set to, like `en_us`; null for the console. */
   val locale: String?
 
+  /** The dimension the player stood in when they asked, as `Dimensions` ids; null for the console. */
+  val dimension: String? get() = null
+
   fun can(permission: String): Boolean
 }

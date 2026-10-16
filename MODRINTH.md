@@ -6,12 +6,12 @@
 
 - 💬 **`/ask` about anything in the game.** “What should I do next?”, “which sword is better?”, “where did I put my redstone?”. The assistant looks things up in the game while it answers instead of guessing.
 - 🗨️ **Chat mode:** with `/allay chat`, everything a player writes goes to the assistant. `!` runs commands, `?` asks in front of everyone, `~` writes to the ordinary chat.
-- 📣 **Questions everyone sees** with `/askall`, in one thread per server, so friends can follow up on each other's questions.
+- 📣 **Questions everyone sees** with `/askall`, in one thread per server, so friends can follow up on each other's questions; everyone gets the buttons under the answer.
 - 📖 **It explains itself** from the commands and settings each player really has, and knows your server's plugins and their versions.
 - 👀 **It sees what the player sees:** the block under the crosshair with its drops, a chest's contents, an enchanting table's bookshelves, a mob and the hits it takes, a villager's trades.
 - 🎒 **It knows the player's things:** inventory, armor, the ender chest, bundles and shulker boxes, and any item in full, down to a weapon's damage and speed as the tooltip shows them.
 - 🔍 **It finds things** in the inventory, the ender chest, and the chests nearby, inside shulker boxes too.
-- 🧭 **It shows the way** with the compass and a particle trail: to a death point, a village, a biome, or a place from the player's notebook.
+- 🧭 **It shows the way** with the compass and a particle trail: to a death point, a village, a biome, or a place from the player's notebook. The trail lasts as long as the walk needs, in a dozen looks, and goes out on arrival.
 - 📒 **A notebook, goals with a boss bar, and reminders.**
 - 🪟 **Buttons under answers** and **recipe, enchanting, and villager windows** that only show pictures, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled, picked by the player's country, then by their game's language.
@@ -65,6 +65,7 @@ The country lookup needs no account and sends no address anywhere. On the first 
 | `/allay chat [on\|off]`, `/allay hints [on\|off]` | Chat mode and the tip about it |
 | `/allay cancel`, `/allay new` | Stops the current question; starts the conversation over |
 | `/allay memory`, `/allay forget <number\|all>` | Shows and erases what the assistant remembers about you |
+| `/allay memory <text>` | Remembers the text by hand; with coordinates, a note in the notebook |
 | `/allay recipe <item>`, `/allay enchants`, `/allay villagers` | Opens a window |
 | `/allay reload` | Reloads the settings and the languages |
 | `/allay status`, `/allay link` | Who pays for the model and how the subscription stands; a link to pay in Telegram |

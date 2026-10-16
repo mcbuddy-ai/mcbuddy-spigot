@@ -148,7 +148,7 @@ summary:
   reminders_cancelled: "cancelled {count}"
   ping: "ding!"
   note_saved: "noted"
-  note_saved_at: "noted: {x} {y} {z}"
+  note_saved_at: "noted: {x} {y} {z}, {dimension}"
   notes: "{count} {count|note|notes}"
   notes_all: "no exact match, reading all {count}"
   notes_empty: "the notebook is empty"
@@ -198,6 +198,8 @@ messages:
   askx_thinking: "&eWorking out the commands…"
   cancelled: "&7Stopped."
   nothing_to_cancel: "&7I'm not doing anything right now."
+  arrived: "&aYou're there."
+  trail_stopped: "&7Trail hidden."
   reminder: "&e⏰ Reminder: &f{text}"
   commands_in_order: "&aRunning {count} {count|command|commands} in order…"
   commands_at_once: "&aRunning {count} {count|command|commands}…"
@@ -228,6 +230,10 @@ memory:
   forget_usage: "&7Usage: &f/allay forget <number|all>&7. The numbers are in &f/allay memory"
   not_found: "&cThere's no entry number {n}. The list: &f/allay memory"
   unsupported: "&cThis Allay server can't keep memories yet."
+  remembered: "&aRemembered: &f{text}"
+  noted: "&aSaved to the notebook: &f{text} &7({x} {y} {z}, {dimension})"
+  full: "&cMy memory is full. Make me forget something first: &f/allay forget <number>"
+  remember_usage: "&7Usage: &f/allay memory <what to remember>&7. With coordinates, it goes to the notebook."
 
 # Chat mode: what a player writes in chat goes to Allay. ! runs commands, ? asks so everyone
 # sees it, ~ writes to the ordinary chat. The tip about it shows under the second /ask of a visit.
@@ -268,6 +274,7 @@ buttons:
     ask: "&7Ask: &f{question}"
     point: "&7Show the way to &f{x} {y} {z}"
     note: "&7Save to the notebook: &f{text} &7({x} {y} {z})"
+    copy: "&7Copy: &f{text}"
     recipe: "&7Open the recipe"
     enchants: "&7Open enchantments for the item in hand"
     villagers: "&7Open the villagers nearby"
@@ -482,6 +489,12 @@ locale:
   unknown: "unknown"
   usage: "&7Usage: &f/allay locale <player>"
   not_found: "&cThere's no player {player} online."
+
+# Dimensions by the game's ids, as the notebook shows them.
+dimensions:
+  overworld: "Overworld"
+  the_nether: "Nether"
+  the_end: "End"
 
 directions:
   north: "north"
