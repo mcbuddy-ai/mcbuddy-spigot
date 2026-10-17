@@ -2,6 +2,15 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 5.4.0
+
+Works with any Allay Server 5.x; the way to players needs Allay Server 5.2.
+
+- 📍 **The way to another player.** “Who's around?” and “take me to Sergey” now work. A new tool, `get_nearby_players`, tells the assistant who is on your locator bar, the dots above the experience bar, and no more: a name, the distance, and the direction, by the game's own rules. Whoever crouches, wears a carved pumpkin or a mob head, or drinks invisibility is off the bar, and off Allay's too; spectators see everyone, and nobody sees them. With the `locator_bar` game rule off, Allay leads nobody. Players elsewhere show up only by name, never where they are; vanished players stay hidden.
+- 🏃 **The trail follows them.** `point_to` takes `player` instead of coordinates: the trail and the compass follow that player as they run, a pillar of particles stands over their head once they're near, and it ends when you reach them. While they hide, the trail goes dark, as their dot does; it ends after 15 seconds off the bar or when they leave. `tools.point_to.follow_seconds` (180) sets how long it lasts when the assistant names no length.
+- 🔘 **Up to six buttons under an answer**, so “to whom?” can offer the way to each player around. A way button to a player checks your locator bar again when you press it, and under a public answer nobody gets the way to themselves.
+- New texts in `lang/`: `tools.get_nearby_players`, `summary.players`, `summary.players_none`, `summary.distance_to`, `messages.found`, `messages.trail_lost`, `buttons.hover.follow`, `buttons.path_to_player`, and `buttons.player_hidden`.
+
 ## 5.3.0
 
 Works with any Allay Server 5.x; the new parts need Allay Server 5.1.

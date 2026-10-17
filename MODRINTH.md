@@ -11,7 +11,7 @@
 - 👀 **It sees what the player sees:** the block under the crosshair with its drops, a chest's contents, an enchanting table's bookshelves, a mob and the hits it takes, a villager's trades.
 - 🎒 **It knows the player's things:** inventory, armor, the ender chest, bundles and shulker boxes, and any item in full, down to a weapon's damage and speed as the tooltip shows them.
 - 🔍 **It finds things** in the inventory, the ender chest, and the chests nearby, inside shulker boxes too.
-- 🧭 **It shows the way** with the compass and a particle trail: to a death point, a village, a biome, or a place from the player's notebook. The trail lasts as long as the walk needs, in a dozen looks, and goes out on arrival.
+- 🧭 **It shows the way** with the compass and a particle trail: to a death point, a village, a biome, or a place from the player's notebook. The trail lasts as long as the walk needs, in a dozen looks, and goes out on arrival. The way to another player follows them as they run.
 - 📒 **A notebook, goals with a boss bar, and reminders.**
 - 🪟 **Buttons under answers** and **recipe, brewing, anvil, enchanting, and villager windows** that only show pictures, so nothing can be taken from them. Potions come from the game's own brewing recipes; the anvil plan uses the books and items the player really has.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled, picked by the player's country, then by their game's language.
@@ -19,7 +19,7 @@
 - 🧩 **PlaceholderAPI**, if you have it: `{papi:luckperms_prefix}` in a text, and `%allay_chat_mode%` and friends for TAB and scoreboards.
 - 🪽 **It sounds like an allay:** a curious hum while it works, a happy chortle with the answer.
 - ✻ **A live status like Claude Code** in the action bar, and a chat line for each tool the assistant uses.
-- 🔒 **Private and safe.** Tools know only the player who asked; other players show up only as a count. Tools that give items or change the world go to operators only. Every tool can be switched off. Vanished players (SuperVanish, PremiumVanish, Essentials) stay hidden from everyone but themselves and operators, and their public questions stay private.
+- 🔒 **Private and safe.** Tools know only the player who asked. Other players show up only as the asker's locator bar shows them, by the game's rules: crouching, a pumpkin, or invisibility hides them from Allay too. Tools that give items or change the world go to operators only. Every tool can be switched off. Vanished players (SuperVanish, PremiumVanish, Essentials) stay hidden from everyone but themselves and operators, and their public questions stay private.
 
 ## Install
 

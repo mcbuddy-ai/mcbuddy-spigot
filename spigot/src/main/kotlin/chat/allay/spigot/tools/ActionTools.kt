@@ -23,7 +23,8 @@ object ActionTools {
   }
 
   private val pointTo = tool("point_to") { context, player, args ->
-    val x = args.double("x") ?: throw ToolError("x is required")
+    args.string("player")?.trim()?.ifEmpty { null }?.let { return@tool follow(context, player, args, it) }
+    val x = args.double("x") ?: throw ToolError("x is required, or player")
     val z = args.double("z") ?: throw ToolError("z is required")
     val world = player.world
     // Nether coordinates in the overworld point somewhere else entirely, so a mismatch is an error, not a guess.
@@ -54,6 +55,37 @@ object ActionTools {
       put("compass", world.environment == org.bukkit.World.Environment.NORMAL)
     }
     ToolOutput(result, context.lang.text("summary.distance", "blocks" to distance, "direction" to context.lang.text("directions.$direction")))
+  }
+
+  /** `point_to` with `player`: a trail that follows someone on the asker's locator bar. */
+  private fun follow(context: ToolContext, player: Player, args: JsonObject, name: String): ToolOutput {
+    val target = Locator.named(player, name)
+      ?: throw ToolError("nobody called $name is online; match the name against get_nearby_players, or ask the player who they mean")
+    if (!Locator.shows(player, target)) {
+      throw ToolError("${target.name} is online but not on the asker's locator bar right now: in another dimension, hidden (crouching, a carved pumpkin or a mob head, invisibility), or out of range. Say so; don't guess where they are")
+    }
+    val tools = context.features.config().tools
+    val seconds = args.int("seconds")?.also { if (it !in 1..tools.trailMaxSeconds) throw ToolError("seconds must be 1–${tools.trailMaxSeconds}") }
+      ?: tools.followSeconds
+    val style = Trails.Style.parse(args.string("style"))
+    val lang = context.lang
+    Trails.follow(context.plugin, player, target, seconds, style,
+      found = { lang.send(player, "messages.found", "name" to target.name) },
+      lost = { lang.send(player, "messages.trail_lost", "name" to target.name) })
+    val dx = target.location.x - player.location.x
+    val dz = target.location.z - player.location.z
+    val distance = Math.round(target.location.distance(player.location))
+    val direction = Facts.direction(dx, dz)
+    val result = buildJsonObject {
+      put("player", target.name)
+      put("distance", distance)
+      put("direction", direction)
+      put("seconds", seconds)
+      put("style", style.name.lowercase())
+      put("follows", true)
+      put("compass", player.world.environment == org.bukkit.World.Environment.NORMAL)
+    }
+    return ToolOutput(result, lang.text("summary.distance_to", "name" to target.name, "blocks" to distance, "direction" to lang.text("directions.$direction")))
   }
 
   private val sortInventory = tool("sort_inventory") { context, player, _ ->

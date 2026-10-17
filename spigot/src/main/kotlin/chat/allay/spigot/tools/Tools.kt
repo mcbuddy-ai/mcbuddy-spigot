@@ -39,7 +39,8 @@ class Features(
 )
 
 /**
- * Who asked. Tools see only this sender: the owner decided the agent may learn about the asker alone.
+ * Who asked. Tools see only this sender: the owner decided the agent may learn about the asker alone, and about
+ * other players only what the asker's locator bar shows ([Locator]).
  * [buttons] collects what goes under the answer; the handler shows them once the answer is out.
  */
 class ToolContext(val sender: CommandSender, val features: Features, val buttons: MutableList<Button> = java.util.Collections.synchronizedList(mutableListOf())) {
@@ -60,6 +61,6 @@ typealias Tool = ClientTool<ToolContext>
 
 /** Every tool this plugin offers. */
 object Tools {
-  fun all(): List<Tool> = PlayerTools.all + LookTools.all + LocationTools.all + WorldTools.all + KnowledgeTools.all + InspectTools.all + CareTools.all + BrewingTools.all +
+  fun all(): List<Tool> = PlayerTools.all + LookTools.all + LocationTools.all + LocatorTools.all + WorldTools.all + KnowledgeTools.all + InspectTools.all + CareTools.all + BrewingTools.all +
     NotebookTools.all + ActionTools.all + InteractTools.all + GoalTools.all + AllayTools.all + OperatorTools.all
 }

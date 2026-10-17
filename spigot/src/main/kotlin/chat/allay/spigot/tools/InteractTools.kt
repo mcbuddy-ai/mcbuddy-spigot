@@ -20,8 +20,8 @@ object InteractTools {
     override fun run(context: ToolContext, args: JsonObject) = body(context, context.requirePlayer(), args)
   }
 
-  /** Buttons under one answer, books included; more would crowd the chat line. */
-  const val MAX_BUTTONS = 5
+  /** Buttons under one answer, books included; more would crowd the chat line. Six fits a way button for each player around. */
+  const val MAX_BUTTONS = 6
 
   private val buttons = tool("add_buttons") { context, player, args ->
     val list = (args["buttons"] as? JsonArray)?.mapNotNull { it as? JsonObject } ?: throw ToolError("buttons is required: an array of objects")
@@ -43,7 +43,11 @@ object InteractTools {
     }
     return when (type) {
       "ask" -> Button.Ask(label, args.string("question")?.take(200) ?: throw ToolError("ask needs the question it asks"))
-      "point" -> coordinates().let { (x, y, z) -> Button.Point(label, x, y, z, args.string("dimension")?.let(Dimensions::parse)) }
+      "point" -> args.string("player")?.trim()?.ifEmpty { null }?.let { name ->
+        val target = Locator.named(player, name) ?: throw ToolError("nobody called $name is online; don't offer this button")
+        if (!Locator.shows(player, target)) throw ToolError("${target.name} isn't on the asker's locator bar right now; don't offer the way to them")
+        Button.Follow(label, target.name)
+      } ?: coordinates().let { (x, y, z) -> Button.Point(label, x, y, z, args.string("dimension")?.let(Dimensions::parse)) }
       "note" -> coordinates().let { (x, y, z) ->
         Button.Note(label, args.string("text")?.take(200) ?: throw ToolError("note needs the text to save"), x, y, z, args.string("dimension")?.let(Dimensions::parse))
       }

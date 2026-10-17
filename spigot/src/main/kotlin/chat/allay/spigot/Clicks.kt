@@ -30,6 +30,7 @@ import chat.allay.core.tools.Dimensions
 import chat.allay.core.tools.Facts
 import chat.allay.spigot.tools.Features
 import chat.allay.spigot.tools.InteractTools
+import chat.allay.spigot.tools.Locator
 import chat.allay.core.tools.Note
 import chat.allay.core.tools.ToolError
 import chat.allay.spigot.tools.Villagers
@@ -99,6 +100,7 @@ class Clicks(
   private fun hover(lang: Lang, player: Player, button: Button): String = when (button) {
     is Button.Ask -> lang.text("buttons.hover.ask", "question" to button.question)
     is Button.Point -> lang.text("buttons.hover.point", "x" to button.x, "y" to button.y, "z" to button.z)
+    is Button.Follow -> lang.text("buttons.hover.follow", "name" to button.player)
     is Button.Note -> lang.text("buttons.hover.note", "text" to button.text, "x" to button.x, "y" to button.y, "z" to button.z)
     is Button.Copy -> lang.text("buttons.hover.copy", "text" to button.text)
     is Button.Recipe -> lang.text("buttons.hover.recipe")
@@ -124,6 +126,7 @@ class Clicks(
         ask(player, button.question, public)
       }
       is Button.Point -> point(player, button)
+      is Button.Follow -> follow(player, button)
       is Button.Note -> note(player, button)
       // Copying happens in the client and never reaches the store; kept for a complete `when`.
       is Button.Copy -> Unit
@@ -156,6 +159,19 @@ class Clicks(
     val dz = target.z - player.location.z
     val lang = lang(player)
     lang.send(player, "buttons.path_shown", "distance" to Math.round(Math.hypot(dx, dz)), "direction" to lang.text("directions.${Facts.direction(dx, dz)}"))
+  }
+
+  private fun follow(player: Player, button: Button.Follow) {
+    val lang = lang(player)
+    // Checked again on the press: the button may be an hour old, and the player may have hidden since.
+    val target = Locator.named(player, button.player)?.takeIf { Locator.shows(player, it) }
+      ?: return lang.send(player, "buttons.player_hidden", "name" to button.player)
+    Trails.follow(plugin, player, target, features.config().tools.followSeconds,
+      found = { lang.send(player, "messages.found", "name" to target.name) },
+      lost = { lang.send(player, "messages.trail_lost", "name" to target.name) })
+    val dx = target.location.x - player.location.x
+    val dz = target.location.z - player.location.z
+    lang.send(player, "buttons.path_to_player", "name" to target.name, "distance" to Math.round(target.location.distance(player.location)), "direction" to lang.text("directions.${Facts.direction(dx, dz)}"))
   }
 
   private fun note(player: Player, button: Button.Note) {

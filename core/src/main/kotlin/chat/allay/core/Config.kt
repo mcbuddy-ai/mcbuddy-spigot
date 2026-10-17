@@ -93,6 +93,8 @@ class Config(private val config: YamlConfig, private val pluginVersion: String) 
     /** The longest trail `point_to` may draw, and the length when nobody names one (also for point buttons). */
     val trailMaxSeconds = config.int("tools.point_to.max_seconds", 600).coerceIn(10, 3600)
     val trailSeconds = config.int("tools.point_to.default_seconds", 30).coerceIn(1, trailMaxSeconds)
+    /** A trail to another player when nobody names a length, also for their way buttons: they move, so it lasts longer. */
+    val followSeconds = config.int("tools.point_to.follow_seconds", 180).coerceIn(1, trailMaxSeconds)
     val biomeRadius = config.int("tools.locate_biome_radius", 2048).coerceIn(64, 6400)
     val villagerRadius = config.int("tools.villager_radius", 32).coerceIn(8, 64)
     /** Plugins `get_server` leaves out of its list, by name, in any case. */

@@ -125,6 +125,7 @@ tools:
     locate_biome: true            # The nearest biome of a kind (the search loads the server)
     get_server: true              # Server version, players online, and the plugins with their versions
     get_locations: true           # Respawn point, world spawn, and the last death
+    get_nearby_players: true      # Other players as the asker's locator bar shows them: name, distance, direction
     get_death_info: true          # Where the player died, what dropped, and how long it will lie there
     find_villagers: true          # Villagers around and their trades; can look for one item
     scan_nearby_containers: true  # Containers around and what's in them (sees through walls: turn it off if players have claims)
@@ -152,7 +153,7 @@ tools:
     find_notes: true              # Find notes, nearest first
     delete_note: true             # Delete a note
     # Harmless actions: they give nothing and change nothing in the world
-    point_to: true                # Point the compass at a spot and draw a trail toward it (only the player sees it)
+    point_to: true                # Point the compass at a spot or a player on the locator bar and draw a trail there (only the asker sees it)
     sort_inventory: true          # Merge stacks and sort the inventory (the hotbar stays)
     reminders: true               # Remind the player in 1–120 minutes; list and cancel reminders
     ping_me: true                 # A sound and particles over the player, seen and heard by everyone nearby
@@ -179,6 +180,7 @@ tools:
   # and /allay cancel stops it.
   point_to:
     default_seconds: 30       # When the assistant names no length, and for way buttons
+    follow_seconds: 180       # The same for a trail to another player, which follows them as they move
     max_seconds: 600          # The longest trail the assistant may draw (10–3600)
   # The biome search radius in blocks (64–6400); it runs on the main thread, like /locate biome.
   locate_biome_radius: 2048

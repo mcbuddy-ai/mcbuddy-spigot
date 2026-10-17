@@ -10,8 +10,8 @@ import org.bukkit.scheduler.BukkitTask
 import java.util.UUID
 
 /**
- * Particle trails toward a spot that only the player sees. One per player: a new trail replaces the old one, and a
- * trail ends once the player arrives, so a ten-minute trail doesn't hang over them after they're there.
+ * Particle trails toward a spot or another player that only the player sees. One per player: a new trail replaces the
+ * old one, and a trail ends once the player arrives, so a ten-minute trail doesn't hang over them after they're there.
  */
 object Trails {
   /** The looks the assistant picks from; the names are what `point_to` takes as `style`. */
@@ -33,32 +33,77 @@ object Trails {
   private const val ARRIVED = 3.0
   /** Closer than this, a column of particles marks the spot itself. */
   private const val MARKER = 48.0
+  /** How long a followed player may stay off the locator bar before their trail ends. */
+  const val HIDDEN_SECONDS = 15
 
   // Touched on the server thread only.
   private val running = HashMap<UUID, BukkitTask>()
 
-  /** Shows the way to [target] for [seconds]; [arrived] runs once if the player gets there before it ends. */
+  /** Shows the way to a spot for [seconds]; [arrived] runs once if the player gets there before it ends. */
   fun show(plugin: Plugin, player: Player, target: Location, seconds: Int, style: Style = Style.SPARKLE, arrived: () -> Unit = {}) {
-    stop(player)
-    // A particle that needs data (a color, a block) would throw; the styles above need none, but a game update may change that.
-    val particle = style.particle.takeIf { it.dataType == Void::class.java } ?: Particle.END_ROD
     val pulses = seconds * 2
-    var pulse = 0
-    lateinit var task: BukkitTask
-    // Two pulses a second, so the line follows the player as they turn and walk.
-    task = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
-      if (!player.isOnline || player.world != target.world || pulse++ >= pulses) return@Runnable end(player, task)
-      val dx = target.x - player.location.x
-      val dz = target.z - player.location.z
-      val distance = Math.hypot(dx, dz)
+    trail(plugin, player, style) { pulse, particle ->
+      if (player.world != target.world || pulse >= pulses) return@trail Pulse.END
+      val distance = Math.hypot(target.x - player.location.x, target.z - player.location.z)
       if (distance <= ARRIVED) {
         player.spawnParticle(particle, target.clone().add(0.0, 1.0, 0.0), 30, 0.6, 0.8, 0.6, 0.02)
-        end(player, task)
         arrived()
-        return@Runnable
+        return@trail Pulse.END
       }
       line(player, target, particle)
       if (distance <= MARKER) column(player, target, particle)
+      Pulse.GO
+    }
+  }
+
+  /**
+   * Shows the way to another player for [seconds], following them as they run. The trail goes dark while they're
+   * off the asker's locator bar, as their dot does, and [lost] ends it once they stay off for [HIDDEN_SECONDS] or
+   * leave the game. [found] runs once the asker reaches them.
+   */
+  fun follow(plugin: Plugin, player: Player, target: Player, seconds: Int, style: Style = Style.SPARKLE, found: () -> Unit = {}, lost: () -> Unit = {}) {
+    val pulses = seconds * 2
+    var hidden = 0
+    trail(plugin, player, style) { pulse, particle ->
+      if (pulse >= pulses) return@trail Pulse.END
+      if (!target.isOnline) {
+        lost()
+        return@trail Pulse.END
+      }
+      if (!Locator.shows(player, target)) {
+        if (++hidden >= HIDDEN_SECONDS * 2) {
+          lost()
+          return@trail Pulse.END
+        }
+        return@trail Pulse.GO
+      }
+      hidden = 0
+      val spot = target.location
+      // Compasses point only in the overworld; elsewhere the trail alone shows the way.
+      player.compassTarget = spot
+      if (spot.distance(player.location) <= ARRIVED + 1) {
+        player.spawnParticle(particle, spot.clone().add(0.0, 2.2, 0.0), 30, 0.4, 0.4, 0.4, 0.02)
+        found()
+        return@trail Pulse.END
+      }
+      line(player, spot.clone().add(0.0, 1.0, 0.0), particle)
+      // Over their head, so they stand out in a crowd once they're near.
+      if (spot.distance(player.location) <= MARKER) column(player, spot.clone().add(0.0, 2.2, 0.0), particle)
+      Pulse.GO
+    }
+  }
+
+  private enum class Pulse { GO, END }
+
+  /** Runs one trail: two pulses a second, so the line follows the player as they turn and walk. */
+  private fun trail(plugin: Plugin, player: Player, style: Style, pulse: (Int, Particle) -> Pulse) {
+    stop(player)
+    // A particle that needs data (a color, a block) would throw; the styles above need none, but a game update may change that.
+    val particle = style.particle.takeIf { it.dataType == Void::class.java } ?: Particle.END_ROD
+    var count = 0
+    lateinit var task: BukkitTask
+    task = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+      if (!player.isOnline || pulse(count++, particle) == Pulse.END) end(player, task)
     }, 0L, 10L)
     running[player.uniqueId] = task
   }
