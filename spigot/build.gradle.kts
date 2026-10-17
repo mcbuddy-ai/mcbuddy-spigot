@@ -13,6 +13,7 @@ dependencies {
   compileOnly("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
   compileOnly("me.clip:placeholderapi:2.12.3")
   compileOnly("com.djrapitops:plan-api:5.9-R1.3")
+  compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.7") { isTransitive = false }
 
   testImplementation("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
   testImplementation(kotlin("test"))

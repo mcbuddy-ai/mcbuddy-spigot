@@ -18,5 +18,9 @@ allprojects {
     }
     maven("https://repo.extendedclip.com/releases/")
     maven("https://repo.playeranalytics.net/releases/")
+    // GriefPrevention publishes nowhere else; only its group comes from here.
+    maven("https://jitpack.io") {
+      content { includeGroup("com.github.GriefPrevention") }
+    }
   }
 }

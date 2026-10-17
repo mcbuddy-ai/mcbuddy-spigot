@@ -7,7 +7,7 @@ author: MairwunNx
 website: https://github.com/allay-ai/minecraft
 prefix: Allay
 load: STARTUP
-softdepend: [PlaceholderAPI, Plan]
+softdepend: [PlaceholderAPI, Plan, GriefPrevention]
 
 commands:
   ask:

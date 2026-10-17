@@ -2,6 +2,14 @@
 
 The “Release” workflow takes the notes for a version from its section here, unless you type them into its `changelog` field.
 
+## 5.5.0
+
+Works with any Allay Server 5.x; marks need Allay Server 5.3.
+
+- ✨ **Marks over blocks.** A new tool, `show_marks`, draws what only the asker sees: a glowing box around a block that's there, a smaller glowing ghost of a block to place, and a label over either. “Where's my redstone?” lights up the chests that hold it, labeled with what's inside; “where do I put torches?” puts ghost torches on the dark spots, and each goes out as you place a block there. The marks are display entities shown to the asker alone, never saved with the world, and gone after their time (`tools.show_marks.default_seconds` 120, `max_seconds` 600), on `/allay cancel`, or when you leave. `tools.show_marks.max_marks` (64) and `radius` (48) bound them.
+- 🔒 **Only containers you could open.** Marks glow through walls, so ores, spawners, and vaults never glow, and Allay now tells a player about a container only when they could open it themselves: outside a GriefPrevention claim, or with container trust in it. An unopened structure chest stays hidden from everyone, since Paper's anti-xray hides it too. This holds for `scan_nearby_containers`, `find_item`, `look_at`, and `inspect_item` as well; `look_at` says why a container is locked instead of reading it. GriefPrevention is optional.
+- New texts in `lang/`: `tools.show_marks`, `summary.marks`, `summary.marks_cleared`, and `messages.marks_cleared`.
+
 ## 5.4.0
 
 Works with any Allay Server 5.x; the way to players needs Allay Server 5.2.

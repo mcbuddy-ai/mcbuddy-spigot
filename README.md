@@ -15,6 +15,7 @@
 - 🎒 **It knows the player's things.** Inventory, armor, the ender chest, what's inside bundles and shulker boxes, and any item in full: enchantments, potion durations, trims, a weapon's damage and speed as the tooltip shows them.
 - 🔍 **It finds things.** Where an item is and how many there are: in the inventory, the ender chest, and the chests nearby, inside shulker boxes too.
 - 🧭 **It shows the way.** A compass and a particle trail to a death point, a village, a cherry grove, or a place from the player's notebook. The trail lasts as long as the player asks or the walk needs, comes in a dozen looks from flames to hearts, and goes out once they're there. Ask for the way to another player, and the trail follows them as they run.
+- ✨ **It marks blocks for you.** “Where's my redstone?” lights up the chests that hold it, with what's inside written over them; “where do I put torches?” puts glowing ghost torches on the dark spots. Only you see the marks, and they glow through walls, so Allay never marks ores, spawners, or vaults, and only containers you could open yourself.
 - 📒 **A notebook, goals, and reminders.** “Remember there's an arrow trader here”, “set a goal to collect 16 diamonds” (a boss bar at the top), “remind me in 5 minutes”. The assistant knows which dimension the player is in, so a bastion noted in the Nether stays in the Nether. `/allay memory <text>` keeps something without asking the assistant.
 - 🪟 **Buttons and windows.** Answers end with buttons: a follow-up question, the way to a spot, coordinates to copy, a recipe, the brewing steps, the anvil plan, enchantments, the villagers around. The assistant reads potions from the game's own brewing recipes, and plans the anvil with the books and items you really have: which goes left, which right, and what each step costs. The recipe, brewing, anvil, enchanting, and villager windows show pictures only, so nothing can be taken from them.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled; the plugin picks one by the player's country, then by their game's language. The assistant answers in the language of the question.
@@ -185,7 +186,8 @@ Plan's labels are in English, since its panel is for admins. Allay never shows a
 | `server.url` | The Allay backend |
 | `provider.*` | Who pays for the model: `hosted` (a subscription) or `byok` (your own key), see “Paying for the model” |
 | `locales.*`, `geoip.*` | Where a player's language comes from, and the country database |
-| `tools.enabled.<tool>` | Switches a tool off. `scan_nearby_containers` and `find_item` see through walls: turn them off if players have claims |
+| `tools.enabled.<tool>` | Switches a tool off. `scan_nearby_containers`, `find_item`, `look_at`, and `show_marks` see only containers the player could open: outside claims, or with container trust in GriefPrevention, and never an unopened structure chest |
+| `tools.show_marks.*` | Marks over blocks: how long they stay (120 s, at most 600), how many at once (64), and how far from the player (48 blocks) |
 | `tools.operator.*` | Tools that give items, teleport, heal, or change time and weather; operators only |
 | `tools.reminders.max_pending`, `tools.notes.max_per_player`, `tools.goals.max_per_player` | How many reminders (10), notes (200), and goals (5) one player can have |
 | `tools.locate_structure_radius`, `tools.locate_biome_radius`, `tools.villager_radius` | Search radii |

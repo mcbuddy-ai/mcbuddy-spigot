@@ -47,8 +47,14 @@ object LookTools {
   fun targetContainer(player: Player): Pair<Block, Container> {
     val block = player.getTargetBlockExact(BLOCK_RANGE) ?: throw ToolError("the player isn't looking at a block within $BLOCK_RANGE blocks")
     val state = block.state as? Container ?: throw ToolError("${block.type.key.key} under the crosshair is not a container")
+    if (!chat.allay.spigot.Claims.mayOpen(player, state)) throw ToolError(locked(state))
     return block to state
   }
+
+  /** Why Allay won't read a container: its owner's claim, or loot that rolls only when someone opens it. */
+  private fun locked(state: Container) =
+    if ((state as? org.bukkit.loot.Lootable)?.lootTable != null) "an unopened structure chest: its loot rolls when someone opens it"
+    else "in someone's claim where the player has no container trust; its contents stay private"
 
   private val lookAt = object : Tool {
     override val name = "look_at"
@@ -98,7 +104,9 @@ object LookTools {
       if (data is Waterlogged && data.isWaterlogged) put("waterlogged", true)
       put("block_light", block.lightFromBlocks.toInt())
       put("sky_light", block.lightFromSky.toInt())
-      if (state is Container) {
+      if (state is Container && !chat.allay.spigot.Claims.mayOpen(player, state)) {
+        put("locked", locked(state))
+      } else if (state is Container) {
         putJsonObject("container") { container(state, detail) }
         val used = state.inventory.contents.count { it != null && !it.type.isAir }
         summary = lang.text("summary.look_container", "id" to type.key.key, "used" to used, "slots" to state.inventory.size)

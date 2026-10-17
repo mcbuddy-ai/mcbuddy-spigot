@@ -12,6 +12,7 @@
 - 🎒 **It knows the player's things:** inventory, armor, the ender chest, bundles and shulker boxes, and any item in full, down to a weapon's damage and speed as the tooltip shows them.
 - 🔍 **It finds things** in the inventory, the ender chest, and the chests nearby, inside shulker boxes too.
 - 🧭 **It shows the way** with the compass and a particle trail: to a death point, a village, a biome, or a place from the player's notebook. The trail lasts as long as the walk needs, in a dozen looks, and goes out on arrival. The way to another player follows them as they run.
+- ✨ **It marks blocks** that only the asker sees, glowing through walls: the chests that hold what they look for, labeled with what's inside, and ghost torches on dark spots. Ores, spawners, and vaults never glow, and containers only when the player could open them.
 - 📒 **A notebook, goals with a boss bar, and reminders.**
 - 🪟 **Buttons under answers** and **recipe, brewing, anvil, enchanting, and villager windows** that only show pictures, so nothing can be taken from them. Potions come from the game's own brewing recipes; the anvil plan uses the books and items the player really has.
 - 🌍 **Every player reads their own language.** English, Russian, Spanish, Portuguese, and German come bundled, picked by the player's country, then by their game's language.
@@ -72,7 +73,7 @@ The country lookup needs no account and sends no address anywhere. On the first 
 | `/allay status`, `/allay link` | Who pays for the model and how the subscription stands; a link to pay in Telegram |
 | `/allay locale [player]` | Which language a player reads Allay in, and why |
 
-`allay.ask`, `allay.askall`, and `allay.chat` are everyone's by default; `allay.askx`, `allay.askall.nocooldown`, `allay.reload`, and `allay.admin` (status, link, locale, and the subscription notes) belong to operators. `scan_nearby_containers` and `find_item` see through walls: switch them off under `tools.enabled` if your players have claims.
+`allay.ask`, `allay.askall`, and `allay.chat` are everyone's by default; `allay.askx`, `allay.askall.nocooldown`, `allay.reload`, and `allay.admin` (status, link, locale, and the subscription notes) belong to operators. Allay tells a player only about containers they could open themselves: outside claims, or with container trust in GriefPrevention, and never an unopened structure chest.
 
 ## Plan
 

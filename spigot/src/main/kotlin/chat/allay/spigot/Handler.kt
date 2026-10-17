@@ -3,6 +3,7 @@ package chat.allay.spigot
 import chat.allay.core.*
 import chat.allay.core.tools.*
 import chat.allay.spigot.tools.ToolContext
+import chat.allay.spigot.tools.Marks
 import chat.allay.spigot.tools.Trails
 
 import kotlinx.coroutines.CancellationException
@@ -41,9 +42,14 @@ class Handler(
   fun cancel(sender: CommandSender): Boolean {
     val run = runs.remove(key(sender))
     if (run == null) {
-      if (sender is Player && Trails.stop(sender)) {
-        locales.of(sender).send(sender, "messages.trail_stopped")
-        return true
+      if (sender is Player) {
+        // Both may be out at once; one /allay cancel hides both.
+        val trail = Trails.stop(sender)
+        val marks = Marks.clear(sender)
+        if (trail || marks) {
+          locales.of(sender).send(sender, if (marks) "messages.marks_cleared" else "messages.trail_stopped")
+          return true
+        }
       }
       locales.of(sender).send(sender, "messages.nothing_to_cancel")
       return true

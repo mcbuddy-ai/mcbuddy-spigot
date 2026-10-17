@@ -42,8 +42,10 @@ object InspectTools {
     return result
   }
 
+  /** Containers within the radius that the player could open themself ([chat.allay.spigot.Claims]), nearest first. */
   private fun containersNear(player: Player, radius: Int): List<Container> =
-    blockEntitiesNear(player.location, radius).filterIsInstance<Container>().sortedBy { it.location.distanceSquared(player.location) }
+    blockEntitiesNear(player.location, radius).filterIsInstance<Container>().filter { chat.allay.spigot.Claims.mayOpen(player, it) }
+      .sortedBy { it.location.distanceSquared(player.location) }
 
   private val scanContainers = tool("scan_nearby_containers") { context, player, args ->
     val radius = (args.int("radius") ?: 8).coerceIn(1, 12)

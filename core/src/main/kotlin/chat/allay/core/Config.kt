@@ -96,6 +96,11 @@ class Config(private val config: YamlConfig, private val pluginVersion: String) 
     /** A trail to another player when nobody names a length, also for their way buttons: they move, so it lasts longer. */
     val followSeconds = config.int("tools.point_to.follow_seconds", 180).coerceIn(1, trailMaxSeconds)
     val biomeRadius = config.int("tools.locate_biome_radius", 2048).coerceIn(64, 6400)
+    /** `show_marks`: how many at once, how far from the player, and how long they stay when nobody says, and at most. */
+    val maxMarks = config.int("tools.show_marks.max_marks", 64).coerceIn(1, 256)
+    val marksRadius = config.int("tools.show_marks.radius", 48).coerceIn(8, 128)
+    val marksMaxSeconds = config.int("tools.show_marks.max_seconds", 600).coerceIn(10, 3600)
+    val marksSeconds = config.int("tools.show_marks.default_seconds", 120).coerceIn(1, marksMaxSeconds)
     val villagerRadius = config.int("tools.villager_radius", 32).coerceIn(8, 64)
     /** Plugins `get_server` leaves out of its list, by name, in any case. */
     val hiddenPlugins = config.strings("tools.server.hidden_plugins").map(String::lowercase).toSet()
